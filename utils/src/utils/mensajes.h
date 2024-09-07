@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <commons/log.h>
+#include <commons/config.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -33,5 +34,7 @@ void enviar_mensaje(char* mensaje, int socket_cliente);
 int recibir_operacion(int socket_cliente);
 void* recibir_buffer(int* size, int socket_cliente);
 void recibir_mensaje(int socket_cliente, t_log* logger);
+void atender_peticiones(t_log* logger, t_config* config, int socket_cliente);
+int atender_peticion(t_log* logger, t_config* config, int socket_cliente);
 
 #endif

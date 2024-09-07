@@ -71,3 +71,34 @@ void recibir_mensaje(int socket_cliente, t_log* logger)
 	log_info(logger, "Me llego el mensaje %s", buffer);
 	free(buffer);
 }
+
+void atender_peticiones(t_log* logger, t_config* config, int socket_cliente)
+{
+    while(1) {
+		int resultado = atender_peticion(logger, config, socket_cliente);
+
+		/* El cliente se desconectó, por lo que cortamos el bucle */
+		if(resultado == -1)
+			break;
+    }
+}
+
+int atender_peticion(t_log* logger, t_config* config, int socket_cliente)
+{
+	log_info(logger, "Esperando código de operación");
+	int codigo_operacion = recibir_operacion(socket_cliente);
+
+	switch(codigo_operacion) {
+		case OPERACION_MENSAJE:
+			recibir_mensaje(socket_cliente, logger);
+			break;
+		case -1:
+			log_error(logger, "El cliente se desconectó");
+			return -1;
+		default:
+			log_warning(logger, "Operación desconocida: %d", codigo_operacion);
+			break;
+	}
+
+	return 0;
+}

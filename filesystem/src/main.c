@@ -17,27 +17,12 @@ int main(int argc, char* argv[]) {
     int socket_memoria = esperar_cliente(fd_escucha);
     log_info(logger, "Se conectó la Memoria");
 
-    while(1) {
-        log_info(logger, "Esperando código de operación");
-        int codigo_operacion = recibir_operacion(socket_memoria);
-
-        switch(codigo_operacion) {
-            case OPERACION_MENSAJE:
-                recibir_mensaje(socket_memoria, logger);
-                break;
-            case -1:
-                log_error(logger, "El cliente se desconectó, terminando servidor");
-                terminar_programa(logger, config);
-                return EXIT_FAILURE;
-            default:
-                log_warning(logger, "Operación desconocida: %d", codigo_operacion);
-                break;
-        }
-    }
+    /* Escuchamos las peticiones que la Memoria haga hasta que se desconecte */
+    atender_peticiones(logger, config, socket_memoria);
 
     terminar_programa(logger, config);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 void terminar_programa(t_log* logger, t_config* config)

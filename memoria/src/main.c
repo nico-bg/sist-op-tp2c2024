@@ -27,9 +27,15 @@ int main(int argc, char* argv[]) {
     int socket_cpu = esperar_cliente(fd_escucha);
     log_info(logger, "Se conectó el CPU");
 
+    /* Escuchamos las peticiones que el CPU haga hasta que se desconecte */
+    atender_peticiones(logger, config, socket_cpu);
+
     /* Estamos esperando al Kernel */
     int socket_kernel = esperar_cliente(fd_escucha);
     log_info(logger, "Se conectó el Kernel");
+
+    /* Escuchamos las peticiones que el CPU haga hasta que se desconecte */
+    atender_peticiones(logger, config, socket_kernel);
 
     terminar_programa(logger, config, socket_filesystem);
 
