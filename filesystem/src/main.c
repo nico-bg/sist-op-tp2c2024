@@ -14,8 +14,12 @@ int main(int argc, char* argv[]) {
     log_info(logger, "FileSystem listo para escuchar a la Memoria");
 
     /* Estamos esperando a la Memoria */
-    int socket_cpu = esperar_cliente(fd_escucha);
+    int socket_memoria = esperar_cliente(fd_escucha);
     log_info(logger, "Se conectó la Memoria");
+
+    log_info(logger, "Esperando handshake de la Memoria");
+    esperar_handshake(socket_memoria);
+    log_info(logger, "Handshake exitoso");
 
     terminar_programa(logger, config);
 
@@ -120,4 +124,17 @@ int esperar_cliente(int socket_servidor)
 	socket_cliente = accept(socket_servidor, NULL, NULL);
 
 	return socket_cliente;
+}
+
+void esperar_handshake(int socket_cliente) {
+    int32_t handshake;
+    int32_t resultOk = 0;
+    int32_t resultError = -1;
+
+    recv(socket_cliente, &handshake, sizeof(int32_t), MSG_WAITALL);
+    if(handshake == 1) {
+        send(socket_cliente, &resultOk, sizeof(int32_t), 0);
+    } else {
+        send(socket_cliente, &resultError, sizeof(int32_t), 0);
+    }
 }

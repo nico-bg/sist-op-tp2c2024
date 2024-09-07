@@ -78,6 +78,19 @@ int conectar_a_filesystem(char *ip, char* puerto)
         abort();
     }
 
+    int32_t handshake = 1;
+    int32_t result;
+
+    send(socket_filesystem, &handshake, sizeof(int32_t), 0);
+    recv(socket_filesystem, &result, sizeof(int32_t), MSG_WAITALL);
+
+    if(result == 0) {
+        printf("FILESYSTEM: HANDSHAKE OK");
+    } else {
+        perror("Error en el handshake con File System");
+        abort();
+    }
+
     return socket_filesystem;
 }
 

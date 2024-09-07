@@ -18,5 +18,6 @@ int crear_conexion(char *ip, char* puerto);
 int iniciar_servidor(char* puerto);
 void terminar_programa(t_log* logger, t_config* config);
 int esperar_cliente(int socket_servidor);
+void esperar_handshake(int socket_cliente);
 
 #endif
