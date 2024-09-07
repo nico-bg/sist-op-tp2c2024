@@ -17,9 +17,23 @@ int main(int argc, char* argv[]) {
     int socket_memoria = esperar_cliente(fd_escucha);
     log_info(logger, "Se conectó la Memoria");
 
-    log_info(logger, "Esperando handshake de la Memoria");
-    esperar_handshake(socket_memoria);
-    log_info(logger, "Handshake exitoso");
+    while(1) {
+        log_info(logger, "Esperando código de operación");
+        int codigo_operacion = recibir_operacion(socket_memoria);
+
+        switch(codigo_operacion) {
+            case OPERACION_MENSAJE:
+                recibir_mensaje(socket_memoria, logger);
+                break;
+            case -1:
+                log_error(logger, "El cliente se desconectó, terminando servidor");
+                terminar_programa(logger, config);
+                return EXIT_FAILURE;
+            default:
+                log_warning(logger, "Operación desconocida: %d", codigo_operacion);
+                break;
+        }
+    }
 
     terminar_programa(logger, config);
 
@@ -30,17 +44,4 @@ void terminar_programa(t_log* logger, t_config* config)
 {
     log_destroy(logger);
     config_destroy(config);
-}
-
-void esperar_handshake(int socket_cliente) {
-    int32_t handshake;
-    int32_t resultOk = 0;
-    int32_t resultError = -1;
-
-    recv(socket_cliente, &handshake, sizeof(int32_t), MSG_WAITALL);
-    if(handshake == 1) {
-        send(socket_cliente, &resultOk, sizeof(int32_t), 0);
-    } else {
-        send(socket_cliente, &resultError, sizeof(int32_t), 0);
-    }
 }

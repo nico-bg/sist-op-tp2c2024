@@ -18,19 +18,7 @@ int main(int argc, char* argv[]) {
     int socket_filesystem = conectar_a_socket(ip_filesystem, puerto_filesystem);
     log_info(logger, "Conectado al Filesystem");
 
-    /* Hacemos el handshake con FileSystem*/
-    int32_t handshake = 1;
-    int32_t result;
-
-    send(socket_filesystem, &handshake, sizeof(int32_t), 0);
-    recv(socket_filesystem, &result, sizeof(int32_t), MSG_WAITALL);
-
-    if(result == 0) {
-        log_info(logger, "HANDSHAKE OK");
-    } else {
-        log_error(logger, "Error en el handshake con File System");
-        abort();
-    }
+    enviar_mensaje("Hola, soy la Memoria", socket_filesystem);
 
     int fd_escucha = iniciar_servidor(puerto_escucha);
     log_info(logger, "Memoria lista para escuchar al CPU y Kernel");
