@@ -61,3 +61,16 @@ int esperar_cliente(int socket_servidor)
 
 	return socket_cliente;
 }
+
+/* Creamos y retornamos el socket de la conexión, con validación de errores al crear la conexión */
+int conectar_a_socket(char *ip, char* puerto)
+{
+    int socket_conexion = crear_conexion(ip, puerto);
+
+    if(socket_conexion == -1) {
+        perror("Error al crear el socket cliente");
+        abort();
+    }
+
+    return socket_conexion;
+}
