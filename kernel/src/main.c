@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     int socket_cpu_interrupt = conectar_a_socket(ip_cpu, puerto_cpu_interrupt);
     log_info(logger, "Conectado al CPU en el puerto Interrupt");
 
-    enviar_mensaje("Hola, soy el Kernel desde el puerto Interrupt", socket_cpu_dispatch);
+    enviar_mensaje("Hola, soy el Kernel desde el puerto Interrupt", socket_cpu_interrupt);
 
     terminar_programa(logger, config, socket_cpu_dispatch, socket_cpu_interrupt, socket_memoria);
 
