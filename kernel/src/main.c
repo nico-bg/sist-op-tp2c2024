@@ -21,11 +21,17 @@ int main(int argc, char* argv[]) {
     int socket_memoria = conectar_a_socket(ip_memoria, puerto_memoria);
     log_info(logger, "Conectado a Memoria");
 
+    enviar_mensaje("Hola, soy el Kernel", socket_memoria);
+
     int socket_cpu_dispatch = conectar_a_socket(ip_cpu, puerto_cpu_dispatch);
     log_info(logger, "Conectado al CPU en el puerto Dispatch");
 
+    enviar_mensaje("Hola, soy el Kernel desde el puerto Dispatch", socket_cpu_dispatch);
+
     int socket_cpu_interrupt = conectar_a_socket(ip_cpu, puerto_cpu_interrupt);
     log_info(logger, "Conectado al CPU en el puerto Interrupt");
+
+    enviar_mensaje("Hola, soy el Kernel desde el puerto Interrupt", socket_cpu_dispatch);
 
     terminar_programa(logger, config, socket_cpu_dispatch, socket_cpu_interrupt, socket_memoria);
 

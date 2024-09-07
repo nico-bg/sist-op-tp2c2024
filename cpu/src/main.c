@@ -28,9 +28,15 @@ int main(int argc, char* argv[]) {
     int socket_dispatch = esperar_cliente(fd_dispatch);
     log_info(logger, "Se conectó el Kernel por el puerto Dispatch");
 
+    /* Escuchamos una sola petición del Kernel por el puerto Dispatch */
+    atender_peticion(logger, config, socket_dispatch);
+
     /* Esperamos a que se conecte el Kernel por el puerto interrupt */
     int socket_interrupt = esperar_cliente(fd_interrupt);
     log_info(logger, "Se conectó el Kernel por el puerto Interrupt");
+
+    /* Escuchamos una sola petición del Kernel por el puerto Interrupt */
+    atender_peticion(logger, config, socket_interrupt);
 
     terminar_programa(logger, config, socket_memoria);
 
