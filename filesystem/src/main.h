@@ -1,8 +1,6 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#include<stdio.h>
-#include<stdlib.h>
 #include <utils/configuracion.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>

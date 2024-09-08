@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
 
     config = iniciar_config("memoria.config");
 
-    logger = iniciar_logger(config, "./logs/memoria.log", "MEMORIA");
+    logger = iniciar_logger(config, "memoria.log", "MEMORIA");
 
     ip_filesystem = config_get_string_value(config, "IP_FILESYSTEM");
     puerto_filesystem = config_get_string_value(config, "PUERTO_FILESYSTEM");

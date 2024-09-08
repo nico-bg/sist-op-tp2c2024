@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     char* puerto_cpu_interrupt;
 
     config = iniciar_config("kernel.config");
-    logger = iniciar_logger(config, "./logs/memoria.log", "MEMORIA");
+    logger = iniciar_logger(config, "memoria.log", "MEMORIA");
 
     ip_memoria = config_get_string_value(config, "IP_MEMORIA");
     puerto_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
