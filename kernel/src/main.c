@@ -4,6 +4,14 @@ t_log* logger;
 t_log* logger_debug;
 t_config* config;
 
+t_list* lista_procesos;
+
+t_estado* estado_new;
+t_estado* estado_ready;
+t_estado* estado_exec;
+t_estado* estado_blocked;
+t_estado* estado_exit;
+
 int main(int argc, char* argv[]) {
     char* ip_memoria;
     char* puerto_memoria;
@@ -31,7 +39,7 @@ int main(int argc, char* argv[]) {
     // Verifico y proceso los argumentos recibidos
     t_argumentos* argumentos = procesar_argumentos(argc, argv);
 
-    liberar_argumentos(argumentos);
+    destruir_argumentos(argumentos);
     terminar_programa(logger, config, socket_cpu_dispatch, socket_cpu_interrupt, socket_memoria);
 
     return 0;

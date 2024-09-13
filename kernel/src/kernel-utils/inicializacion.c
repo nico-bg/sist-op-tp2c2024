@@ -22,7 +22,7 @@ t_argumentos* procesar_argumentos(int argc, char* argv[])
 /*
  * @brief Libera la memoria de la estructura t_argumentos
  */
-void liberar_argumentos(t_argumentos* argumentos)
+void destruir_argumentos(t_argumentos* argumentos)
 {
     free(argumentos->archivo_pseudocodigo);
     free(argumentos);

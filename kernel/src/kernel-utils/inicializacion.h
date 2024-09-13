@@ -12,6 +12,6 @@ typedef struct {
 } t_argumentos;
 
 t_argumentos* procesar_argumentos(int argc, char* argv[]);
-void liberar_argumentos(t_argumentos* argumentos);
+void destruir_argumentos(t_argumentos* argumentos);
 
 #endif
