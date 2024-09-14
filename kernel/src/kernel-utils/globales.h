@@ -12,14 +12,15 @@ extern t_log* logger;
 extern t_log* logger_debug;
 extern t_config* config;
 
-/* Lista de PCBs creados */
+/* Lista de PCBs/Procesos creados */
 extern t_list* lista_procesos;
+extern int ULTIMO_PID;
 
-/* Estados */
-extern t_estado* estado_new;
-extern t_estado* estado_ready;
-extern t_estado* estado_exec;
-extern t_estado* estado_blocked;
-extern t_estado* estado_exit;
+/* Estados para los hilos gestionados por los planificadores */
+extern t_list* estado_new;
+extern t_list* estado_ready;
+extern t_list* estado_exec;
+extern t_list* estado_blocked;
+extern t_list* estado_exit;
 
 #endif

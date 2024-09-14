@@ -4,14 +4,6 @@ t_log* logger;
 t_log* logger_debug;
 t_config* config;
 
-t_list* lista_procesos;
-
-t_estado* estado_new;
-t_estado* estado_ready;
-t_estado* estado_exec;
-t_estado* estado_blocked;
-t_estado* estado_exit;
-
 int main(int argc, char* argv[]) {
     char* ip_cpu;
     char* puerto_cpu_dispatch;
@@ -31,19 +23,33 @@ int main(int argc, char* argv[]) {
     int socket_cpu_dispatch = conectar_a_socket(ip_cpu, puerto_cpu_dispatch);
     int socket_cpu_interrupt = conectar_a_socket(ip_cpu, puerto_cpu_interrupt);
 
-    // Verifico y proceso los argumentos recibidos
+    // Inicializamos las variables globales de estados y la lista de procesos
+    inicializar_estados();
+
+    // Verifico y proceso los argumentos recibidos en `main`
     t_argumentos* argumentos = procesar_argumentos(argc, argv);
 
-    destruir_argumentos(argumentos);
-    terminar_programa(logger, config, socket_cpu_dispatch, socket_cpu_interrupt);
+    // Creamos el primer proceso
+    crear_proceso(argumentos->archivo_pseudocodigo, argumentos->tamanio_proceso, 0);
+
+    // Iniciamos el planificador de largo plazo
+    // TODO: Considerar crear un hilo para ejecutarlo en paralelo
+    planificador_largo_plazo();
+
+    // Escuchamos las Syscalls que recibimos de la CPU
+    // TODO: Considerar crear un hilo para ejecutarlo en paralelo
+    atender_syscalls();
+
+    // destruir_argumentos(argumentos);
+    // terminar_programa(logger, config, socket_cpu_dispatch, socket_cpu_interrupt);
 
     return 0;
 }
 
-void terminar_programa(t_log* logger, t_config* config, int conexion_cpu_dispatch, int conexion_cpu_interrupt)
-{
-    log_destroy(logger);
-    config_destroy(config);
-    close(conexion_cpu_dispatch);
-    close(conexion_cpu_interrupt);
-}
+// void terminar_programa(t_log* logger, t_config* config, int conexion_cpu_dispatch, int conexion_cpu_interrupt)
+// {
+//     log_destroy(logger);
+//     config_destroy(config);
+//     close(conexion_cpu_dispatch);
+//     close(conexion_cpu_interrupt);
+// }
