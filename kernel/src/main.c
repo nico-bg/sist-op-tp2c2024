@@ -32,6 +32,10 @@ int main(int argc, char* argv[]) {
     // Creamos el primer proceso
     crear_proceso(argumentos->archivo_pseudocodigo, argumentos->tamanio_proceso, 0);
 
+    // Iniciamos el planificador de corto plazo
+    // TODO: Considerar crear un hilo para ejecutarlo en paralelo
+    planificador_corto_plazo();
+
     // Iniciamos el planificador de largo plazo
     // TODO: Considerar crear un hilo para ejecutarlo en paralelo
     planificador_largo_plazo();
