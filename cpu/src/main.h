@@ -4,7 +4,13 @@
 #include <utils/configuracion.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
+#include <pthread.h>
+
+
 
 void terminar_programa(t_log* logger, t_config* config, int conexion);
+
+void iniciar();
+
 
 #endif
