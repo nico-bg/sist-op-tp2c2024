@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 
     // Iniciamos el planificador de corto plazo
     // TODO: Considerar crear un hilo para ejecutarlo en paralelo
-    // planificador_corto_plazo();
+    planificador_corto_plazo();
 
     // Iniciamos el planificador de largo plazo
     // TODO: Considerar crear un hilo para ejecutarlo en paralelo

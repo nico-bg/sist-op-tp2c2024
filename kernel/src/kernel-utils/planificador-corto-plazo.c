@@ -22,7 +22,6 @@ void planificador_corto_plazo()
 void planificador_corto_plazo_fifo()
 {
     while(1) {
-        // TODO: Utilizar un semáforo para bloquear en lugar del if
         if(hay_hilos_en_ready()) {
             t_tcb* siguiente_a_exec = obtener_siguiente_a_exec_fifo();
             enviar_hilo_a_cpu(siguiente_a_exec);

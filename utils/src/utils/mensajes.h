@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <utils/buffer.h>
 
 typedef enum
 {
@@ -18,21 +19,15 @@ typedef enum
 
 typedef struct
 {
-	int size;
-	void* stream;
-} t_buffer;
-
-typedef struct
-{
 	op_code codigo_operacion;
 	t_buffer* buffer;
 } t_paquete;
 
-void* serializar_paquete(t_paquete* paquete, int bytes);
+t_buffer* serializar_paquete(t_paquete* paquete);
 void eliminar_paquete(t_paquete* paquete);
 void enviar_mensaje(char* mensaje, int socket_cliente);
 int recibir_operacion(int socket_cliente);
-void* recibir_buffer(int* size, int socket_cliente);
+t_buffer* recibir_buffer(uint32_t* size, int socket_cliente);
 void recibir_mensaje(int socket_cliente, t_log* logger);
 void atender_peticiones(t_log* logger, t_config* config, int socket_cliente);
 int atender_peticion(t_log* logger, t_config* config, int socket_cliente);
