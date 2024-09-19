@@ -4,6 +4,7 @@
 #include <kernel-utils/globales.h>
 #include <kernel-utils/estados.h>
 #include <kernel-utils/estructuras.h>
+#include <utils/mensajes.h>
 #include <string.h>
 
 typedef enum {

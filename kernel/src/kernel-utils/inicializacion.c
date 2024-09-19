@@ -14,7 +14,7 @@ t_argumentos* procesar_argumentos(int argc, char* argv[])
     }
 
     argumentos->archivo_pseudocodigo = string_duplicate(argv[1]);
-    argumentos->tamanio_proceso = (u_int32_t) atoi(argv[2]);
+    argumentos->tamanio_proceso = (uint32_t) atoi(argv[2]);
 
     return argumentos;
 }

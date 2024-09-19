@@ -14,7 +14,8 @@
 typedef enum
 {
 	OPERACION_MENSAJE,
-	OPERACION_PAQUETE
+	OPERACION_PAQUETE,
+	OPERACION_EJECUTAR_HILO
 } op_code;
 
 typedef struct
