@@ -6,6 +6,7 @@
 #include <kernel-utils/estructuras.h>
 #include <utils/mensajes.h>
 #include <string.h>
+#include <utils/comunicacion_kernel_cpu.h>
 
 typedef enum {
     DESALOJO,
