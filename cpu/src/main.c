@@ -1,4 +1,6 @@
 #include <main.h>
+#include <pthread.h>
+
 
 t_log* logger_cpu;
 char* puerto_escucha_dispatch;
@@ -10,7 +12,7 @@ int main(int argc, char* argv[]) {
     char* ip_memoria;
     char* puerto_memoria;
 
-    config = iniciar_config("cpu.config");
+    config = iniciar_config("./cpu.config");
     logger_cpu = iniciar_logger(config, "cpu.log", "CPU");
 
     ip_memoria = config_get_string_value(config, "IP_MEMORIA");
@@ -27,7 +29,7 @@ int main(int argc, char* argv[]) {
     iniciar();
 
 
-    terminar_programa(logger, config, socket_memoria);
+    terminar_programa(logger_cpu, config, socket_memoria);
 
     return 0;
 }
@@ -46,9 +48,12 @@ void iniciar(){
 void esperar_a_kernel(){
     pthread_t *hilo_dispatch = malloc(sizeof(pthread_t));
     pthread_t *hilo_interrupt = malloc(sizeof(pthread_t));
+    pthread_t *hilo_ciclo_de_instruccion = malloc(sizeof(pthread_t));
 
     pthread_create(hilo_dispatch, NULL, &ejecutar_pid,NULL);
     pthread_create(hilo_interrupt, NULL, &ejecutar_interrupcion,NULL);
+    pthread_create(hilo_ciclo_de_instruccion, NULL, &ejecutar_interrupcion,NULL);
+    
 
     pthread_join(*hilo_dispatch, NULL);
     pthread_join(*hilo_interrupt, NULL);   
@@ -56,14 +61,14 @@ void esperar_a_kernel(){
 
 void ejecutar_pid(){
     
-    int fd_dispatch = iniciar_servidor(puerto_escucha_dispatch);
+   // int fd_dispatch = iniciar_servidor(puerto_escucha_dispatch);
 /* Esperamos a que se conecte el Kernel por el puerto dispatch */
-    int socket_dispatch = esperar_cliente(fd_dispatch);
-    log_info(logger_cpu, "Se conectó el Kernel por el puerto Dispatch");
+    //int socket_dispatch = esperar_cliente(fd_dispatch);
+    log_info(logger_cpu, "Hola, soy el hilo dispatch");
 
     /* Escuchamos una sola petición del Kernel por el puerto Dispatch */
     //atender_peticion(logger_cpu, config, socket_dispatch);
-
+/*
     while(1) {
     int operacion = recibir_operacion(socket_dispatch); 
 
@@ -73,18 +78,29 @@ void ejecutar_pid(){
     }
 
     }
-
+*/
 }
 
 void ejecutar_interrupcion(){
 
-    int fd_interrupt = iniciar_servidor(puerto_escucha_interrupt);
+  //  int fd_interrupt = iniciar_servidor(puerto_escucha_interrupt);
     /* Esperamos a que se conecte el Kernel por el puerto interrupt */
-    int socket_interrupt = esperar_cliente(fd_interrupt);
-    log_info(logger_cpu, "Se conectó el Kernel por el puerto Interrupt");
+   // int socket_interrupt = esperar_cliente(fd_interrupt);
+    log_info(logger_cpu, "Hola soy el hilo Interrupt");
 
     /* Escuchamos una sola petición del Kernel por el puerto Interrupt */
-    atender_peticion(logger_cpu, config, socket_interrupt);
+    //atender_peticion(logger_cpu, config, socket_interrupt);
 }
 
+
+void ejecutar_ciclo_de_instruccion(){
+
+    //int fd_interrupt = iniciar_servidor(puerto_escucha_interrupt);
+    /* Esperamos a que se conecte el Kernel por el puerto interrupt */
+    //int socket_interrupt = esperar_cliente(fd_interrupt);
+    log_info(logger_cpu, "Hola soy el hilo del ciclo de instruccion");
+
+    /* Escuchamos una sola petición del Kernel por el puerto Interrupt */
+    //atender_peticion(logger_cpu, config, socket_interrupt);
+}
 
