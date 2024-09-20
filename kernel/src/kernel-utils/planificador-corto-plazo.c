@@ -22,7 +22,6 @@ void planificador_corto_plazo()
 void planificador_corto_plazo_fifo()
 {
     while(1) {
-        // TODO: Utilizar un semáforo para bloquear en lugar del if
         if(hay_hilos_en_ready()) {
             t_tcb* siguiente_a_exec = obtener_siguiente_a_exec_fifo();
             enviar_hilo_a_cpu(siguiente_a_exec);
@@ -57,14 +56,39 @@ t_tcb* obtener_siguiente_a_exec_fifo()
     return siguiente_a_exec;
 }
 
+/**
+ * @brief Envía el `tid` del hilo y el `pid` de su proceso padre a la CPU para que el hilo entre en ejecución
+ * !WARNING: Va a romper en el `send` si no logró conectar correctamente al socket en `main.c`
+ */
 void enviar_hilo_a_cpu(t_tcb* hilo)
 {
+    /* Armamos el paquete con los datos a enviar serializados */
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = OPERACION_EJECUTAR_HILO;
 
+    t_hilo_a_cpu* datos_a_enviar = malloc(sizeof(t_hilo_a_cpu));
+    datos_a_enviar->tid = hilo->tid;
+    datos_a_enviar->pid = hilo->pid_padre;
+
+    paquete->buffer = serializar_hilo_a_cpu(datos_a_enviar);
+
+    /* Serializamos el paquete y enviamos los datos a la CPU */
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
+    send(socket_cpu_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
+
+    /* Liberamos la memoria correspondiente */
+    free(datos_a_enviar);
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
 }
 
+/**
+ * @brief Setea el hilo en `estado_exec` y lo saca de la lista de `estado_ready`
+ */
 void transicion_hilo_a_exec(t_tcb* hilo)
 {
-
+    estado_exec = hilo;
+    list_remove_element(estado_ready, hilo);
 }
 
 t_motivo_devolucion esperar_devolucion_hilo()

@@ -8,7 +8,7 @@
 
 typedef struct {
     char* archivo_pseudocodigo;
-    u_int32_t tamanio_proceso;
+    uint32_t tamanio_proceso;
 } t_argumentos;
 
 t_argumentos* procesar_argumentos(int argc, char* argv[]);

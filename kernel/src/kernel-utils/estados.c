@@ -3,7 +3,7 @@
 t_list* lista_procesos;
 t_list* estado_new;
 t_list* estado_ready;
-t_list* estado_exec;
+t_tcb* estado_exec;
 t_list* estado_blocked;
 t_list* estado_exit;
 
@@ -12,10 +12,15 @@ t_list* estado_exit;
  */
 void inicializar_estados()
 {
+    t_tcb* hilo = malloc(sizeof(t_tcb));
+    hilo->pid_padre = 1;
+    hilo->tid = 0;
+    hilo->prioridad = 0;
     lista_procesos = list_create();
     estado_new = list_create();
     estado_ready = list_create();
-    estado_exec = list_create();
+    list_add(estado_ready, hilo);
+    estado_exec = malloc(sizeof(t_tcb));
     estado_blocked = list_create();
     estado_exit = list_create();
 }
@@ -28,7 +33,7 @@ void destruir_estados()
     list_destroy_and_destroy_elements(lista_procesos, (void*) destruir_pcb);
     list_destroy_and_destroy_elements(estado_new, (void*) destruir_tcb);
     list_destroy_and_destroy_elements(estado_ready, (void*) destruir_tcb);
-    list_destroy_and_destroy_elements(estado_exec, (void*) destruir_tcb);
+    destruir_tcb(estado_exec);
     list_destroy_and_destroy_elements(estado_blocked, (void*) destruir_tcb);
     list_destroy_and_destroy_elements(estado_exit, (void*) destruir_tcb);
 }

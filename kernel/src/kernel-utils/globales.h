@@ -12,6 +12,10 @@ extern t_log* logger;
 extern t_log* logger_debug;
 extern t_config* config;
 
+/* Sockets de Conexión a CPU */
+extern int socket_cpu_dispatch;
+extern int socket_cpu_interrupt;
+
 /* Lista de PCBs/Procesos creados */
 extern t_list* lista_procesos;
 extern int ULTIMO_PID;
@@ -19,7 +23,7 @@ extern int ULTIMO_PID;
 /* Estados para los hilos gestionados por los planificadores */
 extern t_list* estado_new;
 extern t_list* estado_ready;
-extern t_list* estado_exec;
+extern t_tcb* estado_exec; // Solo podemos tener 1 hilo en este estado
 extern t_list* estado_blocked;
 extern t_list* estado_exit;
 

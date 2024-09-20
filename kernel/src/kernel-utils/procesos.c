@@ -9,7 +9,7 @@
  * @param tamanio_proceso Tamaño del proceso en Memoria
  * @param prioridad Prioridad del hilo principal (TID 0)
  */
-t_pcb* crear_proceso(char* nombre_archivo, u_int32_t tamanio_proceso, u_int32_t prioridad)
+t_pcb* crear_proceso(char* nombre_archivo, uint32_t tamanio_proceso, uint32_t prioridad)
 {
     // Reservar memoria para el proceso
     t_pcb* nuevo_proceso;
