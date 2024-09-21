@@ -15,11 +15,11 @@ typedef enum {
 } t_motivo_devolucion;
 
 void planificador_corto_plazo();
-void planificador_corto_plazo_fifo();
-void planificador_corto_plazo_prioridades();
-void planificador_corto_plazo_colas_multinivel();
 
+t_tcb* obtener_siguiente_a_exec();
 t_tcb* obtener_siguiente_a_exec_fifo();
+t_tcb* obtener_siguiente_a_exec_prioridades();
+t_tcb* obtener_siguiente_a_exec_colas_multinivel();
 void enviar_hilo_a_cpu(t_tcb* hilo);
 void transicion_hilo_a_exec(t_tcb* hilo);
 t_motivo_devolucion esperar_devolucion_hilo();

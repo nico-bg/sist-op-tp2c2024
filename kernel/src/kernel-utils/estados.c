@@ -11,7 +11,7 @@ sem_t semaforo_estado_ready;
 pthread_mutex_t mutex_estado_ready;
 pthread_mutex_t mutex_estado_exec;
 
-t_tcb* crear_hilo_ready_mock(uint32_t pid, uint32_t tid, uint32_t prioridad) {
+void crear_hilo_ready_mock(uint32_t pid, uint32_t tid, uint32_t prioridad) {
     t_tcb* hilo = malloc(sizeof(t_tcb));
     hilo->pid_padre = pid;
     hilo->tid = tid;
