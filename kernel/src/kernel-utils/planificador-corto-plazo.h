@@ -7,9 +7,10 @@
 #include <utils/mensajes.h>
 #include <string.h>
 #include <utils/comunicacion_kernel_cpu.h>
+#include <utils/sleep.h>
 
 typedef enum {
-    DESALOJO,
+    DESALOJO_POR_QUANTUM,
     FINALIZACION,
     BLOQUEO,
 } t_motivo_devolucion;

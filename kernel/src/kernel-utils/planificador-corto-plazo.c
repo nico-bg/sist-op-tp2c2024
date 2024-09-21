@@ -1,5 +1,20 @@
 #include <kernel-utils/planificador-corto-plazo.h>
 
+void transicion_exec_a_ready(t_tcb* hilo)
+{
+    // Desalojo el hilo del estado EXEC (El mismo que recibimos como parámetro en esta función)
+    pthread_mutex_lock(&mutex_estado_exec);
+    estado_exec = NULL;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    // Agregamos el hilo al estado READY
+    pthread_mutex_lock(&mutex_estado_ready);
+    list_add(estado_ready, hilo);
+    pthread_mutex_unlock(&mutex_estado_ready);
+
+    sem_post(&semaforo_estado_ready);
+}
+
 void planificador_corto_plazo()
 {
     while(1) {
@@ -19,44 +34,11 @@ void planificador_corto_plazo()
         {
         case FINALIZACION:
             // log_debug(logger_debug, "Motivo devolución: FINALIZACION");
-            log_debug(logger_debug, "PID: %d, TID: %d, Prioridad: %d", siguiente_a_exec->pid_padre, siguiente_a_exec->tid, siguiente_a_exec->prioridad);
+            log_debug(logger_debug, "Motivo devolución: FINALIZACION. PID %d, TID: %d, Prioridad: %d", siguiente_a_exec->pid_padre, siguiente_a_exec->tid, siguiente_a_exec->prioridad);
             break;
-        case DESALOJO:
-            log_debug(logger_debug, "Motivo de devolución: DESALOJO");
-            break;
-        case BLOQUEO:
-            log_debug(logger_debug, "Motivo de devolución: BLOQUEO");
-            break;            
-        default:
-            log_debug(logger_debug, "Motivo de devolución desconocido");
-            break;
-        }
-    }
-}
-
-void planificador_corto_plazo_fifo()
-{
-    while(1) {
-        // Si ya no hay hilos en READY, esperamos hasta que se agreguen (hacer un sem_post)
-        // ...al crear un proceso, hilo, al desalojar un proceso por quantum, etc
-        sem_wait(&semaforo_estado_ready);
-
-        pthread_mutex_lock(&mutex_estado_ready);
-        t_tcb* siguiente_a_exec = obtener_siguiente_a_exec_fifo();
-        transicion_hilo_a_exec(siguiente_a_exec);
-        pthread_mutex_unlock(&mutex_estado_ready);
-
-        // enviar_hilo_a_cpu(siguiente_a_exec);
-        int motivo = esperar_devolucion_hilo();
-
-        switch (motivo)
-        {
-        case FINALIZACION:
-            // log_debug(logger_debug, "Motivo devolución: FINALIZACION");
-            log_debug(logger_debug, "Finalización <%d:%d>", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
-            break;
-        case DESALOJO:
-            log_debug(logger_debug, "Motivo de devolución: DESALOJO");
+        case DESALOJO_POR_QUANTUM:
+            log_debug(logger_debug, "Motivo de devolución: DESALOJO_POR_QUANTUM. PID %d, TID: %d, Prioridad: %d", siguiente_a_exec->pid_padre, siguiente_a_exec->tid, siguiente_a_exec->prioridad);
+            transicion_exec_a_ready(siguiente_a_exec);
             break;
         case BLOQUEO:
             log_debug(logger_debug, "Motivo de devolución: BLOQUEO");
@@ -147,10 +129,38 @@ t_tcb* obtener_siguiente_a_exec_prioridades()
     return siguiente_a_exec;
 }
 
+void solicitar_desalojo_hilo_a_cpu(t_tcb* hilo)
+{
+    pthread_mutex_lock(&mutex_estado_exec);
+    bool sigue_en_exec = estado_exec == hilo;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    if(sigue_en_exec) {
+        // TODO: Descomentar cuando la CPU pueda recibir esta operacion
+        // uint32_t operacion = OPERACION_DESALOJAR_HILO;
+        // send(socket_cpu_interrupt, &operacion, sizeof(uint32_t), 0);
+    }
+}
+
+void* temporizador_desalojo_por_quantum(void* arg)
+{
+    t_tcb* hilo_escuchado = (t_tcb*) arg;
+
+    int quantum = config_get_int_value(config, "QUANTUM");
+
+    esperar_ms(quantum);
+    solicitar_desalojo_hilo_a_cpu(hilo_escuchado);
+
+    return NULL;
+}
+
 t_tcb* obtener_siguiente_a_exec_colas_multinivel()
 {
-    // TODO: Reemplazar esta implementación por la correspondiente a colas multinivel
-    t_tcb* siguiente_a_exec = (t_tcb*) list_get(estado_ready, 0);
+    t_tcb* siguiente_a_exec = obtener_siguiente_a_exec_prioridades();
+
+    pthread_t hilo_desalojo_por_quantum;
+    pthread_create(&hilo_desalojo_por_quantum, NULL, temporizador_desalojo_por_quantum, siguiente_a_exec);
+    pthread_detach(hilo_desalojo_por_quantum);
 
     return siguiente_a_exec;
 }
@@ -198,5 +208,7 @@ void transicion_hilo_a_exec(t_tcb* hilo)
  */
 t_motivo_devolucion esperar_devolucion_hilo()
 {
-    return FINALIZACION;
+    t_motivo_devolucion motivo_finalizacion = rand() % 2 == 0 ? FINALIZACION : DESALOJO_POR_QUANTUM;
+
+    return motivo_finalizacion;
 }
