@@ -22,27 +22,33 @@ void planificador_corto_plazo()
 void planificador_corto_plazo_fifo()
 {
     while(1) {
-        if(hay_hilos_en_ready()) {
-            t_tcb* siguiente_a_exec = obtener_siguiente_a_exec_fifo();
-            enviar_hilo_a_cpu(siguiente_a_exec);
-            transicion_hilo_a_exec(siguiente_a_exec);
-            int motivo = esperar_devolucion_hilo();
+        // Si ya no hay hilos en READY, esperamos hasta que se agreguen (hacer un sem_post)
+        // ...al crear un proceso, hilo, al desalojar un proceso por quantum, etc
+        sem_wait(&semaforo_estado_ready);
 
-            switch (motivo)
-            {
-            case FINALIZACION:
-                log_debug(logger_debug, "Motivo devolución: FINALIZACION");
-                break;
-            case DESALOJO:
-                log_debug(logger_debug, "Motivo de devolución: DESALOJO");
-                break;
-            case BLOQUEO:
-                log_debug(logger_debug, "Motivo de devolución: BLOQUEO");
-                break;            
-            default:
-                log_debug(logger_debug, "Motivo de devolución desconocido");
-                break;
-            }
+        pthread_mutex_lock(&mutex_estado_ready);
+        t_tcb* siguiente_a_exec = obtener_siguiente_a_exec_fifo();
+        transicion_hilo_a_exec(siguiente_a_exec);
+        pthread_mutex_unlock(&mutex_estado_ready);
+
+        // enviar_hilo_a_cpu(siguiente_a_exec);
+        int motivo = esperar_devolucion_hilo();
+
+        switch (motivo)
+        {
+        case FINALIZACION:
+            // log_debug(logger_debug, "Motivo devolución: FINALIZACION");
+            log_debug(logger_debug, "Finalización <%d:%d>", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
+            break;
+        case DESALOJO:
+            log_debug(logger_debug, "Motivo de devolución: DESALOJO");
+            break;
+        case BLOQUEO:
+            log_debug(logger_debug, "Motivo de devolución: BLOQUEO");
+            break;            
+        default:
+            log_debug(logger_debug, "Motivo de devolución desconocido");
+            break;
         }
     }
 }
@@ -87,7 +93,10 @@ void enviar_hilo_a_cpu(t_tcb* hilo)
  */
 void transicion_hilo_a_exec(t_tcb* hilo)
 {
+    pthread_mutex_lock(&mutex_estado_exec);
     estado_exec = hilo;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
     list_remove_element(estado_ready, hilo);
 }
 
@@ -107,9 +116,4 @@ void planificador_corto_plazo_prioridades() {
 
 void planificador_corto_plazo_colas_multinivel() {
 
-}
-
-bool hay_hilos_en_ready()
-{
-    return !list_is_empty(estado_ready);
 }

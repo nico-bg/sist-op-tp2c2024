@@ -1,6 +1,8 @@
 #ifndef GLOBALES_H_
 #define GLOBALES_H_
 
+#include <semaphore.h>
+#include <pthread.h>
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/collections/queue.h>
@@ -26,5 +28,10 @@ extern t_list* estado_ready;
 extern t_tcb* estado_exec; // Solo podemos tener 1 hilo en este estado
 extern t_list* estado_blocked;
 extern t_list* estado_exit;
+
+/* Semáforos y Mutex para los estados que los requieren */
+extern sem_t semaforo_estado_ready;
+extern pthread_mutex_t mutex_estado_ready;
+extern pthread_mutex_t mutex_estado_exec;
 
 #endif
