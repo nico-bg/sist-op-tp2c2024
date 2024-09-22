@@ -10,6 +10,7 @@ t_list* estado_exit;
 sem_t semaforo_estado_ready;
 pthread_mutex_t mutex_estado_ready;
 pthread_mutex_t mutex_estado_exec;
+pthread_mutex_t mutex_estado_blocked;
 
 void crear_hilo_ready_mock(uint32_t pid, uint32_t tid, uint32_t prioridad) {
     t_tcb* hilo = malloc(sizeof(t_tcb));
@@ -37,6 +38,7 @@ void inicializar_estados()
     sem_init(&semaforo_estado_ready, 0, 0);
     pthread_mutex_init(&mutex_estado_ready, NULL);
     pthread_mutex_init(&mutex_estado_exec, NULL);
+    pthread_mutex_init(&mutex_estado_blocked, NULL);
 
     /* TODO: Eliminar esto una vez que el planificador a largo plazo funcione */
     /* Solo lo utilizo para tener un hilo en Ready y poder probar el planificador a corto plazo */
@@ -64,4 +66,5 @@ void destruir_estados()
     sem_destroy(&semaforo_estado_ready);
     pthread_mutex_destroy(&mutex_estado_ready);
     pthread_mutex_destroy(&mutex_estado_exec);
+    pthread_mutex_destroy(&mutex_estado_blocked);
 }

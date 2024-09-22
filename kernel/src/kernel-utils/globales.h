@@ -33,5 +33,6 @@ extern t_list* estado_exit;
 extern sem_t semaforo_estado_ready;
 extern pthread_mutex_t mutex_estado_ready;
 extern pthread_mutex_t mutex_estado_exec;
+extern pthread_mutex_t mutex_estado_blocked;
 
 #endif
