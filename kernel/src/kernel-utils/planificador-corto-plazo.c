@@ -19,7 +19,7 @@ static t_tcb* obtener_siguiente_a_exec_colas_multinivel();
 static void enviar_hilo_a_cpu(t_tcb* hilo);
 static t_motivo_devolucion esperar_devolucion_hilo();
 
-void planificador_corto_plazo()
+void* planificador_corto_plazo()
 {
     while(1) {
         // Si ya no hay hilos en READY, esperamos hasta que se agreguen (hacer un sem_post)
@@ -53,6 +53,8 @@ void planificador_corto_plazo()
             break;
         }
     }
+
+    return NULL;
 }
 
 /* TRANSICIONES */

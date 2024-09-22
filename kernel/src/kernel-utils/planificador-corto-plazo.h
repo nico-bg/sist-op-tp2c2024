@@ -9,6 +9,6 @@
 #include <utils/comunicacion_kernel_cpu.h>
 #include <utils/sleep.h>
 
-void planificador_corto_plazo();
+void* planificador_corto_plazo();
 
 #endif
