@@ -5,7 +5,7 @@ int main(int argc, char* argv[]) {
     t_config* config;
     t_log* logger;
 
-    config = iniciar_config("filesystem.config");
+    config = iniciar_config("../filesystem.config");
     logger = iniciar_logger(config, "filesystem.log", "FILESYSTEM");
 
     puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
