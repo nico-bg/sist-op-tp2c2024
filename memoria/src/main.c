@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
     char* puerto_filesystem;
     char* puerto_escucha;
 
-    config = iniciar_config("../memoria.config");
+    config = iniciar_config("memoria.config");
 
     logger = iniciar_logger(config, "memoria.log", "MEMORIA");
 

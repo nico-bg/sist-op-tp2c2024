@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     char* puerto_cpu_interrupt;
 
     // Levanto el archivo de configuración e inicializo los loggers
-    config = iniciar_config("../kernel.config");
+    config = iniciar_config("kernel.config");
     logger = iniciar_logger(config, "kernel.log", "KERNEL");
     logger_debug = iniciar_logger_debug("debug.log", "KERNEL");
 
