@@ -29,11 +29,11 @@ int main(int argc, char* argv[]) {
     int socket_dispatch = esperar_cliente(fd_dispatch);
     log_info(logger, "Hola, el kernel se conecto por puerto dispatch");
 
-
+/*
    int fd_interrupt = iniciar_servidor(puerto_escucha_interrupt);
-/* Esperamos a que se conecte el Kernel por el puerto interrupt */
+  -- Esperamos a que se conecte el Kernel por el puerto interrupt 
     int socket_interrupt = esperar_cliente(fd_interrupt);
-
+*/
     log_info(logger, "Hola, el kernel se conecto por puerto interrupt");
 
     t_thread_args dispatch_args = {socket_dispatch, socket_memoria, logger};  
@@ -61,21 +61,35 @@ void escuchar_dispatch (void *args) {
 
 	t_buffer* buffer;
     
+    uint32_t* size;
+
+    t_hilo_a_cpu* pcb;
+    
     while (1) {
         op_code cod_op = recibir_operacion(cliente_dispatch);
+        
+        //op_code cod_op = OPERACION_EJECUTAR_HILO;
+
+        
         log_info(logger, "me llego el codigo de operacion");
         switch (cod_op) {
             case OPERACION_EJECUTAR_HILO:
-                buffer = recibir_paquete_t_hilo_a_cpu(cliente_dispatch);
+                
+                log_info(logger, "me llegó un OPERACION_EJECUTAR_HILO!!");
+                
+                buffer = recibir_buffer(size, cliente_dispatch);
 
                 log_info(logger, "me llego el buffer");
 
-                t_hilo_a_cpu *paquete_t_hilo_a_cpu = deserializar_hilo_a_cpu(buffer);
+                 pcb = deserializar_hilo_a_cpu(buffer);
 
-                procesar_pcb(servidor_memoria, &paquete_t_hilo_a_cpu, logger );
+                log_info(logger, "me llego el buffer con primer campo:%d", pcb -> tid );
+
+                log_info(logger, "me llego el buffer con segundo campo:%d", pcb -> pid );
 
                 break;
             case -1:
+        
                 log_error(logger, "cliente desconectado");
                 return EXIT_FAILURE;
             default:
@@ -86,11 +100,12 @@ void escuchar_dispatch (void *args) {
 
 
 }
+/*
 
 void procesar_pcb (int socket_mem, t_hilo_a_cpu estructura_pcb, t_log*  logger){
  log_info(logger, "Se ejecuta el pcb");
 }
-
+*/
 
 void terminar_programa(t_log* logger, t_config* config, int conexion)
 {
@@ -98,4 +113,5 @@ void terminar_programa(t_log* logger, t_config* config, int conexion)
     config_destroy(config);
     close(conexion);
 }
+
 
