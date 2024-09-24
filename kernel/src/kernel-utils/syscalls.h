@@ -4,6 +4,6 @@
 #include <kernel-utils/estructuras.h>
 #include <kernel-utils/globales.h>
 
-void atender_syscalls();
+void* atender_syscalls();
 
 #endif
