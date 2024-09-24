@@ -91,6 +91,39 @@ void procesar_pcb (int socket_mem, t_hilo_a_cpu estructura_pcb, t_log*  logger){
  log_info(logger, "Se ejecuta el pcb");
 }
 
+void ejecutar_instruccion(t_instruccion *instruccion, uint32_t valor_rw){   //valor_rw seria un valor que tal vez usemos en la ejecucion de read y write al desarrollar una nueva funcion que escriba en memoria//
+	int resultado; //variable para almacenar datos de salida luego de la ejecucion de inst. dependiendo la operacion//
+    switch(instruccion->instruc){ //uso de semaforos en cada caso para usar logger//
+        case SET:
+        break;
+
+        case READ_MEM:
+        break;
+
+        case WRITE_MEM:
+        break;
+
+        case SUM:
+        break;
+
+        case SUB:
+        break;
+
+        case JNZ:
+        break;
+
+        case LOG:
+        break;
+
+    }
+
+}
+
+void chequeo_interrupcion(){
+    //uso de semaforos combinados con hilos que no me queda claro//
+    //es una funcion que se la llama al final de cada "case" de la funcion ejecutar_instruccion//
+}
+
 
 void terminar_programa(t_log* logger, t_config* config, int conexion)
 {

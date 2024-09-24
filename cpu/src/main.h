@@ -12,6 +12,22 @@ typedef struct {
     t_log *logger;
 } t_thread_args;
 
+typedef enum{
+    SET,
+    READ_MEM,
+    WRITE_MEM,
+    SUM,
+    SUB,
+    JNZ,
+    LOG
+}instruccion;
+
+typedef struct{
+    instruccion instruc;
+    int algo1;
+    int algo2;
+}t_instruccion;
+
 void escuchar_dispatch();
 
 void terminar_programa(t_log* logger, t_config* config, int conexion);
