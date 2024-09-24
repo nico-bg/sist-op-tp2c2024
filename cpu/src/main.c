@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     t_config* config;
     
     
-    config = iniciar_config("../cpu.config");
+    config = iniciar_config("cpu.config");
     logger = iniciar_logger(config, "cpu.log", "CPU");
 
     ip_memoria = config_get_string_value(config, "IP_MEMORIA");
@@ -61,7 +61,7 @@ void escuchar_dispatch (void *args) {
 
 	t_buffer* buffer;
     
-    uint32_t* size;
+    uint32_t size;
 
     t_hilo_a_cpu* pcb;
     
@@ -77,7 +77,7 @@ void escuchar_dispatch (void *args) {
                 
                 log_info(logger, "me llegó un OPERACION_EJECUTAR_HILO!!");
                 
-                buffer = recibir_buffer(size, cliente_dispatch);
+                buffer = recibir_buffer(&size, cliente_dispatch);
 
                 log_info(logger, "me llego el buffer");
 
