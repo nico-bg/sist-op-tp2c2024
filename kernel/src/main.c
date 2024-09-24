@@ -34,28 +34,34 @@ int main(int argc, char* argv[]) {
     // Creamos el primer proceso
     crear_proceso(argumentos->archivo_pseudocodigo, argumentos->tamanio_proceso, 0);
 
-    // Iniciamos el planificador de corto plazo
-    // TODO: Considerar crear un hilo para ejecutarlo en paralelo
-    planificador_corto_plazo();
-
     // Iniciamos el planificador de largo plazo
-    // TODO: Considerar crear un hilo para ejecutarlo en paralelo
-    // planificador_largo_plazo();
+    // pthread_t hilo_planificador_largo_plazo;
+    // pthread_create(&hilo_planificador_largo_plazo, NULL, planificador_largo_plazo, NULL);
+
+    // Iniciamos el planificador de corto plazo
+    pthread_t hilo_planificador_corto_plazo;
+    pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo, NULL);
 
     // Escuchamos las Syscalls que recibimos de la CPU
-    // TODO: Considerar crear un hilo para ejecutarlo en paralelo
-    // atender_syscalls();
+    pthread_t hilo_escucha_syscalls;
+    pthread_create(&hilo_escucha_syscalls, NULL, atender_syscalls, NULL);
 
-    // destruir_argumentos(argumentos);
-    // terminar_programa(logger, config, socket_cpu_dispatch, socket_cpu_interrupt);
+    // pthread_join(hilo_planificador_largo_plazo, NULL);
+    pthread_join(hilo_planificador_corto_plazo, NULL);
+    pthread_join(hilo_escucha_syscalls, NULL);
+
+    destruir_argumentos(argumentos);
+    terminar_programa();
 
     return 0;
 }
 
-// void terminar_programa(t_log* logger, t_config* config, int conexion_cpu_dispatch, int conexion_cpu_interrupt)
-// {
-//     log_destroy(logger);
-//     config_destroy(config);
-//     close(conexion_cpu_dispatch);
-//     close(conexion_cpu_interrupt);
-// }
+void terminar_programa()
+{
+    destruir_estados();
+    log_destroy(logger);
+    log_destroy(logger_debug);
+    config_destroy(config);
+    close(socket_cpu_dispatch);
+    close(socket_cpu_interrupt);
+}
