@@ -31,7 +31,7 @@ void* planificador_corto_plazo()
         transicion_ready_a_exec(siguiente_a_exec);
         pthread_mutex_unlock(&mutex_estado_ready);
 
-        // enviar_hilo_a_cpu(siguiente_a_exec);
+        enviar_hilo_a_cpu(siguiente_a_exec);
         int motivo = esperar_devolucion_hilo();
 
         switch (motivo)
@@ -250,16 +250,18 @@ static void enviar_hilo_a_cpu(t_tcb* hilo)
  */
 static t_motivo_devolucion esperar_devolucion_hilo()
 {
-    int numero_aleatorio = rand() % 3;
-    char* algoritmo = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
+    op_code codigo_operacion = recibir_operacion(socket_cpu_dispatch);
+    log_debug(logger_debug, "Codigo operacion: %d", codigo_operacion);
+    // int numero_aleatorio = rand() % 3;
+    // char* algoritmo = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
 
-    if(numero_aleatorio == 0) {
-        return DEVOLUCION_BLOQUEO;
-    }
+    // if(numero_aleatorio == 0) {
+    //     return DEVOLUCION_BLOQUEO;
+    // }
 
-    if(numero_aleatorio == 1 && strcmp(algoritmo, "CMN") == 0) {
-        return DEVOLUCION_DESALOJO_QUANTUM;
-    }
+    // if(numero_aleatorio == 1 && strcmp(algoritmo, "CMN") == 0) {
+    //     return DEVOLUCION_DESALOJO_QUANTUM;
+    // }
 
-    return DEVOLUCION_FINALIZACION;
+    // return DEVOLUCION_FINALIZACION;
 }
