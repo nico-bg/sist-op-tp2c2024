@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
     t_log* logger;
     t_config* config;
     
+    iniciar_semaforos();
     
     config = iniciar_config("cpu.config");
     logger = iniciar_logger(config, "cpu.log", "CPU");
@@ -36,19 +37,37 @@ int main(int argc, char* argv[]) {
 */
     log_info(logger, "Hola, el kernel se conecto por puerto interrupt");
 
-    t_thread_args dispatch_args = {socket_dispatch, socket_memoria, logger};  
+    t_thread_args hilos_args = {socket_dispatch, socket_memoria, logger};  
+
 
     pthread_t thread_dispatch;
+    pthread_t thread_ciclo_de_instruccion;
     
-    pthread_create(&thread_dispatch, NULL, escuchar_dispatch, &dispatch_args);    
+    pthread_create(&thread_dispatch, NULL, escuchar_dispatch, &hilos_args);    
+    pthread_create(&thread_ciclo_de_instruccion, NULL, ciclo_de_instruccion, &hilos_args);    
 
     pthread_join(thread_dispatch, NULL);
+    pthread_join(thread_ciclo_de_instruccion, NULL);
 
     terminar_programa(logger, config, socket_memoria);
 
     return 0;
 }
-   
+
+void iniciar_semaforos (){
+    sem_init(&sem_ciclo_de_instruccion, 0, 0);
+}
+
+
+void ciclo_de_instruccion (void *args) {
+    sem_wait(&sem_ciclo_de_instruccion);
+
+    t_thread_args *thread_args = (t_thread_args *) args;
+    t_log *logger =  thread_args -> logger;
+    log_info(logger, "Hilo ciclo_de_instrucción en ejecucion");
+}
+
+
 void escuchar_dispatch (void *args) {
     t_thread_args *thread_args = (t_thread_args *) args;
     
@@ -62,8 +81,7 @@ void escuchar_dispatch (void *args) {
 	t_buffer* buffer;
     
     uint32_t size;
-
-    t_hilo_a_cpu* pcb;
+    
     
     while (1) {
         op_code cod_op = recibir_operacion(cliente_dispatch);
@@ -86,6 +104,12 @@ void escuchar_dispatch (void *args) {
                 log_info(logger, "me llego el buffer con primer campo:%d", pcb -> tid );
 
                 log_info(logger, "me llego el buffer con segundo campo:%d", pcb -> pid );
+/*
+                contexto = pedir_contexto_a_memoria(servidor_memoria);
+*/
+               // contexto = { '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11' };  
+
+                sem_post(&sem_ciclo_de_instruccion);
 
                 break;
             case -1:
@@ -98,8 +122,14 @@ void escuchar_dispatch (void *args) {
         }
     }
 
-
 }
+
+
+
+
+
+
+
 /*
 
 void procesar_pcb (int socket_mem, t_hilo_a_cpu estructura_pcb, t_log*  logger){

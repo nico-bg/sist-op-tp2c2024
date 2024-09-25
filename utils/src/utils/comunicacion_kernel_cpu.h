@@ -6,7 +6,7 @@
 typedef struct {
     uint32_t tid;
     uint32_t pid;
-} t_hilo_a_cpu;
+} t_hilo_a_cpu;          
 
 typedef enum {
     DEVOLUCION_DESALOJO_QUANTUM,
