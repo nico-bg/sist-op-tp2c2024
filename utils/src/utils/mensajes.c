@@ -43,16 +43,6 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	eliminar_paquete(paquete);
 }
 
-int recibir_operacion(int socket_cliente)
-{
-	int cod_op;
-	if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) > 0)
-		return cod_op;
-	else {
-		close(socket_cliente);
-		return -1;
-	}
-}
 
 t_buffer* recibir_buffer(uint32_t* size, int socket_cliente)
 {
@@ -108,4 +98,15 @@ int atender_peticion(t_log* logger, t_config* config, int socket_cliente)
 	}
 
 	return 0;
+}
+
+int recibir_operacion(int socket_cliente)
+{
+	int cod_op;
+	if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) > 0)
+		return cod_op;
+	else {
+		close(socket_cliente);
+		return -1;
+	}
 }
