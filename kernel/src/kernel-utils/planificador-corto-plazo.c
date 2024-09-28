@@ -37,7 +37,6 @@ void* planificador_corto_plazo()
         switch (motivo)
         {
         case DEVOLUCION_FINALIZACION:
-            // log_debug(logger_debug, "Motivo devolución: FINALIZACION");
             log_debug(logger_debug, "Motivo devolución: FINALIZACION. PID %d, TID: %d, Prioridad: %d", siguiente_a_exec->pid_padre, siguiente_a_exec->tid, siguiente_a_exec->prioridad);
             break;
         case DEVOLUCION_DESALOJO_QUANTUM:
@@ -250,18 +249,7 @@ static void enviar_hilo_a_cpu(t_tcb* hilo)
  */
 static t_motivo_devolucion esperar_devolucion_hilo()
 {
-    op_code codigo_operacion = recibir_operacion(socket_cpu_dispatch);
-    log_debug(logger_debug, "Codigo operacion: %d", codigo_operacion);
-    // int numero_aleatorio = rand() % 3;
-    // char* algoritmo = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
+    t_motivo_devolucion motivo = recibir_operacion(socket_cpu_dispatch);
 
-    // if(numero_aleatorio == 0) {
-    //     return DEVOLUCION_BLOQUEO;
-    // }
-
-    // if(numero_aleatorio == 1 && strcmp(algoritmo, "CMN") == 0) {
-    //     return DEVOLUCION_DESALOJO_QUANTUM;
-    // }
-
-    // return DEVOLUCION_FINALIZACION;
+    return motivo;
 }

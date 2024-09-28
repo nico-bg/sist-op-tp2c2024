@@ -1,5 +1,0 @@
-ip_mem = 127.0.0.1
-puerto_mem = 8004
-ip_cpu = 127.0.0.1
-puerto_cpu_d = 8007
-puerto_cpu_i = 8008
