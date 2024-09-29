@@ -18,8 +18,7 @@ t_buffer* serializar_paquete(t_paquete* paquete)
 
 void eliminar_paquete(t_paquete* paquete)
 {
-	free(paquete->buffer->stream);
-	free(paquete->buffer);
+	buffer_destroy(paquete->buffer);
 	free(paquete);
 }
 

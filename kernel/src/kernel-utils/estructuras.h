@@ -11,8 +11,14 @@ typedef struct {
     t_list* tids;
     // Lista de mutex creados por los threads del proceso
     t_list* mutex;
+    // Tamaño del proceso en Memoria
+    uint32_t tamanio;
     // Entero incremental para reconocer el siguiente tid a crear
     uint32_t ultimo_tid;
+    // Prioridad del hilo principal (TID 0)
+    uint32_t prioridad;
+    // Archivo de pseudocódigo del hilo principal (TID 0)
+    char* nombre_archivo;
 } t_pcb;
 
 typedef struct {

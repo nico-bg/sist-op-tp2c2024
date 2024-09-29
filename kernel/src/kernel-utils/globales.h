@@ -22,16 +22,20 @@ extern int socket_cpu_interrupt;
 extern t_list* lista_procesos;
 extern int ULTIMO_PID;
 
-/* Estados para los hilos gestionados por los planificadores */
-extern t_list* estado_new;
+/* Estados para los procesos/hilos gestionados por los planificadores */
+extern t_list* estado_new; // Lista de PCBs en NEW
 extern t_list* estado_ready;
 extern t_tcb* estado_exec; // Solo podemos tener 1 hilo en este estado
 extern t_list* estado_blocked;
 extern t_list* estado_exit;
 
 /* Semáforos y Mutex para los estados que los requieren */
+extern sem_t semaforo_estado_new; // Indica la cantidad de veces que puede iterar el planificador de largo plazo
+extern sem_t semaforo_memoria_suficiente; // Indica si el planificador de largo plazo puede volver a intentar inicializar un proceso para el que no hubo memoria
 extern sem_t semaforo_estado_ready;
+extern sem_t semaforo_estado_exit;
 extern pthread_mutex_t mutex_lista_procesos;
+extern pthread_mutex_t mutex_estado_new;
 extern pthread_mutex_t mutex_estado_ready;
 extern pthread_mutex_t mutex_estado_exec;
 extern pthread_mutex_t mutex_estado_blocked;

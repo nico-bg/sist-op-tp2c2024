@@ -5,6 +5,7 @@ t_log* logger_debug;
 t_config* config;
 int socket_cpu_dispatch;
 int socket_cpu_interrupt;
+int ULTIMO_PID = 0;
 
 int main(int argc, char* argv[]) {
     char* ip_cpu;
@@ -35,14 +36,14 @@ int main(int argc, char* argv[]) {
     crear_proceso(argumentos->archivo_pseudocodigo, argumentos->tamanio_proceso, 0);
 
     // Iniciamos el planificador de largo plazo
-    // pthread_t hilo_planificador_largo_plazo;
-    // pthread_create(&hilo_planificador_largo_plazo, NULL, planificador_largo_plazo, NULL);
+    pthread_t hilo_planificador_largo_plazo;
+    pthread_create(&hilo_planificador_largo_plazo, NULL, planificador_largo_plazo, NULL);
 
     // Iniciamos el planificador de corto plazo
     pthread_t hilo_planificador_corto_plazo;
     pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo, NULL);
 
-    // pthread_join(hilo_planificador_largo_plazo, NULL);
+    pthread_join(hilo_planificador_largo_plazo, NULL);
     pthread_join(hilo_planificador_corto_plazo, NULL);
 
     destruir_argumentos(argumentos);

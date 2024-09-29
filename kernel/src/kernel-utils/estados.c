@@ -7,8 +7,12 @@ t_tcb* estado_exec;
 t_list* estado_blocked;
 t_list* estado_exit;
 
+sem_t semaforo_estado_new;
+sem_t semaforo_memoria_suficiente;
 sem_t semaforo_estado_ready;
+sem_t semaforo_estado_exit;
 pthread_mutex_t mutex_lista_procesos;
+pthread_mutex_t mutex_estado_new;
 pthread_mutex_t mutex_estado_ready;
 pthread_mutex_t mutex_estado_exec;
 pthread_mutex_t mutex_estado_blocked;
@@ -37,8 +41,14 @@ void inicializar_estados()
     estado_exit = list_create();
 
     /* Inicialización de Semáforos y Mutex de estados*/
+
+    sem_init(&semaforo_estado_new, 0, 0);
+    // Inicia en 1 para evitar bloquear el planificador de largo plazo desde el principio
+    sem_init(&semaforo_memoria_suficiente, 0, 1);
     sem_init(&semaforo_estado_ready, 0, 0);
+    sem_init(&semaforo_estado_exit, 0, 0);
     pthread_mutex_init(&mutex_lista_procesos, NULL);
+    pthread_mutex_init(&mutex_estado_new, NULL);
     pthread_mutex_init(&mutex_estado_ready, NULL);
     pthread_mutex_init(&mutex_estado_exec, NULL);
     pthread_mutex_init(&mutex_estado_blocked, NULL);
@@ -46,11 +56,11 @@ void inicializar_estados()
 
     /* TODO: Eliminar esto una vez que el planificador a largo plazo funcione */
     /* Solo lo utilizo para tener un hilo en Ready y poder probar el planificador a corto plazo */
-    crear_hilo_ready_mock(1, 0, 1);
-    crear_hilo_ready_mock(2, 0, 4);
-    crear_hilo_ready_mock(1, 1, 2);
-    crear_hilo_ready_mock(0, 0, 0);
-    crear_hilo_ready_mock(0, 1, 1);
+    // crear_hilo_ready_mock(1, 0, 1);
+    // crear_hilo_ready_mock(2, 0, 4);
+    // crear_hilo_ready_mock(1, 1, 2);
+    // crear_hilo_ready_mock(0, 0, 0);
+    // crear_hilo_ready_mock(0, 1, 1);
 }
 
 /**
@@ -67,8 +77,12 @@ void destruir_estados()
     list_destroy_and_destroy_elements(estado_exit, (void*) destruir_tcb);
 
     /* Liberamos los Semáforos y Mutex de estados */
+    sem_destroy(&semaforo_estado_new);
+    sem_destroy(&semaforo_memoria_suficiente);
     sem_destroy(&semaforo_estado_ready);
+    sem_destroy(&semaforo_estado_exit);
     pthread_mutex_destroy(&mutex_lista_procesos);
+    pthread_mutex_destroy(&mutex_estado_new);
     pthread_mutex_destroy(&mutex_estado_ready);
     pthread_mutex_destroy(&mutex_estado_exec);
     pthread_mutex_destroy(&mutex_estado_blocked);

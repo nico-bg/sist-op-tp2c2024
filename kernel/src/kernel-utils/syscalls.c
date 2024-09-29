@@ -10,7 +10,12 @@ uint32_t pid_auxiliar;
 
 void syscall_finalizar_hilo()
 {
-    // Solo nos encargamos de la transición, el planificador a largo plazo los libera
+    // Guardamos en una variable auxiliar el hilo que invocó la syscall (Es el que está en estado EXEC)
+    pthread_mutex_lock(&mutex_estado_exec);
+    t_tcb* hilo_invocador = estado_exec;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    solicitar_finalizacion_hilo_a_memoria(hilo_invocador->tid);
     transicion_exec_a_exit();
 }
 
@@ -68,7 +73,6 @@ static void transicion_exec_a_exit()
     pthread_mutex_unlock(&mutex_estado_exit);
 }
 
-// TODO: Probablemente sea el Planificador a largo plazo quien haga esta petición
 static void solicitar_finalizacion_hilo_a_memoria(uint32_t tid)
 {
     int fd_conexion = crear_conexion_a_memoria();
@@ -86,7 +90,6 @@ static void solicitar_finalizacion_hilo_a_memoria(uint32_t tid)
 
     buffer_destroy(paquete_serializado);
     eliminar_paquete(paquete);
-    buffer_destroy(buffer_paquete);
     close(fd_conexion);
 }
 
