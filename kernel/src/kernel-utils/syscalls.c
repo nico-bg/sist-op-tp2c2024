@@ -47,6 +47,11 @@ void syscall_crear_hilo(char* archivo_pseudocodigo, uint32_t prioridad)
     close(fd_memoria);
 }
 
+void syscall_crear_proceso(char* archivo_pseudocodigo, uint32_t tamanio_proceso, uint32_t prioridad)
+{
+    crear_proceso(archivo_pseudocodigo, tamanio_proceso, prioridad);
+}
+
 /* UTILIDADES */
 
 static void transicion_exec_a_exit()

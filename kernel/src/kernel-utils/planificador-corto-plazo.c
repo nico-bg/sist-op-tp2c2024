@@ -34,18 +34,30 @@ void* planificador_corto_plazo()
 
         // Esperamos la respuesta de la CPU para procesar una syscall, un desalojo, un bloqueo, etc
         op_code operacion = recibir_operacion(socket_cpu_dispatch);
+        uint32_t size;
+        t_buffer* buffer;
 
         switch (operacion)
         {
+        case OPERACION_CREAR_PROCESO:
+            log_info(logger, "## (%d:%d) - Solicitó syscall: PROCESS_CREATE", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
+
+            // Recibimos y deserializamos los datos enviados por la CPU
+            buffer = recibir_buffer(&size, socket_cpu_dispatch);
+            t_datos_crear_proceso* datos_crear_proceso = deserializar_datos_crear_proceso(buffer);
+
+            syscall_crear_proceso(datos_crear_proceso->archivo_pseudocodigo, datos_crear_proceso->tamanio_proceso, datos_crear_proceso->prioridad);
+            destruir_datos_crear_proceso(datos_crear_proceso);
+            break;
         case OPERACION_CREAR_HILO:
             log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_CREATE", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
 
             // Recibimos y deserializamos los datos enviados por la CPU
-            uint32_t size;
-            t_buffer* buffer = recibir_buffer(&size, socket_cpu_dispatch);
-            t_datos_crear_hilo* datos = deserializar_datos_crear_hilo(buffer);
+            buffer = recibir_buffer(&size, socket_cpu_dispatch);
+            t_datos_crear_hilo* datos_crear_hilo = deserializar_datos_crear_hilo(buffer);
 
-            syscall_crear_hilo(datos->archivo_pseudocodigo, datos->prioridad);
+            syscall_crear_hilo(datos_crear_hilo->archivo_pseudocodigo, datos_crear_hilo->prioridad);
+            destruir_datos_crear_hilo(datos_crear_hilo);
             break;
         case OPERACION_FINALIZAR_HILO:
             log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_EXIT", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
