@@ -1,29 +1,51 @@
 #include <kernel-utils/planificador-largo-plazo.h>
 
+static void transicion_new_a_ready(t_pcb* proceso, t_tcb* hilo);
+static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso);
+
 /**
  * @brief Se mantiene escuchando los cambios en los estados NEW y EXIT
  * para pasarlos a READY o liberarlos respectivamente
  */
-void planificador_largo_plazo()
+void* planificador_largo_plazo()
 {
-    // ?? Evaluar si es necesario ejecutarlo en un hilo a parte
-    // ?? ...para que escuche constantemente la lista de EXIT
-    liberar_hilos_en_exit();
+    // liberar_hilos_en_exit();
 
     while(1) {
-        // Obtenemos el siguiente hilo (que debería pasar a READY) de `estado_new` según FIFO
-        t_tcb* hilo_a_ready;
+        // Esperamos hasta que se finalicen procesos para seguir intentando inicializar (solo si en algun momento no hubo memoria suficiente)
+        sem_wait(&semaforo_memoria_suficiente);
+        // Esperamos hasta que hayan procesos en NEW
+        sem_wait(&semaforo_estado_new);
 
-        // Le enviamos el hilo a Memoria para que cree las estructuras necesarias
-        // Considerar utilizar un semáforo para llamar solo cuando haya memoria suficiente
-        int resultado = pedir_inicializacion_hilo_a_memoria(hilo_a_ready);
+        // Obtenemos el siguiente proceso (cuyo hilo principal debería pasar a READY) de `estado_new` según FIFO
+        pthread_mutex_lock(&mutex_estado_new);
+        t_pcb* proceso_a_inicializar = list_get(estado_new, 0);
+        pthread_mutex_unlock(&mutex_estado_new);
 
-        // Si la respuesta es exitosa, pasamos el tcb a `estado_ready`
-        // caso contrario, bloqueamos el semáforo para esperar hasta que se libere la memoria
+        int resultado_proceso = pedir_inicializacion_proceso_a_memoria(proceso_a_inicializar);
+
+        // Si no hubo memoria suficiente pasamos a la siguiente iteración donde se va a bloquear por el `semaforo_memoria_suficiente`
+        if(resultado_proceso != 0) {
+            continue;
+        }
+
+        // Si hubo memoria suficiente liberamos el semáforo de memoria para evitar bloquear el planificador en la siguiente iteración
+        // ... y continuamos la ejecución
+        sem_post(&semaforo_memoria_suficiente);
+
+        // Inicializamos el hilo principal del proceso
+        t_tcb* hilo_principal = malloc(sizeof(t_tcb));
+        hilo_principal->tid = 0;
+        hilo_principal->pid_padre = proceso_a_inicializar->pid;
+        hilo_principal->prioridad = proceso_a_inicializar->prioridad;
+        hilo_principal->nombre_archivo = string_duplicate(proceso_a_inicializar->nombre_archivo);
+
+        // Le enviamos el hilo a Memoria para que cree los contextos de ejecucion
+        int resultado = pedir_inicializacion_hilo_a_memoria(hilo_principal);
+
+        // Si la respuesta es exitosa, pasamos el tcb a `estado_ready` y sacamos el proceso de `estado_new`
         if(resultado == 0) {
-            // Sacamos el hilo de `estado_new` y lo pasamos a `estado_ready`
-        } else {
-            // Bloqueamos el semáforo
+            transicion_new_a_ready(proceso_a_inicializar, hilo_principal);
         }
     }
 }
@@ -44,5 +66,36 @@ void liberar_hilos_en_exit()
  */
 int pedir_inicializacion_hilo_a_memoria(t_tcb* hilo)
 {
-    return -1;
+    return 0;
+}
+
+static void transicion_new_a_ready(t_pcb* proceso, t_tcb* hilo)
+{
+    // Sacamos el proceso del estado NEW
+    pthread_mutex_lock(&mutex_estado_new);
+    list_remove_element(estado_new, proceso);
+    pthread_mutex_unlock(&mutex_estado_new);
+
+    // Agregamos el hilo al estado READY
+    pthread_mutex_lock(&mutex_estado_ready);
+    list_add(estado_ready, hilo);
+    pthread_mutex_unlock(&mutex_estado_ready);
+
+    // Le notificamos al planificador de corto plazo que tiene mas hilos para planificar
+    sem_post(&semaforo_estado_ready);
+}
+
+// static void crear_hilo()
+// {
+//     // Inicializamos el hilo con los datos recibidos
+//     t_tcb* hilo_principal = malloc(sizeof(t_tcb));
+//     hilo_principal->pid_padre = nuevo_proceso->pid;
+//     hilo_principal->nombre_archivo = nombre_archivo;
+//     hilo_principal->tid = 0;
+//     hilo_principal->prioridad = prioridad;
+// }
+
+static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso)
+{
+    return 0;
 }

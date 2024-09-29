@@ -18,23 +18,21 @@ void crear_proceso(char* nombre_archivo, uint32_t tamanio_proceso, uint32_t prio
     nuevo_proceso->mutex = list_create();
     nuevo_proceso->tamanio = tamanio_proceso;
     nuevo_proceso->ultimo_tid = 0;
+    nuevo_proceso->prioridad = prioridad;
+    nuevo_proceso->nombre_archivo = nombre_archivo;
 
     // Agregamos el proceso a nuestra `lista_procesos`
     pthread_mutex_lock(&mutex_lista_procesos);
     list_add(lista_procesos, nuevo_proceso);
     pthread_mutex_unlock(&mutex_lista_procesos);
 
-    // Inicializamos el hilo principal del proceso (TID 0)
-    t_tcb* hilo_principal = malloc(sizeof(t_tcb));
-    hilo_principal->pid_padre = nuevo_proceso->pid;
-    hilo_principal->nombre_archivo = nombre_archivo;
-    hilo_principal->tid = 0;
-    hilo_principal->prioridad = prioridad;
-
-    // Agregamos el hilo principal al estado NEW
+    // Agregamos el proceso al estado NEW
     pthread_mutex_lock(&mutex_estado_new);
-    list_add(estado_new, hilo_principal);
+    list_add(estado_new, nuevo_proceso);
     pthread_mutex_unlock(&mutex_estado_new);
+
+    // Informamos al planificador de largo plazo que tiene hilos para procesar
+    sem_post(&semaforo_estado_new);
 
     log_info(logger, "## (%d:0) Se crea el proceso - Estado: NEW ##", nuevo_proceso->pid);
 }
