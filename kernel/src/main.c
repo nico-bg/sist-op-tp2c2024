@@ -42,13 +42,8 @@ int main(int argc, char* argv[]) {
     pthread_t hilo_planificador_corto_plazo;
     pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo, NULL);
 
-    // Escuchamos las Syscalls que recibimos de la CPU
-    pthread_t hilo_escucha_syscalls;
-    pthread_create(&hilo_escucha_syscalls, NULL, atender_syscalls, NULL);
-
     // pthread_join(hilo_planificador_largo_plazo, NULL);
     pthread_join(hilo_planificador_corto_plazo, NULL);
-    pthread_join(hilo_escucha_syscalls, NULL);
 
     destruir_argumentos(argumentos);
     terminar_programa();

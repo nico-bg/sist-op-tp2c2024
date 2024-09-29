@@ -17,7 +17,6 @@ static void solicitar_desalojo_hilo_a_cpu(t_tcb* hilo);
 static void* temporizador_desalojo_por_quantum(void* arg);
 static t_tcb* obtener_siguiente_a_exec_colas_multinivel();
 static void enviar_hilo_a_cpu(t_tcb* hilo);
-static t_motivo_devolucion esperar_devolucion_hilo();
 
 void* planificador_corto_plazo()
 {
@@ -32,20 +31,42 @@ void* planificador_corto_plazo()
         pthread_mutex_unlock(&mutex_estado_ready);
 
         enviar_hilo_a_cpu(siguiente_a_exec);
-        int motivo = esperar_devolucion_hilo();
 
-        switch (motivo)
+        // Esperamos la respuesta de la CPU para procesar una syscall, un desalojo, un bloqueo, etc
+        op_code operacion = recibir_operacion(socket_cpu_dispatch);
+        uint32_t size;
+        t_buffer* buffer;
+
+        switch (operacion)
         {
-        case DEVOLUCION_FINALIZACION:
-            // log_debug(logger_debug, "Motivo devolución: FINALIZACION");
-            log_debug(logger_debug, "Motivo devolución: FINALIZACION. PID %d, TID: %d, Prioridad: %d", siguiente_a_exec->pid_padre, siguiente_a_exec->tid, siguiente_a_exec->prioridad);
+        case OPERACION_CREAR_PROCESO:
+            log_info(logger, "## (%d:%d) - Solicitó syscall: PROCESS_CREATE", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
+
+            // Recibimos y deserializamos los datos enviados por la CPU
+            buffer = recibir_buffer(&size, socket_cpu_dispatch);
+            t_datos_crear_proceso* datos_crear_proceso = deserializar_datos_crear_proceso(buffer);
+
+            syscall_crear_proceso(datos_crear_proceso->archivo_pseudocodigo, datos_crear_proceso->tamanio_proceso, datos_crear_proceso->prioridad);
+            destruir_datos_crear_proceso(datos_crear_proceso);
             break;
-        case DEVOLUCION_DESALOJO_QUANTUM:
-            log_debug(logger_debug, "Motivo de devolución: DESALOJO_POR_QUANTUM. PID %d, TID: %d, Prioridad: %d", siguiente_a_exec->pid_padre, siguiente_a_exec->tid, siguiente_a_exec->prioridad);
+        case OPERACION_CREAR_HILO:
+            log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_CREATE", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
+
+            // Recibimos y deserializamos los datos enviados por la CPU
+            buffer = recibir_buffer(&size, socket_cpu_dispatch);
+            t_datos_crear_hilo* datos_crear_hilo = deserializar_datos_crear_hilo(buffer);
+
+            syscall_crear_hilo(datos_crear_hilo->archivo_pseudocodigo, datos_crear_hilo->prioridad);
+            destruir_datos_crear_hilo(datos_crear_hilo);
+            break;
+        case OPERACION_FINALIZAR_HILO:
+            log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_EXIT", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
+            syscall_finalizar_hilo();
+            break;
+        case OPERACION_DESALOJAR_HILO:
             transicion_exec_a_ready(siguiente_a_exec);
             break;
-        case DEVOLUCION_BLOQUEO:
-            log_debug(logger_debug, "Motivo de devolución: BLOQUEO. PID %d, TID: %d, Prioridad: %d", siguiente_a_exec->pid_padre, siguiente_a_exec->tid, siguiente_a_exec->prioridad);
+        case OPERACION_IO:
             transicion_exec_a_blocked(siguiente_a_exec);
             break;            
         default:
@@ -243,25 +264,4 @@ static void enviar_hilo_a_cpu(t_tcb* hilo)
     free(datos_a_enviar);
     buffer_destroy(paquete_serializado);
     eliminar_paquete(paquete);
-}
-
-/**
- * @brief Se queda esperando una respuesta de la CPU que incluya el motivo por el cual devolvió el Hilo
- */
-static t_motivo_devolucion esperar_devolucion_hilo()
-{
-    op_code codigo_operacion = recibir_operacion(socket_cpu_dispatch);
-    log_debug(logger_debug, "Codigo operacion: %d", codigo_operacion);
-    // int numero_aleatorio = rand() % 3;
-    // char* algoritmo = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
-
-    // if(numero_aleatorio == 0) {
-    //     return DEVOLUCION_BLOQUEO;
-    // }
-
-    // if(numero_aleatorio == 1 && strcmp(algoritmo, "CMN") == 0) {
-    //     return DEVOLUCION_DESALOJO_QUANTUM;
-    // }
-
-    // return DEVOLUCION_FINALIZACION;
 }

@@ -4,6 +4,7 @@
 #include <kernel-utils/globales.h>
 #include <kernel-utils/estados.h>
 #include <kernel-utils/estructuras.h>
+#include <kernel-utils/syscalls.h>
 #include <utils/mensajes.h>
 #include <string.h>
 #include <utils/comunicacion_kernel_cpu.h>
