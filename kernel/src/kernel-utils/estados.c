@@ -9,6 +9,7 @@ t_list* estado_exit;
 
 sem_t semaforo_estado_ready;
 pthread_mutex_t mutex_lista_procesos;
+pthread_mutex_t mutex_estado_new;
 pthread_mutex_t mutex_estado_ready;
 pthread_mutex_t mutex_estado_exec;
 pthread_mutex_t mutex_estado_blocked;
@@ -39,6 +40,7 @@ void inicializar_estados()
     /* Inicialización de Semáforos y Mutex de estados*/
     sem_init(&semaforo_estado_ready, 0, 0);
     pthread_mutex_init(&mutex_lista_procesos, NULL);
+    pthread_mutex_init(&mutex_estado_new, NULL);
     pthread_mutex_init(&mutex_estado_ready, NULL);
     pthread_mutex_init(&mutex_estado_exec, NULL);
     pthread_mutex_init(&mutex_estado_blocked, NULL);
@@ -46,11 +48,11 @@ void inicializar_estados()
 
     /* TODO: Eliminar esto una vez que el planificador a largo plazo funcione */
     /* Solo lo utilizo para tener un hilo en Ready y poder probar el planificador a corto plazo */
-    crear_hilo_ready_mock(1, 0, 1);
-    crear_hilo_ready_mock(2, 0, 4);
-    crear_hilo_ready_mock(1, 1, 2);
-    crear_hilo_ready_mock(0, 0, 0);
-    crear_hilo_ready_mock(0, 1, 1);
+    // crear_hilo_ready_mock(1, 0, 1);
+    // crear_hilo_ready_mock(2, 0, 4);
+    // crear_hilo_ready_mock(1, 1, 2);
+    // crear_hilo_ready_mock(0, 0, 0);
+    // crear_hilo_ready_mock(0, 1, 1);
 }
 
 /**
@@ -69,6 +71,7 @@ void destruir_estados()
     /* Liberamos los Semáforos y Mutex de estados */
     sem_destroy(&semaforo_estado_ready);
     pthread_mutex_destroy(&mutex_lista_procesos);
+    pthread_mutex_destroy(&mutex_estado_new);
     pthread_mutex_destroy(&mutex_estado_ready);
     pthread_mutex_destroy(&mutex_estado_exec);
     pthread_mutex_destroy(&mutex_estado_blocked);

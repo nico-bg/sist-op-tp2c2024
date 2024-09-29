@@ -9,18 +9,34 @@
  * @param tamanio_proceso Tamaño del proceso en Memoria
  * @param prioridad Prioridad del hilo principal (TID 0)
  */
-t_pcb* crear_proceso(char* nombre_archivo, uint32_t tamanio_proceso, uint32_t prioridad)
+void crear_proceso(char* nombre_archivo, uint32_t tamanio_proceso, uint32_t prioridad)
 {
-    // Reservar memoria para el proceso
-    t_pcb* nuevo_proceso;
+    // Inicializamos el nuevo proceso con PID incremental
+    t_pcb* nuevo_proceso = malloc(sizeof(t_pcb));
+    nuevo_proceso->pid = ULTIMO_PID == 0 ? ULTIMO_PID : ULTIMO_PID + 1;
+    nuevo_proceso->tids = list_create();
+    nuevo_proceso->mutex = list_create();
+    nuevo_proceso->tamanio = tamanio_proceso;
+    nuevo_proceso->ultimo_tid = 0;
 
-    // Inicializar pcb, incrementar en 1 la variable global ULTIMO_PID. Agregarlo a la variable global `lista_procesos`
+    // Agregamos el proceso a nuestra `lista_procesos`
+    pthread_mutex_lock(&mutex_lista_procesos);
+    list_add(lista_procesos, nuevo_proceso);
+    pthread_mutex_unlock(&mutex_lista_procesos);
 
-    // Crear hilo (tcb) principal. Agregarlo a la variable global `estado_new`
+    // Inicializamos el hilo principal del proceso (TID 0)
+    t_tcb* hilo_principal = malloc(sizeof(t_tcb));
+    hilo_principal->pid_padre = nuevo_proceso->pid;
+    hilo_principal->nombre_archivo = nombre_archivo;
+    hilo_principal->tid = 0;
+    hilo_principal->prioridad = prioridad;
+
+    // Agregamos el hilo principal al estado NEW
+    pthread_mutex_lock(&mutex_estado_new);
+    list_add(estado_new, hilo_principal);
+    pthread_mutex_unlock(&mutex_estado_new);
 
     log_info(logger, "## (%d:0) Se crea el proceso - Estado: NEW ##", nuevo_proceso->pid);
-
-    return nuevo_proceso;
 }
 
 /**
