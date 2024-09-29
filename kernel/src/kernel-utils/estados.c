@@ -10,6 +10,7 @@ t_list* estado_exit;
 sem_t semaforo_estado_new;
 sem_t semaforo_memoria_suficiente;
 sem_t semaforo_estado_ready;
+sem_t semaforo_estado_exit;
 pthread_mutex_t mutex_lista_procesos;
 pthread_mutex_t mutex_estado_new;
 pthread_mutex_t mutex_estado_ready;
@@ -42,9 +43,10 @@ void inicializar_estados()
     /* Inicialización de Semáforos y Mutex de estados*/
 
     sem_init(&semaforo_estado_new, 0, 0);
-    sem_init(&semaforo_estado_ready, 0, 0);
     // Inicia en 1 para evitar bloquear el planificador de largo plazo desde el principio
     sem_init(&semaforo_memoria_suficiente, 0, 1);
+    sem_init(&semaforo_estado_ready, 0, 0);
+    sem_init(&semaforo_estado_exit, 0, 0);
     pthread_mutex_init(&mutex_lista_procesos, NULL);
     pthread_mutex_init(&mutex_estado_new, NULL);
     pthread_mutex_init(&mutex_estado_ready, NULL);
@@ -78,6 +80,7 @@ void destruir_estados()
     sem_destroy(&semaforo_estado_new);
     sem_destroy(&semaforo_memoria_suficiente);
     sem_destroy(&semaforo_estado_ready);
+    sem_destroy(&semaforo_estado_exit);
     pthread_mutex_destroy(&mutex_lista_procesos);
     pthread_mutex_destroy(&mutex_estado_new);
     pthread_mutex_destroy(&mutex_estado_ready);

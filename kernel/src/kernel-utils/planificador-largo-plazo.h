@@ -6,7 +6,7 @@
 #include <commons/string.h>
 
 void* planificador_largo_plazo();
-void liberar_hilos_en_exit();
+void* liberar_hilos_en_exit();
 int pedir_inicializacion_hilo_a_memoria(t_tcb* hilo);
 
 #endif

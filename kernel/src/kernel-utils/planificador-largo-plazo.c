@@ -2,6 +2,7 @@
 
 static void transicion_new_a_ready(t_pcb* proceso, t_tcb* hilo);
 static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso);
+static t_tcb* crear_hilo_principal(t_pcb* proceso_padre);
 
 /**
  * @brief Se mantiene escuchando los cambios en los estados NEW y EXIT
@@ -9,7 +10,10 @@ static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso);
  */
 void* planificador_largo_plazo()
 {
-    // liberar_hilos_en_exit();
+    // Paralelizamos la liberación de hilos que estén en estado EXIT
+    pthread_t hilo_liberacion_hilos_en_exit;
+    pthread_create(&hilo_liberacion_hilos_en_exit, NULL, liberar_hilos_en_exit, NULL);
+    pthread_detach(hilo_liberacion_hilos_en_exit);
 
     while(1) {
         // Esperamos hasta que se finalicen procesos para seguir intentando inicializar (solo si en algun momento no hubo memoria suficiente)
@@ -34,11 +38,7 @@ void* planificador_largo_plazo()
         sem_post(&semaforo_memoria_suficiente);
 
         // Inicializamos el hilo principal del proceso
-        t_tcb* hilo_principal = malloc(sizeof(t_tcb));
-        hilo_principal->tid = 0;
-        hilo_principal->pid_padre = proceso_a_inicializar->pid;
-        hilo_principal->prioridad = proceso_a_inicializar->prioridad;
-        hilo_principal->nombre_archivo = string_duplicate(proceso_a_inicializar->nombre_archivo);
+        t_tcb* hilo_principal = crear_hilo_principal(proceso_a_inicializar);
 
         // Le enviamos el hilo a Memoria para que cree los contextos de ejecucion
         int resultado = pedir_inicializacion_hilo_a_memoria(hilo_principal);
@@ -51,12 +51,27 @@ void* planificador_largo_plazo()
 }
 
 /**
- * @brief Libera la memoria de todos los hilos que esten en exit.
+ * @brief Se mantiene escuchando los cambios en el estado EXIT y libera la memoria de sus elementos
  * Si alguno tenía TID 0, buscar a su proceso padre y liberarlo de lista_procesos
  */
-void liberar_hilos_en_exit()
+void* liberar_hilos_en_exit()
 {
+    while(1) {
+        // Esperamos hasta que hayan TCBs en EXIT
+        sem_wait(&semaforo_estado_exit);
 
+        // Obtenemos el siguiente hilo a liberar
+        pthread_mutex_lock(&mutex_estado_exit);
+        t_tcb* hilo_a_liberar = list_get(estado_exit, 0);
+        pthread_mutex_unlock(&mutex_estado_exit);
+
+        // Si el TID corresponde al hilo principal de un proceso, lo buscamos y liberamos de `lista_procesos`
+        if(hilo_a_liberar->tid == 0) {
+            // TODO: Buscar proceso y liberarlo
+        }
+
+        destruir_tcb(hilo_a_liberar);
+    }
 }
 
 /**
@@ -85,15 +100,17 @@ static void transicion_new_a_ready(t_pcb* proceso, t_tcb* hilo)
     sem_post(&semaforo_estado_ready);
 }
 
-// static void crear_hilo()
-// {
-//     // Inicializamos el hilo con los datos recibidos
-//     t_tcb* hilo_principal = malloc(sizeof(t_tcb));
-//     hilo_principal->pid_padre = nuevo_proceso->pid;
-//     hilo_principal->nombre_archivo = nombre_archivo;
-//     hilo_principal->tid = 0;
-//     hilo_principal->prioridad = prioridad;
-// }
+static t_tcb* crear_hilo_principal(t_pcb* proceso_padre)
+{
+    // Inicializamos el hilo principal
+    t_tcb* hilo_principal = malloc(sizeof(t_tcb));
+    hilo_principal->pid_padre = proceso_padre->pid;
+    hilo_principal->nombre_archivo = string_duplicate(proceso_padre->nombre_archivo);
+    hilo_principal->tid = 0;
+    hilo_principal->prioridad = proceso_padre->prioridad;
+
+    return hilo_principal;
+}
 
 static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso)
 {

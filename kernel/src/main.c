@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     pthread_t hilo_planificador_corto_plazo;
     pthread_create(&hilo_planificador_corto_plazo, NULL, planificador_corto_plazo, NULL);
 
-    // pthread_join(hilo_planificador_largo_plazo, NULL);
+    pthread_join(hilo_planificador_largo_plazo, NULL);
     pthread_join(hilo_planificador_corto_plazo, NULL);
 
     destruir_argumentos(argumentos);
