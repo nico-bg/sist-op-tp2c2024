@@ -48,8 +48,8 @@ int main(int argc, char* argv[]) {
         if(resultado == -1) { break; }
     }
 
-    void** th;
-    pthread_join(thread_kernel, th);
+    
+    pthread_join(thread_kernel, NULL);
     free(parametros);
     terminar_programa(logger, config, socket_filesystem);
 
@@ -69,19 +69,20 @@ void* hilo_kernel(void* args)
         parametros->socket = socket_kernel;                 // Se cambia el socket de escucha por el del kernel para poder reeutilizar la estructura
         pthread_create(&kernelThread, NULL, atender_kernel, parametros);
         pthread_detach(kernelThread);
+        //free(socket_kernel);
     }
 }
 
-int atender_kernel(void* args)
+void* atender_kernel(void* args)
 {
     parametros_hilo* parametros = (parametros_hilo*)args;
     int socket_cliente = parametros->socket;
     t_log* logger = parametros->logger;
 
-    int codigo_operacion = recibir_operacion((int)socket_cliente);
+    int codigo_operacion = recibir_operacion(socket_cliente);
     switch(codigo_operacion) {
         case -1:
-            //log_error(logger, "El kernel se desconectó");
+            log_error(logger, "El kernel se desconectó");
             break;
         default:
             atender_peticion_kernel(logger, codigo_operacion);
@@ -151,6 +152,8 @@ void* atender_peticion_cpu(int cod_op)
             //log_error(logger, "Operación desconocida - CPU");
             break;
     }
+
+    return cod_op;
 }
 
 int leer_buffer(int buffer)
