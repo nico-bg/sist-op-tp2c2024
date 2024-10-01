@@ -26,7 +26,7 @@ typedef struct {
 
 void terminar_programa(t_log* logger, t_config* config, int conexion);
 
-int atender_kernel(void* socket_cliente);
+void* atender_kernel(void* socket_cliente);
 
 void* atender_peticion_kernel(t_log* logger, int cod_op);
 
