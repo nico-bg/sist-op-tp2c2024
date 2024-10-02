@@ -31,3 +31,26 @@ void destruir_datos_inicializacion_hilo(t_datos_inicializacion_hilo* datos)
     free(datos->archivo_pseudocodigo);
     free(datos);
 }
+
+t_buffer* serializar_datos_finalizacion_hilo(t_datos_finalizacion_hilo* datos)
+{
+    t_buffer* buffer = buffer_create(2 * sizeof(uint32_t));
+    buffer_add_uint32(buffer, datos->pid);
+    buffer_add_uint32(buffer, datos->tid);
+
+    return buffer;
+}
+
+t_datos_finalizacion_hilo* deserializar_datos_finalizacion_hilo(t_buffer* buffer)
+{
+    t_datos_finalizacion_hilo* datos = malloc(sizeof(t_datos_finalizacion_hilo));
+    datos->pid = buffer_read_uint32(buffer);
+    datos->tid = buffer_read_uint32(buffer);
+
+    return buffer;
+}
+
+void destruir_datos_finalizacion_hilo(t_datos_finalizacion_hilo* datos)
+{
+    free(datos);
+}

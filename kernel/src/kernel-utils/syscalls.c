@@ -1,7 +1,7 @@
 #include <kernel-utils/syscalls.h>
 
 static void transicion_exec_a_exit();
-static void solicitar_finalizacion_hilo_a_memoria(uint32_t tid);
+static void solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid);
 static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo);
 static t_pcb* buscar_proceso(uint32_t pid);
 static bool encontrar_proceso_por_pid_auxiliar(void* elemento);
@@ -15,7 +15,8 @@ void syscall_finalizar_hilo()
     t_tcb* hilo_invocador = estado_exec;
     pthread_mutex_unlock(&mutex_estado_exec);
 
-    solicitar_finalizacion_hilo_a_memoria(hilo_invocador->tid);
+    // TODO: Revisar si es necesario mover esta peticion al Planificador de largo plazo
+    solicitar_finalizacion_hilo_a_memoria(hilo_invocador->pid_padre ,hilo_invocador->tid);
     transicion_exec_a_exit();
 }
 
@@ -73,16 +74,17 @@ static void transicion_exec_a_exit()
     pthread_mutex_unlock(&mutex_estado_exit);
 }
 
-static void solicitar_finalizacion_hilo_a_memoria(uint32_t tid)
+static void solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid)
 {
     int fd_conexion = crear_conexion_a_memoria();
 
-    t_buffer* buffer_paquete = buffer_create(sizeof(uint32_t));
-    buffer_add_uint32(buffer_paquete, tid);
+    t_datos_finalizacion_hilo* datos_a_enviar = malloc(sizeof(t_datos_finalizacion_hilo));
+    datos_a_enviar->pid = pid;
+    datos_a_enviar->tid = tid;
 
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->codigo_operacion = OPERACION_FINALIZAR_HILO;
-    paquete->buffer = buffer_paquete;
+    paquete->buffer = serializar_datos_finalizacion_hilo(datos_a_enviar);
 
     t_buffer* paquete_serializado = serializar_paquete(paquete);
 
