@@ -85,29 +85,34 @@ void* atender_kernel(void* args)
             log_error(logger, "El kernel se desconectó");
             break;
         default:
-            atender_peticion_kernel(logger, codigo_operacion);
+            atender_peticion_kernel(logger, codigo_operacion, socket_cliente);
             break;
     }
 }
 
-void* atender_peticion_kernel(t_log* logger, int cod_op)
+void* atender_peticion_kernel(t_log* logger, int cod_op, int socket)
 {
     int mensaje = leer_buffer(cod_op);
     switch(mensaje) {
         case CREAR_PROCESO:
-            //crear proceso
+            //kernel envia pid y tamaño (archivo pseudocodigo?)
+            estructura_proceso* proceso = iniciar_proceso();
+            //Devuelve el proceso al kernel
             break;
         case FINALIZAR_PROCESO:
-            //finalizar proceso
+            //kernel envia pid
+            finalizar_proceso();
             break;
         case CREAR_HILO:
-            //crear hilo
+            estructura_hilo* hilo = iniciar_hilo();
+            //Devuelve el hilo al kernel
             break;
         case FINALIZAR_HILO:
-            //finalizar hilo
+            //kernel envia pid & tid
+            finalizar_hilo()
             break;
         case MEMORY_DUMP:
-            //memory dump
+            enviar_mensaje("OK"); //temporal - checkpoint-2
             break;
         default:
             //log_error(logger, "Operación desconocida - kernel");
