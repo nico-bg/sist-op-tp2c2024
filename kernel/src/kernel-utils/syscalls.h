@@ -13,5 +13,6 @@
 void syscall_finalizar_hilo();
 void syscall_crear_hilo(char* archivo_pseudocodigo, uint32_t prioridad);
 void syscall_crear_proceso(char* archivo_pseudocodigo, uint32_t tamanio_proceso, uint32_t prioridad);
+void syscall_finalizar_proceso();
 
 #endif

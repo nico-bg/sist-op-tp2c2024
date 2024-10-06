@@ -11,12 +11,13 @@ uint32_t pid_auxiliar;
 void syscall_finalizar_hilo()
 {
     // Guardamos en una variable auxiliar el hilo que invocó la syscall (Es el que está en estado EXEC)
-    pthread_mutex_lock(&mutex_estado_exec);
-    t_tcb* hilo_invocador = estado_exec;
-    pthread_mutex_unlock(&mutex_estado_exec);
+    // pthread_mutex_lock(&mutex_estado_exec);
+    // t_tcb* hilo_invocador = estado_exec;
+    // pthread_mutex_unlock(&mutex_estado_exec);
 
     // TODO: Revisar si es necesario mover esta peticion al Planificador de largo plazo
-    solicitar_finalizacion_hilo_a_memoria(hilo_invocador->pid_padre ,hilo_invocador->tid);
+    // solicitar_finalizacion_hilo_a_memoria(hilo_invocador->pid_padre ,hilo_invocador->tid);
+    // El planificador de largo plazo se encarga de liberar los procesos
     transicion_exec_a_exit();
 }
 
@@ -56,6 +57,21 @@ void syscall_crear_hilo(char* archivo_pseudocodigo, uint32_t prioridad)
 void syscall_crear_proceso(char* archivo_pseudocodigo, uint32_t tamanio_proceso, uint32_t prioridad)
 {
     crear_proceso(archivo_pseudocodigo, tamanio_proceso, prioridad);
+}
+
+void syscall_finalizar_proceso()
+{
+    pthread_mutex_lock(&mutex_estado_exec);
+    bool es_hilo_principal = estado_exec->tid == 0;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    if(!es_hilo_principal) {
+        log_error(logger_debug, "Error al finalizar proceso, el hilo que invocó la syscall no es TID 0");
+    }
+
+    // Lo mandamos a EXIT para que el planificador de largo plazo se encargue de liberarlo
+    // En caso de ser TID 0, el planificador liberará el hilo y el proceso asociado, caso contrario solo el hilo
+    transicion_exec_a_exit();
 }
 
 /* UTILIDADES */

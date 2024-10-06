@@ -49,6 +49,11 @@ void* planificador_corto_plazo()
             syscall_crear_proceso(datos_crear_proceso->archivo_pseudocodigo, datos_crear_proceso->tamanio_proceso, datos_crear_proceso->prioridad);
             destruir_datos_crear_proceso(datos_crear_proceso);
             break;
+        case OPERACION_FINALIZAR_PROCESO:
+            log_info(logger, "## (%d:%d) - Solicitó syscall: PROCESS_EXIT", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
+
+            syscall_finalizar_proceso();
+            break;
         case OPERACION_CREAR_HILO:
             log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_CREATE", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
 
@@ -68,7 +73,7 @@ void* planificador_corto_plazo()
             break;
         case OPERACION_IO:
             transicion_exec_a_blocked(siguiente_a_exec);
-            break;            
+            break;
         default:
             log_debug(logger_debug, "Motivo de devolución desconocido");
             break;
