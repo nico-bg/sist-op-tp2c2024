@@ -9,10 +9,12 @@
 #include <utils/buffer.h>
 #include <utils/mensajes.h>
 #include <utils/comunicacion_kernel_memoria.h>
+#include <commons/collections/queue.h>
 
 void syscall_finalizar_hilo();
 void syscall_crear_hilo(char* archivo_pseudocodigo, uint32_t prioridad);
 void syscall_crear_proceso(char* archivo_pseudocodigo, uint32_t tamanio_proceso, uint32_t prioridad);
 void syscall_finalizar_proceso();
+void syscall_crear_mutex(char* recurso);
 
 #endif

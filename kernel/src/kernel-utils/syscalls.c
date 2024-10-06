@@ -40,6 +40,7 @@ void syscall_crear_hilo(char* archivo_pseudocodigo, uint32_t prioridad)
     nuevo_hilo->pid_padre = hilo_invocador->pid_padre;
     nuevo_hilo->prioridad = prioridad;
     nuevo_hilo->tid = proceso_invocador->ultimo_tid + 1;
+    nuevo_hilo->hilos_bloqueados = list_create();
 
     // Le pedimos a la Memoria que inicialice los contextos de ejecución para el hilo creado
     solicitar_inicializacion_hilo_a_memoria(nuevo_hilo);
@@ -72,6 +73,28 @@ void syscall_finalizar_proceso()
     // Lo mandamos a EXIT para que el planificador de largo plazo se encargue de liberarlo
     // En caso de ser TID 0, el planificador liberará el hilo y el proceso asociado, caso contrario solo el hilo
     transicion_exec_a_exit();
+}
+
+void syscall_crear_mutex(char* recurso)
+{
+    pthread_mutex_lock(&mutex_estado_exec);
+    uint32_t pid_en_ejecucion = estado_exec->pid_padre;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    t_pcb* proceso = buscar_proceso(pid_en_ejecucion);
+
+    t_mutex* nuevo_mutex = malloc(sizeof(t_mutex));
+
+    // Inicializamos el mutex que va a contener nuestra estructura personalizada para los recursos
+    pthread_mutex_t* mutex_interno = malloc(sizeof(pthread_mutex_t));
+    pthread_mutex_init(mutex_interno, NULL);
+
+    nuevo_mutex->hilos_bloqueados = queue_create();
+    nuevo_mutex->esta_libre = true;
+    nuevo_mutex->recurso = string_duplicate(recurso);
+    nuevo_mutex->mutex = mutex_interno;
+
+    list_add(proceso->mutex, nuevo_mutex);
 }
 
 /* UTILIDADES */

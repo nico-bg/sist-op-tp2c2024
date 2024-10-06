@@ -38,13 +38,25 @@ void crear_proceso(char* nombre_archivo, uint32_t tamanio_proceso, uint32_t prio
 }
 
 /**
+ * @brief Libera la memoria del t_mutex dado
+ */
+void destruir_mutex(void* elemento)
+{
+    t_mutex* mutex = (t_mutex*) elemento;
+    queue_destroy(mutex->hilos_bloqueados);
+    pthread_mutex_destroy(mutex->mutex);
+    free(mutex->recurso);
+    free(mutex);
+}
+
+/**
  * @brief Libera la memoria del pcb dado
  */
 void destruir_pcb(t_pcb* pcb)
 {
     list_destroy_and_destroy_elements(pcb->tids, free);
-    // TODO: Revisar si es correcto usar solo free para destruir el mutex
-    list_destroy_and_destroy_elements(pcb->mutex, free);
+    list_destroy_and_destroy_elements(pcb->mutex, destruir_mutex);
+    free(pcb->nombre_archivo);
     free(pcb);
 }
 
@@ -53,5 +65,6 @@ void destruir_pcb(t_pcb* pcb)
  */
 void destruir_tcb(t_tcb* tcb)
 {
+    list_destroy(tcb->hilos_bloqueados);
     free(tcb);
 }

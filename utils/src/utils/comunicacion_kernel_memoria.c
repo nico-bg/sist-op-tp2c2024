@@ -47,7 +47,7 @@ t_datos_finalizacion_hilo* deserializar_datos_finalizacion_hilo(t_buffer* buffer
     datos->pid = buffer_read_uint32(buffer);
     datos->tid = buffer_read_uint32(buffer);
 
-    return buffer;
+    return datos;
 }
 
 void destruir_datos_finalizacion_hilo(t_datos_finalizacion_hilo* datos)
