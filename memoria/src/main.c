@@ -88,25 +88,30 @@ void atender_peticion_kernel(int cod_op, int socket)
             //LEER BUFFER
             if(hay_espacio_en_memoria(tamanio)){
                 iniciar_proceso(pid, tamanio, base, limite, archivo);
-                enviar_mensaje("Proceso inicializado con éxito", socket);
+                log_info(logger, "## Proceso Creado -  PID: %d - Tamaño: %d", pid, tamanio);
+                //enviar_mensaje("Proceso inicializado con éxito", socket);
             } else {
                 enviar_mensaje("No hay suficiente espacio para inicializar proceso", socket);
             }
             break;
         case FINALIZAR_PROCESO:
             finalizar_proceso(pid);
-            enviar_mensaje("Proceso finalizado con éxito", socket);
+            log_info(logger, "## Proceso Destruido -  PID: %d - Tamaño: %d", pid, tamanio);
+            //enviar_mensaje("Proceso finalizado con éxito", socket);
             break;
         case CREAR_HILO:
             iniciar_hilo(pid, tid);
-            enviar_mensaje("Hilo inicializado con éxito", socket);
+            log_info(logger, "## Hilo Creado - (PID:TID) - (%d:%d)", pid, tid);
+            //enviar_mensaje("Hilo inicializado con éxito", socket);
             break;
         case FINALIZAR_HILO:
             finalizar_hilo(pid, tid);
-            enviar_mensaje("Hilo finalizado con éxito", socket);
+            log_info(logger, "## Hilo Destruido - (PID:TID) - (%d:%d)", pid, tid);
+            //enviar_mensaje("Hilo finalizado con éxito", socket);
             break;
         case MEMORY_DUMP:
-            enviar_mensaje("Operacion MEM_DUMP realizada con éxito", socket); //temporal - checkpoint-2
+            log_info(logger, "## Memory Dump solicitado - (PID:TID) - (%d:%d)", pid, tid);
+            //enviar_mensaje("Operacion MEM_DUMP realizada con éxito", socket); //temporal - checkpoint-2
             break;
         default:
             //log_error(logger, "Operación desconocida - kernel");
@@ -166,5 +171,5 @@ void terminar_programa(t_config* config, int conexion)
 }
 
 bool hay_espacio_en_memoria(int tamanio){
-    return true;
+    return true; //checkpoint-2
 }
