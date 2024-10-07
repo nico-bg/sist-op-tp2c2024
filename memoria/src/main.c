@@ -1,11 +1,11 @@
 #include "main.h"
 #include <pthread.h>
 
+t_log* logger;
 
 int main(int argc, char* argv[]) {
 
     t_config* config;
-    t_log* logger;
 
     char* ip_filesystem;
     char* puerto_filesystem;
@@ -23,96 +23,95 @@ int main(int argc, char* argv[]) {
 
 
     /* Conexión con el Filesystem */
-
     int socket_filesystem = conectar_a_socket(ip_filesystem, puerto_filesystem);
     log_info(logger, "Conectado al Filesystem");
     //enviar_mensaje("Hola, soy la Memoria", socket_filesystem);
 
-    /* Conexión con la CPU */
 
+    /* Conexión con la CPU */
     int fd_escucha = iniciar_servidor(puerto_escucha);
     log_info(logger, "Memoria lista para escuchar al CPU y Kernel");
     
-    int socket_cpu = esperar_cliente(fd_escucha);   //  No se está haciendo un check para asegurar que es
-    log_info(logger, "Se conectó el CPU");          //  la CPU quien se está conectando - definir
+    int socket_cpu = esperar_cliente(fd_escucha);   //  No se está haciendo un check para asegurar que
+    log_info(logger, "Se conectó el CPU");          //  es la CPU quien se está conectando - definir
 
     /* Se crea un hilo para escuchar al kernel */
-    parametros_hilo* parametros = malloc(sizeof(parametros_hilo));  //
-    parametros->socket = fd_escucha;                                // Esta parte es unicamente para pasarle más de un parametro a la función
-    parametros->logger = logger;                                    //
-    pthread_create(&thread_kernel, NULL, hilo_kernel, parametros);
+    pthread_create(&thread_kernel, NULL, hilo_kernel, fd_escucha);
 
     /* Escuchamos las peticiones que el CPU haga hasta que se desconecte */
     while(1) {
-        int resultado = atender_cpu(logger, socket_cpu);
+        int resultado = atender_cpu(socket_cpu);
         if(resultado == -1) { break; }
     }
-
     
     pthread_join(thread_kernel, NULL);
-    free(parametros);
-    terminar_programa(logger, config, socket_filesystem);
+    terminar_programa(config, socket_filesystem);
 
     return 0;
 }
 
-void* hilo_kernel(void* args)
+void hilo_kernel(void* fd_escucha)
 {
-    parametros_hilo* parametros = (parametros_hilo*)args;   // 
-    int fd_escucha = parametros->socket;                    // Sacamos los parametros del logger y el socket de escucha de nuestra estructura
-    t_log* logger = parametros->logger;                     //
-
     while(1) {  // Crea un nuevo hilo por cada conexión
         pthread_t kernelThread;
-        int socket_kernel = (int)malloc(sizeof(int));       //
-        socket_kernel = accept(fd_escucha, NULL, NULL);     //
-        parametros->socket = socket_kernel;                 // Se cambia el socket de escucha por el del kernel para poder reeutilizar la estructura
-        pthread_create(&kernelThread, NULL, atender_kernel, parametros);
+        int* socket_kernel = malloc(sizeof(int));
+        socket_kernel = accept(fd_escucha, NULL, NULL);
+        pthread_create(&kernelThread, NULL, atender_kernel, socket_kernel);
         pthread_detach(kernelThread);
-        //free(socket_kernel);
     }
 }
 
-void* atender_kernel(void* args)
+void atender_kernel(void* socket_cliente)
 {
-    parametros_hilo* parametros = (parametros_hilo*)args;
-    int socket_cliente = parametros->socket;
-    t_log* logger = parametros->logger;
+    int socket = *(int*)socket_cliente;
+    free(socket_cliente);
 
-    int codigo_operacion = recibir_operacion(socket_cliente);
+    int codigo_operacion = recibir_operacion(socket);
     switch(codigo_operacion) {
         case -1:
             log_error(logger, "El kernel se desconectó");
             break;
         default:
-            atender_peticion_kernel(logger, codigo_operacion, socket_cliente);
+            atender_peticion_kernel(codigo_operacion, socket);
             break;
     }
 }
 
-void* atender_peticion_kernel(t_log* logger, int cod_op, int socket)
+void atender_peticion_kernel(int cod_op, int socket)
 {
-    int mensaje = leer_buffer(cod_op);
-    switch(mensaje) {
+
+    int pid, tid, tamanio;
+    uint32_t base, limite;
+    char* archivo;
+    switch(cod_op) {
         case CREAR_PROCESO:
-            //kernel envia pid y tamaño (archivo pseudocodigo?)
-            estructura_proceso* proceso = iniciar_proceso();
-            //Devuelve el proceso al kernel
+            //LEER BUFFER
+            if(hay_espacio_en_memoria(tamanio)){
+                iniciar_proceso(pid, tamanio, base, limite, archivo);
+                log_info(logger, "## Proceso Creado -  PID: %d - Tamaño: %d", pid, tamanio);
+                //enviar_mensaje("Proceso inicializado con éxito", socket);
+            } else {
+                enviar_mensaje("No hay suficiente espacio para inicializar proceso", socket);
+            }
             break;
         case FINALIZAR_PROCESO:
-            //kernel envia pid
-            finalizar_proceso();
+            finalizar_proceso(pid);
+            log_info(logger, "## Proceso Destruido -  PID: %d - Tamaño: %d", pid, tamanio);
+            //enviar_mensaje("Proceso finalizado con éxito", socket);
             break;
         case CREAR_HILO:
-            estructura_hilo* hilo = iniciar_hilo();
-            //Devuelve el hilo al kernel
+            iniciar_hilo(pid, tid);
+            log_info(logger, "## Hilo Creado - (PID:TID) - (%d:%d)", pid, tid);
+            //enviar_mensaje("Hilo inicializado con éxito", socket);
             break;
         case FINALIZAR_HILO:
-            //kernel envia pid & tid
-            finalizar_hilo()
+            finalizar_hilo(pid, tid);
+            log_info(logger, "## Hilo Destruido - (PID:TID) - (%d:%d)", pid, tid);
+            //enviar_mensaje("Hilo finalizado con éxito", socket);
             break;
         case MEMORY_DUMP:
-            enviar_mensaje("OK"); //temporal - checkpoint-2
+            log_info(logger, "## Memory Dump solicitado - (PID:TID) - (%d:%d)", pid, tid);
+            //enviar_mensaje("Operacion MEM_DUMP realizada con éxito", socket); //temporal - checkpoint-2
             break;
         default:
             //log_error(logger, "Operación desconocida - kernel");
@@ -120,7 +119,7 @@ void* atender_peticion_kernel(t_log* logger, int cod_op, int socket)
     }
 }
 
-int atender_cpu(t_log* logger, int socket_cliente)
+int atender_cpu(int socket_cliente)
 {
     int codigo_operacion = recibir_operacion(socket_cliente);
     switch(codigo_operacion) {
@@ -134,7 +133,7 @@ int atender_cpu(t_log* logger, int socket_cliente)
     return codigo_operacion;
 }
 
-void* atender_peticion_cpu(int cod_op)
+void atender_peticion_cpu(int cod_op)
 {
     int mensaje = leer_buffer(cod_op);
     switch(mensaje){
@@ -157,8 +156,6 @@ void* atender_peticion_cpu(int cod_op)
             //log_error(logger, "Operación desconocida - CPU");
             break;
     }
-
-    return cod_op;
 }
 
 int leer_buffer(int buffer)
@@ -166,9 +163,13 @@ int leer_buffer(int buffer)
     return CREAR_PROCESO;
 }
 
-void terminar_programa(t_log* logger, t_config* config, int conexion)
+void terminar_programa(t_config* config, int conexion)
 {
     log_destroy(logger);
     config_destroy(config);
     close(conexion);
+}
+
+bool hay_espacio_en_memoria(int tamanio){
+    return true; //checkpoint-2
 }
