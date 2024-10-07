@@ -92,9 +92,38 @@ void syscall_crear_mutex(char* recurso)
     nuevo_mutex->hilos_bloqueados = queue_create();
     nuevo_mutex->esta_libre = true;
     nuevo_mutex->recurso = string_duplicate(recurso);
-    nuevo_mutex->mutex = mutex_interno;
+    // nuevo_mutex->mutex = mutex_interno;
 
     list_add(proceso->mutex, nuevo_mutex);
+}
+
+char* recurso_buscado;
+
+bool encontrar_mutex_proceso_en_ejecucion(void* elemento)
+{
+    return true;
+    // t_mutex* mutex = (t_mutex*) elemento;
+
+    // bool encontrado = strcmp(mutex->recurso, recurso_buscado) == 0;
+
+    // return encontrado;
+}
+
+void syscall_bloquear_mutex(char* recurso)
+{
+    // recurso_buscado = recurso;
+    // t_mutex* mutex = list_find(proceso->mutex, encontrar_mutex_proceso_en_ejecucion);
+
+    // if(mutex->esta_libre) {
+    //     mutex->esta_libre = false;
+    // } else {
+    //     list_add(mutex->hilos_bloqueados, estado_exec);
+    // }
+}
+
+void syscall_desbloquear_mutex(char* recurso)
+{
+
 }
 
 /* UTILIDADES */

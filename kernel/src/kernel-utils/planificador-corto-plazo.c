@@ -73,10 +73,23 @@ void* planificador_corto_plazo()
 
             // Recibimos y deserializamos los datos enviados por la CPU
             buffer = recibir_buffer(&size, socket_cpu_dispatch);
-            t_datos_crear_mutex* datos_crear_mutex = deserializar_datos_crear_mutex(buffer);
+            t_datos_operacion_mutex* datos_crear_mutex = deserializar_datos_operacion_mutex(buffer);
 
             syscall_crear_mutex(datos_crear_mutex->recurso);
-            destruir_datos_crear_mutex(datos_crear_mutex);
+            destruir_datos_operacion_mutex(datos_crear_mutex);
+            break;
+        case OPERACION_BLOQUEAR_MUTEX:
+            log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_LOCK", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
+
+            // Recibimos y deserializamos los datos enviados por la CPU
+            buffer = recibir_buffer(&size, socket_cpu_dispatch);
+            t_datos_operacion_mutex* datos_bloquear_mutex = deserializar_datos_operacion_mutex(buffer);
+
+            syscall_bloquear_mutex(datos_bloquear_mutex->recurso);
+            destruir_datos_operacion_mutex(datos_bloquear_mutex);
+            break;
+        case OPERACION_DESBLOQUEAR_MUTEX:
+            log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_UNLOCK", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
             break;
         case OPERACION_DESALOJAR_HILO:
             transicion_exec_a_ready(siguiente_a_exec);

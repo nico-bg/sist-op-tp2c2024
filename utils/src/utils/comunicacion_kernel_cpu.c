@@ -80,7 +80,7 @@ void destruir_datos_crear_proceso(t_datos_crear_proceso* datos)
     free(datos);
 }
 
-t_buffer* serializar_datos_crear_mutex(t_datos_crear_mutex* datos)
+t_buffer* serializar_datos_operacion_mutex(t_datos_operacion_mutex* datos)
 {
     int recurso_length = strlen(datos->recurso) + 1;
     t_buffer* buffer = buffer_create(recurso_length);
@@ -90,9 +90,9 @@ t_buffer* serializar_datos_crear_mutex(t_datos_crear_mutex* datos)
     return buffer;
 }
 
-t_datos_crear_mutex* deserializar_datos_crear_mutex(t_buffer* buffer)
+t_datos_operacion_mutex* deserializar_datos_operacion_mutex(t_buffer* buffer)
 {
-    t_datos_crear_mutex* datos = malloc(sizeof(t_datos_crear_mutex));
+    t_datos_operacion_mutex* datos = malloc(sizeof(t_datos_operacion_mutex));
 
     uint32_t length;
     datos->recurso = buffer_read_string(buffer, &length);
@@ -100,7 +100,7 @@ t_datos_crear_mutex* deserializar_datos_crear_mutex(t_buffer* buffer)
     return datos;
 }
 
-void destruir_datos_crear_mutex(t_datos_crear_mutex* datos)
+void destruir_datos_operacion_mutex(t_datos_operacion_mutex* datos)
 {
     free(datos->recurso);
     free(datos);

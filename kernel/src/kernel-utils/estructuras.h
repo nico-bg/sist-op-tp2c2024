@@ -9,8 +9,8 @@
 typedef struct {
     // Nombre del recurso creado con MUTEX_CREATE
     char* recurso;
-    // Valor del mutex para garantizar mutua exclusión cuando quieran modificar el recurso
-    pthread_mutex_t* mutex;
+    // // Valor del mutex para garantizar mutua exclusión cuando quieran modificar el recurso
+    // pthread_mutex_t* mutex;
     // Nos va a servir para validar si el recurso se encuentra asignado o no
     bool esta_libre;
     // Cola de hilos que están esperando el mutex
