@@ -3,6 +3,7 @@
 
 #include <kernel-utils/estructuras.h>
 #include <kernel-utils/globales.h>
+#include <commons/string.h>
 
 void crear_proceso(char* nombre_archivo, uint32_t tamanio_proceso, uint32_t prioridad);
 void destruir_pcb(t_pcb* pcb);

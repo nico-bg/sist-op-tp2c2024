@@ -79,3 +79,29 @@ void destruir_datos_crear_proceso(t_datos_crear_proceso* datos)
     free(datos->archivo_pseudocodigo);
     free(datos);
 }
+
+t_buffer* serializar_datos_operacion_mutex(t_datos_operacion_mutex* datos)
+{
+    int recurso_length = strlen(datos->recurso) + 1;
+    t_buffer* buffer = buffer_create(recurso_length);
+
+    buffer_add_string(buffer, recurso_length, datos->recurso);
+
+    return buffer;
+}
+
+t_datos_operacion_mutex* deserializar_datos_operacion_mutex(t_buffer* buffer)
+{
+    t_datos_operacion_mutex* datos = malloc(sizeof(t_datos_operacion_mutex));
+
+    uint32_t length;
+    datos->recurso = buffer_read_string(buffer, &length);
+
+    return datos;
+}
+
+void destruir_datos_operacion_mutex(t_datos_operacion_mutex* datos)
+{
+    free(datos->recurso);
+    free(datos);
+}
