@@ -22,6 +22,9 @@
 
 typedef struct nodo_hilo nodo_hilo;
 typedef struct nodo_proceso nodo_proceso;
+
+static nodo_proceso* nodo_primer_proceso = NULL;
+
 typedef struct {
     int tid;
     uint32_t PC;
@@ -37,7 +40,7 @@ typedef struct {
 
 struct nodo_hilo {
     estructura_hilo hilo;
-    nodo_hilo* siguiente;
+    nodo_hilo* siguiente_nodo_hilo;
 };
 
 typedef struct {
@@ -51,7 +54,7 @@ typedef struct {
 
 struct nodo_proceso {
     estructura_proceso proceso;
-    nodo_proceso* lista_proceso;
+    nodo_proceso* siguiente_nodo_proceso;
 };
 
 typedef struct {
@@ -59,36 +62,43 @@ typedef struct {
     int socket;
 } parametros_hilo;
 
+bool hay_espacio_en_memoria(int tamanio);
 
-void terminar_programa(t_log* logger, t_config* config, int conexion);
+void terminar_programa(t_config* config, int conexion);
 
-void* atender_kernel(void* socket_cliente);
+void hilo_kernel(void* socket);
 
-void* atender_peticion_kernel(t_log* logger, int cod_op);
+void atender_kernel(void* socket_cliente);
 
-int atender_cpu(t_log* logger, int socket_cliente);
+void atender_peticion_kernel(int cod_op, int socket);
 
-void* atender_peticion_cpu(int cod_op);
+int atender_cpu(int socket_cliente);
 
-void* hilo_kernel(void* args);
+void atender_peticion_cpu(int cod_op);
 
 
-estructura_proceso* iniciar_proceso(int pid, int tamanio, uint32_t base, uint32_t limite, const char* archivo_pseudocodigo);
 
-estructura_hilo* agregar_hilo(int pid, int tid);
+nodo_proceso* buscar_proceso_por_pid(int pid);
+
+nodo_hilo* buscar_hilo_por_tid(int pid, int tid);
+
+void iniciar_proceso(int pid, int tamanio, uint32_t base, uint32_t limite, const char* archivo_pseudocodigo);
 
 void finalizar_proceso(int pid);
 
+void iniciar_hilo(int pid, int tid);
+
 void finalizar_hilo(int pid, int tid);
 
-estructura_proceso* buscar_proceso_por_pid(int pid);
-
-estructura_hilo* buscar_hilo_por_tid(int pid, int tid);
-
-void liberar_instrucciones(char** instrucciones);
 
 char** leer_archivo_pseudocodigo(const char* nombre_archivo);
 
+void liberar_instrucciones(char** instrucciones);
+
 int contar_lineas(const char* nombre_archivo);
+
+nodo_proceso* buscar_ultimo_proceso(void);
+
+nodo_hilo* buscar_ultimo_hilo(int pid);
 
 #endif
