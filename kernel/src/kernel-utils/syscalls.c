@@ -106,12 +106,16 @@ bool encontrar_mutex_proceso_en_ejecucion(void* elemento)
     return encontrado;
 }
 
-void syscall_bloquear_mutex(char* recurso)
+/**
+ * @brief Si el recurso está libre, se lo asigna al hilo en ejecución, en caso contrario lo bloquea
+ * @return Devuelve true si el hilo pudo asignarse el mutex
+ */
+bool syscall_bloquear_mutex(char* recurso)
 {
     recurso_buscado = recurso;
 
     pthread_mutex_lock(&mutex_estado_exec);
-    t_tcb* hilo_en_ejecucion = estado_exec->pid_padre;
+    t_tcb* hilo_en_ejecucion = estado_exec;
     pthread_mutex_unlock(&mutex_estado_exec);
 
     t_pcb* proceso = buscar_proceso(hilo_en_ejecucion->pid_padre);
@@ -125,6 +129,8 @@ void syscall_bloquear_mutex(char* recurso)
         transicion_exec_a_blocked();
         queue_push(mutex->hilos_bloqueados, estado_exec);
     }
+
+    return mutex->esta_libre;
 }
 
 void syscall_desbloquear_mutex(char* recurso)
@@ -132,7 +138,7 @@ void syscall_desbloquear_mutex(char* recurso)
     recurso_buscado = recurso;
 
     pthread_mutex_lock(&mutex_estado_exec);
-    t_tcb* hilo_en_ejecucion = estado_exec->pid_padre;
+    t_tcb* hilo_en_ejecucion = estado_exec;
     pthread_mutex_unlock(&mutex_estado_exec);
 
     t_pcb* proceso = buscar_proceso(hilo_en_ejecucion->pid_padre);
