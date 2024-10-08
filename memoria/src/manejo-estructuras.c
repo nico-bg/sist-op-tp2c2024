@@ -4,7 +4,7 @@
 /* Para el manejo de instrucciones */
 #define MAX_LINE_LENGTH 255
 
-nodo_proceso* buscar_proceso_por_pid(int pid){
+estructura_proceso* buscar_proceso_por_pid(int pid){
 
     nodo_proceso* actual = nodo_primer_proceso;
 
@@ -12,10 +12,10 @@ nodo_proceso* buscar_proceso_por_pid(int pid){
         actual = actual->siguiente_nodo_proceso;
     }
 
-    return actual;
+    return &(actual->proceso);
 }
 
-nodo_hilo* buscar_hilo_por_tid(int pid, int tid){
+estructura_hilo* buscar_hilo_por_tid(int pid, int tid){
 
     nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
     nodo_hilo* actual = nodo_proceso->proceso.lista_hilos;
@@ -24,7 +24,7 @@ nodo_hilo* buscar_hilo_por_tid(int pid, int tid){
         actual = actual->siguiente_nodo_hilo;
     }
 
-    return actual;
+    return &(actual->hilo);
 }
 
 
@@ -106,13 +106,13 @@ void finalizar_hilo(int pid, int tid){
 }
 
 
-char** leer_archivo_pseudocodigo(const char* nombre_archivo){
+char* leer_archivo_pseudocodigo(const char* nombre_archivo){
 
     int cant_lineas = contar_lineas(nombre_archivo);
 
     FILE* archivo = fopen(nombre_archivo, "r");
 
-    char** instrucciones = (char**)malloc((cant_lineas + 1)*sizeof(char*));
+    char* instrucciones = (char**)malloc((cant_lineas + 1)*sizeof(char*));
 
     char* buffer[MAX_LINE_LENGTH];
     int cont = 0;
@@ -180,4 +180,39 @@ nodo_hilo* buscar_ultimo_hilo(int pid){
     }
 
     return actual;
+}
+
+
+estructura_hilo* devolver_contexto_ejecucion(int pid, int tid){
+
+    estructura_hilo* hilo = buscar_hilo_por_tid(pid, tid);
+
+    return hilo;
+}
+
+void actualizar_contexto_ejecucion(int pid, int tid, estructura_hilo* contexto_hilo){
+
+    estructura_hilo* hilo_a_actualizar = buscar_hilo_por_tid(pid, tid);
+
+    hilo_a_actualizar->AX = contexto_hilo->AX;
+    hilo_a_actualizar->BX = contexto_hilo->BX;
+    hilo_a_actualizar->CX = contexto_hilo->CX;
+    hilo_a_actualizar->DX = contexto_hilo->DX;
+    hilo_a_actualizar->EX = contexto_hilo->EX;
+    hilo_a_actualizar->FX = contexto_hilo->FX;
+    hilo_a_actualizar->GX = contexto_hilo->GX;
+    hilo_a_actualizar->HX = contexto_hilo->HX;
+    hilo_a_actualizar->PC = contexto_hilo->PC;
+
+    return;
+}
+
+char* devolver_instruccion(int pid, int tid, int PC){
+
+    estructura_proceso* proceso = buscar_proceso_por_pid(pid);
+    //estructura_hilo* hilo = buscar_hilo_por_tid(pid, tid);
+
+    char* inst = proceso->archivo_pseudocodigo[PC];
+
+    return inst;
 }

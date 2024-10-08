@@ -48,7 +48,7 @@ typedef struct {
     int tamanio;
     uint32_t base;
     uint32_t limite;
-    char** archivo_pseudocodigo;
+    char* archivo_pseudocodigo;
     nodo_hilo* lista_hilos;
 } estructura_proceso;
 
@@ -74,13 +74,13 @@ void atender_peticion_kernel(int cod_op, int socket);
 
 int atender_cpu(int socket_cliente);
 
-void atender_peticion_cpu(int cod_op);
+void atender_peticion_cpu(int cod_op, int socket);
 
 
 
-nodo_proceso* buscar_proceso_por_pid(int pid);
+estructura_proceso* buscar_proceso_por_pid(int pid);
 
-nodo_hilo* buscar_hilo_por_tid(int pid, int tid);
+estructura_hilo* buscar_hilo_por_tid(int pid, int tid);
 
 void iniciar_proceso(int pid, int tamanio, uint32_t base, uint32_t limite, const char* archivo_pseudocodigo);
 
@@ -91,7 +91,7 @@ void iniciar_hilo(int pid, int tid);
 void finalizar_hilo(int pid, int tid);
 
 
-char** leer_archivo_pseudocodigo(const char* nombre_archivo);
+char* leer_archivo_pseudocodigo(const char* nombre_archivo);
 
 void liberar_instrucciones(char** instrucciones);
 
@@ -100,5 +100,12 @@ int contar_lineas(const char* nombre_archivo);
 nodo_proceso* buscar_ultimo_proceso(void);
 
 nodo_hilo* buscar_ultimo_hilo(int pid);
+
+
+estructura_hilo* devolver_contexto_ejecucion(int pid, int tid);
+
+void actualizar_contexto_ejecucion(int pid, int tid, estructura_hilo* contexto_hilo);
+
+char* devolver_instruccion(int pid, int tid, int PC);
 
 #endif

@@ -83,6 +83,7 @@ void atender_peticion_kernel(int cod_op, int socket)
     int pid, tid, tamanio;
     uint32_t base, limite;
     char* archivo;
+
     switch(cod_op) {
         case CREAR_PROCESO:
             //LEER BUFFER
@@ -127,29 +128,41 @@ int atender_cpu(int socket_cliente)
             log_error(logger, "El CPU se desconectó");
             break;
         default:
-            atender_peticion_cpu(codigo_operacion);
+            atender_peticion_cpu(codigo_operacion, socket_cliente);
             break;
     }
     return codigo_operacion;
 }
 
-void atender_peticion_cpu(int cod_op)
+void atender_peticion_cpu(int cod_op, int socket)
 {
+    int pid, tid, tamanio;
+    uint32_t PC;
+    char* archv_codigo, dir_fisica;
+    estructura_hilo* hilo;
+
     int mensaje = leer_buffer(cod_op);
     switch(mensaje){
         case DEVOLVER_CONTEXTO_EJECUCION:
-            //devolver contexto de ejecucion
+            log_info(logger, "## Contexto Solicitado - (PID:TID) - (%d:%d)", pid, tid);
+            hilo = devolver_contexto_ejecucion(pid, tid);
+            //ENVIAR CONTEXTO EJECUCION
             break;
         case ACTUALIZAR_CONTEXTO_EJECUCION:
-            //actualizar contexto de ejecucion
+            actualizar_contexto_ejecucion(pid, tid, hilo);
+            log_info(logger, "## Contexto Actualizado - (PID:TID) - (%d:%d)", pid, tid);
+            enviar_mensaje("Contexto actualizado con éxito", socket);
             break;
         case DEVOLVER_INSTRUCCION:
-            //devolver instruccion
+            char* inst = devolver_instruccion(pid, tid, PC);
+            log_info(logger, "## Obtener instrucción - (PID:TID) - (%d:%d) - Instrucción: <%s> <%s>", pid, tid, inst, archv_codigo);
             break;
         case LEER_MEMORIA:
+            log_info(logger, "## Lectura - (PID:TID) - (%d:%d) - Dir. Física: %s - Tamaño: %d", pid, tid, dir_fisica, tamanio);
             //leer memoria
             break;
         case ESCRIBIR_MEMORIA:
+            log_info(logger, "## Escritura - (PID:TID) - (%d:%d) - Dir. Física: %s - Tamaño: %d", pid, tid, dir_fisica, tamanio);
             //escribir memoria
             break;
         default:
