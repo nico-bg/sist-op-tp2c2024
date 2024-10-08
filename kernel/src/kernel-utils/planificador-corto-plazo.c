@@ -87,6 +87,21 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
         log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_EXIT", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
         syscall_finalizar_hilo();
         break;
+    case OPERACION_ESPERAR_HILO:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_JOIN", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        // Recibimos y deserializamos los datos enviados por la CPU
+        buffer = recibir_buffer(&size, socket_cpu_dispatch);
+        t_datos_operacion_hilo* datos_esperar_hilo = deserializar_datos_operacion_hilo(buffer);
+
+        bool hilo_bloqueado = syscall_esperar_hilo(datos_esperar_hilo->tid);
+        destruir_datos_operacion_hilo(datos_esperar_hilo);
+
+        // Continuamos ejecutando el hilo que solicitó la syscall solo si el hilo no fue bloqueado por la syscall
+        if(!hilo_bloqueado) {
+            procesar_instrucciones_cpu(hilo_en_ejecucion);
+        }
+        break;
     case OPERACION_CREAR_MUTEX:
         log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_CREATE", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
 

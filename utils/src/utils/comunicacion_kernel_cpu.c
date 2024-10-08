@@ -105,3 +105,26 @@ void destruir_datos_operacion_mutex(t_datos_operacion_mutex* datos)
     free(datos->recurso);
     free(datos);
 }
+
+t_buffer* serializar_datos_operacion_hilo(uint32_t tid)
+{
+    t_buffer* buffer = buffer_create(sizeof(uint32_t));
+
+    buffer_add_uint32(buffer, tid);
+
+    return buffer;
+}
+
+t_datos_operacion_hilo* deserializar_datos_operacion_hilo(t_buffer* buffer)
+{
+    t_datos_operacion_hilo* datos = malloc(sizeof(t_datos_operacion_hilo));
+
+    datos->tid = buffer_read_uint32(buffer);
+
+    return datos;
+}
+
+void destruir_datos_operacion_hilo(t_datos_operacion_hilo* datos)
+{
+    free(datos);
+}

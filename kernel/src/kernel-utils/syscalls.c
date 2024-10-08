@@ -47,6 +47,10 @@ void syscall_crear_hilo(char* archivo_pseudocodigo, uint32_t prioridad)
     // Le pedimos a la Memoria que inicialice los contextos de ejecución para el hilo creado
     solicitar_inicializacion_hilo_a_memoria(nuevo_hilo);
 
+    // Actualizamos los datos del proceso asociado
+    proceso_invocador->ultimo_tid += 1;
+    list_add(proceso_invocador->tids, &nuevo_hilo->tid);
+
     // Agregamos el nuevo hilo al estado READY para que pueda ser planificado
     pthread_mutex_lock(&mutex_estado_ready);
     list_add(estado_ready, nuevo_hilo);
@@ -55,6 +59,65 @@ void syscall_crear_hilo(char* archivo_pseudocodigo, uint32_t prioridad)
     log_info(logger, "## (%d:%d) Se crea el Hilo - Estado: READY", nuevo_hilo->pid_padre, nuevo_hilo->tid);
 
     close(fd_memoria);
+}
+
+uint32_t tid_auxiliar;
+
+bool existe_tid_en_lista(void* elemento)
+{
+    uint32_t* tid = (uint32_t*) elemento;
+
+    return *tid == tid_auxiliar;
+}
+
+t_tcb* buscar_hilo_en_proceso(t_pcb* proceso, uint32_t tid)
+{
+    tid_auxiliar = tid;
+    bool tid_existente = list_any_satisfy(proceso->tids, existe_tid_en_lista);
+
+    if(tid_existente) {
+        t_tcb* hilo_encontrado;
+
+        // Buscamos el TID en la lista de estado READY
+        pthread_mutex_lock(&mutex_estado_ready);
+        hilo_encontrado = list_find(estado_ready, existe_tid_en_lista);
+        pthread_mutex_unlock(&mutex_estado_ready);
+
+        // Si no se encuentra el hilo en READY, lo buscamos en BLOCKED
+        if(hilo_encontrado == NULL) {
+            pthread_mutex_lock(&mutex_estado_blocked);
+            hilo_encontrado = list_find(estado_blocked, existe_tid_en_lista);
+            pthread_mutex_unlock(&mutex_estado_blocked);
+        }
+
+        return hilo_encontrado;
+    } else {
+        return NULL;
+    }
+}
+
+/**
+ * @brief Bloquea el hilo en ejecución hasta que el hilo del TID recibido finalice
+ * @return Devuelve true solo si el hilo en ejecución fue correctamente bloqueado
+ */
+bool syscall_esperar_hilo(uint32_t tid)
+{
+    pthread_mutex_lock(&mutex_estado_exec);
+    t_tcb* hilo_en_ejecucion = estado_exec;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    t_pcb* proceso = buscar_proceso(hilo_en_ejecucion->pid_padre);
+
+    t_tcb* hilo_a_esperar = buscar_hilo_en_proceso(proceso, tid);
+
+    if(hilo_a_esperar != NULL) {
+        // Agrego el hilo que invocó la syscall en la lista de bloqueados del hilo que se quiere esperar (asociado al TID recibido)
+        list_add(hilo_a_esperar->hilos_bloqueados, hilo_en_ejecucion);
+        transicion_exec_a_blocked();
+        return true;
+    }
+
+    return false;
 }
 
 void syscall_crear_proceso(char* archivo_pseudocodigo, uint32_t tamanio_proceso, uint32_t prioridad)
@@ -125,12 +188,14 @@ bool syscall_bloquear_mutex(char* recurso)
     if(mutex->esta_libre) {
         mutex->esta_libre = false;
         mutex->hilo_asignado = hilo_en_ejecucion;
+
+        return true;
     } else {
         transicion_exec_a_blocked();
         queue_push(mutex->hilos_bloqueados, estado_exec);
-    }
 
-    return mutex->esta_libre;
+        return false;
+    }
 }
 
 void syscall_desbloquear_mutex(char* recurso)
