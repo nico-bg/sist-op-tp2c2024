@@ -90,6 +90,16 @@ void* planificador_corto_plazo()
             break;
         case OPERACION_DESBLOQUEAR_MUTEX:
             log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_UNLOCK", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
+
+            // Recibimos y deserializamos los datos enviados por la CPU
+            buffer = recibir_buffer(&size, socket_cpu_dispatch);
+            t_datos_operacion_mutex* datos_desbloquear_mutex = deserializar_datos_operacion_mutex(buffer);
+
+            syscall_desbloquear_mutex(datos_desbloquear_mutex->recurso);
+            destruir_datos_operacion_mutex(datos_desbloquear_mutex);
+
+            // Continuamos ejecutando el hilo que solicitó la syscall
+            enviar_hilo_a_cpu(siguiente_a_exec);
             break;
         case OPERACION_DESALOJAR_HILO:
             transicion_exec_a_ready(siguiente_a_exec);

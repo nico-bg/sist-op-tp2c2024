@@ -1,6 +1,8 @@
 #include <kernel-utils/syscalls.h>
 
 static void transicion_exec_a_exit();
+static void transicion_exec_a_blocked();
+static void transicion_blocked_a_ready(t_tcb* hilo);
 static void solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid);
 static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo);
 static t_pcb* buscar_proceso(uint32_t pid);
@@ -85,14 +87,10 @@ void syscall_crear_mutex(char* recurso)
 
     t_mutex* nuevo_mutex = malloc(sizeof(t_mutex));
 
-    // Inicializamos el mutex que va a contener nuestra estructura personalizada para los recursos
-    pthread_mutex_t* mutex_interno = malloc(sizeof(pthread_mutex_t));
-    pthread_mutex_init(mutex_interno, NULL);
-
     nuevo_mutex->hilos_bloqueados = queue_create();
     nuevo_mutex->esta_libre = true;
     nuevo_mutex->recurso = string_duplicate(recurso);
-    // nuevo_mutex->mutex = mutex_interno;
+    nuevo_mutex->hilo_asignado = NULL;
 
     list_add(proceso->mutex, nuevo_mutex);
 }
@@ -101,29 +99,60 @@ char* recurso_buscado;
 
 bool encontrar_mutex_proceso_en_ejecucion(void* elemento)
 {
-    return true;
-    // t_mutex* mutex = (t_mutex*) elemento;
+    t_mutex* mutex = (t_mutex*) elemento;
 
-    // bool encontrado = strcmp(mutex->recurso, recurso_buscado) == 0;
+    bool encontrado = strcmp(mutex->recurso, recurso_buscado) == 0;
 
-    // return encontrado;
+    return encontrado;
 }
 
 void syscall_bloquear_mutex(char* recurso)
 {
-    // recurso_buscado = recurso;
-    // t_mutex* mutex = list_find(proceso->mutex, encontrar_mutex_proceso_en_ejecucion);
+    recurso_buscado = recurso;
 
-    // if(mutex->esta_libre) {
-    //     mutex->esta_libre = false;
-    // } else {
-    //     list_add(mutex->hilos_bloqueados, estado_exec);
-    // }
+    pthread_mutex_lock(&mutex_estado_exec);
+    t_tcb* hilo_en_ejecucion = estado_exec->pid_padre;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    t_pcb* proceso = buscar_proceso(hilo_en_ejecucion->pid_padre);
+
+    t_mutex* mutex = list_find(proceso->mutex, encontrar_mutex_proceso_en_ejecucion);
+
+    if(mutex->esta_libre) {
+        mutex->esta_libre = false;
+        mutex->hilo_asignado = hilo_en_ejecucion;
+    } else {
+        transicion_exec_a_blocked();
+        queue_push(mutex->hilos_bloqueados, estado_exec);
+    }
 }
 
 void syscall_desbloquear_mutex(char* recurso)
 {
+    recurso_buscado = recurso;
 
+    pthread_mutex_lock(&mutex_estado_exec);
+    t_tcb* hilo_en_ejecucion = estado_exec->pid_padre;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    t_pcb* proceso = buscar_proceso(hilo_en_ejecucion->pid_padre);
+
+    t_mutex* mutex = list_find(proceso->mutex, encontrar_mutex_proceso_en_ejecucion);
+
+    bool correctamente_asignado = hilo_en_ejecucion->tid == mutex->hilo_asignado->tid;
+    bool hay_mas_hilos_bloqueados = !queue_is_empty(mutex->hilos_bloqueados);
+
+    if(correctamente_asignado && hay_mas_hilos_bloqueados) {
+        t_tcb* hilo_a_desbloquear = queue_pop(mutex->hilos_bloqueados);
+
+        mutex->hilo_asignado = hilo_a_desbloquear;
+        transicion_blocked_a_ready(hilo_a_desbloquear);
+    }
+
+    if(correctamente_asignado && !hay_mas_hilos_bloqueados) {
+        mutex->hilo_asignado = NULL;
+        mutex->esta_libre = true;
+    }
 }
 
 /* UTILIDADES */
@@ -140,6 +169,37 @@ static void transicion_exec_a_exit()
     pthread_mutex_lock(&mutex_estado_exit);
     list_add(estado_exit, hilo_a_exit);
     pthread_mutex_unlock(&mutex_estado_exit);
+
+    sem_post(&semaforo_estado_exit);
+}
+
+static void transicion_exec_a_blocked()
+{
+    // Desalojo el hilo del estado EXEC guardándolo en otra variable auxiliar
+    pthread_mutex_lock(&mutex_estado_exec);
+    t_tcb* hilo_a_blocked = estado_exec;
+    estado_exec = NULL;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    // Agregamos el hilo al estado BLOCKED
+    pthread_mutex_lock(&mutex_estado_blocked);
+    list_add(estado_blocked, hilo_a_blocked);
+    pthread_mutex_unlock(&mutex_estado_blocked);
+}
+
+static void transicion_blocked_a_ready(t_tcb* hilo)
+{
+    // Saco el hilo del estado BLOCKED
+    pthread_mutex_lock(&mutex_estado_blocked);
+    list_remove_element(estado_blocked, hilo);
+    pthread_mutex_unlock(&mutex_estado_blocked);
+
+    // Agrego el hilo al estado READY
+    pthread_mutex_lock(&mutex_estado_ready);
+    list_add(estado_ready, hilo);
+    pthread_mutex_unlock(&mutex_estado_ready);
+
+    sem_post(&semaforo_estado_ready);
 }
 
 static void solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid)

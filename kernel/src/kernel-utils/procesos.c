@@ -44,7 +44,6 @@ void destruir_mutex(void* elemento)
 {
     t_mutex* mutex = (t_mutex*) elemento;
     queue_destroy(mutex->hilos_bloqueados);
-    // pthread_mutex_destroy(mutex->mutex);
     free(mutex->recurso);
     free(mutex);
 }
