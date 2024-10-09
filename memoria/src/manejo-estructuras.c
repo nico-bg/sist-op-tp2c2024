@@ -4,7 +4,7 @@
 /* Para el manejo de instrucciones */
 #define MAX_LINE_LENGTH 255
 
-estructura_proceso* buscar_proceso_por_pid(int pid){
+nodo_proceso* buscar_proceso_por_pid(int pid){
 
     nodo_proceso* actual = nodo_primer_proceso;
 
@@ -12,10 +12,10 @@ estructura_proceso* buscar_proceso_por_pid(int pid){
         actual = actual->siguiente_nodo_proceso;
     }
 
-    return &(actual->proceso);
+    return actual;
 }
 
-estructura_hilo* buscar_hilo_por_tid(int pid, int tid){
+nodo_hilo* buscar_hilo_por_tid(int pid, int tid){
 
     nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
     nodo_hilo* actual = nodo_proceso->proceso.lista_hilos;
@@ -24,18 +24,18 @@ estructura_hilo* buscar_hilo_por_tid(int pid, int tid){
         actual = actual->siguiente_nodo_hilo;
     }
 
-    return &(actual->hilo);
+    return actual;
 }
 
 
-void iniciar_proceso(int pid, int tamanio, uint32_t base, uint32_t limite, const char* archivo_pseudocodigo){
+void iniciar_proceso(int pid, int tamanio, const char* archivo_pseudocodigo){
     
     nodo_proceso* nuevo_nodo_proceso = (nodo_proceso*)malloc(sizeof(nodo_proceso));
 
     nuevo_nodo_proceso->proceso.pid = pid;
     nuevo_nodo_proceso->proceso.tamanio = tamanio;
-    nuevo_nodo_proceso->proceso.base = base;
-    nuevo_nodo_proceso->proceso.limite = limite;
+    nuevo_nodo_proceso->proceso.base = 0;
+    nuevo_nodo_proceso->proceso.limite = nuevo_nodo_proceso->proceso.base + tamanio;
     nuevo_nodo_proceso->proceso.archivo_pseudocodigo = leer_archivo_pseudocodigo(archivo_pseudocodigo);
     nuevo_nodo_proceso->proceso.lista_hilos = NULL; //No inicializamos ningún hilo todavía
 
@@ -69,7 +69,7 @@ void finalizar_proceso(int pid){
     return;
 }
 
-void iniciar_hilo(int pid, int tid){
+void iniciar_hilo(int pid, int tid, const char* archivo){
 
     nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
     nodo_hilo* nuevo_nodo_hilo = (nodo_hilo*)malloc(sizeof(nodo_hilo));
@@ -84,6 +84,8 @@ void iniciar_hilo(int pid, int tid){
     nuevo_nodo_hilo->hilo.FX = 0;
     nuevo_nodo_hilo->hilo.GX = 0;
     nuevo_nodo_hilo->hilo.HX = 0;
+
+    nuevo_nodo_hilo->hilo.archivo_pseudocodigo_th = leer_archivo_pseudocodigo(archivo);
 
     nuevo_nodo_hilo->siguiente_nodo_hilo = NULL;
 
@@ -106,15 +108,15 @@ void finalizar_hilo(int pid, int tid){
 }
 
 
-char* leer_archivo_pseudocodigo(const char* nombre_archivo){
+char** leer_archivo_pseudocodigo(const char* archivo_pseudocodigo){
 
-    int cant_lineas = contar_lineas(nombre_archivo);
+    int cant_lineas = contar_lineas(archivo_pseudocodigo);
 
-    FILE* archivo = fopen(nombre_archivo, "r");
+    FILE* archivo = fopen(archivo_pseudocodigo, "r");
 
-    char* instrucciones = (char**)malloc((cant_lineas + 1)*sizeof(char*));
+    char** instrucciones = (char**)malloc((cant_lineas + 1)*sizeof(char*));
 
-    char* buffer[MAX_LINE_LENGTH];
+    char buffer[MAX_LINE_LENGTH];
     int cont = 0;
 
     while(fgets(buffer, MAX_LINE_LENGTH, archivo) != NULL && cont < cant_lineas){
@@ -185,34 +187,64 @@ nodo_hilo* buscar_ultimo_hilo(int pid){
 
 estructura_hilo* devolver_contexto_ejecucion(int pid, int tid){
 
-    estructura_hilo* hilo = buscar_hilo_por_tid(pid, tid);
+    nodo_hilo* hilo = buscar_hilo_por_tid(pid, tid);
 
-    return hilo;
+    return &(hilo->hilo);
 }
 
 void actualizar_contexto_ejecucion(int pid, int tid, estructura_hilo* contexto_hilo){
 
-    estructura_hilo* hilo_a_actualizar = buscar_hilo_por_tid(pid, tid);
+    nodo_hilo* hilo_a_actualizar = buscar_hilo_por_tid(pid, tid);
 
-    hilo_a_actualizar->AX = contexto_hilo->AX;
-    hilo_a_actualizar->BX = contexto_hilo->BX;
-    hilo_a_actualizar->CX = contexto_hilo->CX;
-    hilo_a_actualizar->DX = contexto_hilo->DX;
-    hilo_a_actualizar->EX = contexto_hilo->EX;
-    hilo_a_actualizar->FX = contexto_hilo->FX;
-    hilo_a_actualizar->GX = contexto_hilo->GX;
-    hilo_a_actualizar->HX = contexto_hilo->HX;
-    hilo_a_actualizar->PC = contexto_hilo->PC;
+    hilo_a_actualizar->hilo.AX = contexto_hilo->AX;
+    hilo_a_actualizar->hilo.BX = contexto_hilo->BX;
+    hilo_a_actualizar->hilo.CX = contexto_hilo->CX;
+    hilo_a_actualizar->hilo.DX = contexto_hilo->DX;
+    hilo_a_actualizar->hilo.EX = contexto_hilo->EX;
+    hilo_a_actualizar->hilo.FX = contexto_hilo->FX;
+    hilo_a_actualizar->hilo.GX = contexto_hilo->GX;
+    hilo_a_actualizar->hilo.HX = contexto_hilo->HX;
+    hilo_a_actualizar->hilo.PC = contexto_hilo->PC;
 
     return;
 }
 
 char* devolver_instruccion(int pid, int tid, int PC){
 
-    estructura_proceso* proceso = buscar_proceso_por_pid(pid);
+    nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
     //estructura_hilo* hilo = buscar_hilo_por_tid(pid, tid);
 
-    char* inst = proceso->archivo_pseudocodigo[PC];
+    char* inst = nodo_proceso->proceso.archivo_pseudocodigo[PC];
 
     return inst;
 }
+
+
+/*
+static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo)
+{
+    // Nos conectamos a la Memoria
+    int fd_memoria = crear_conexion_a_memoria();
+
+    // Serializamos los datos a enviar en un buffer
+    t_datos_inicializacion_hilo* datos_a_enviar = malloc(sizeof(t_datos_inicializacion_hilo));
+    datos_a_enviar->pid = hilo->pid_padre;
+    datos_a_enviar->tid = hilo->tid;
+    datos_a_enviar->archivo_pseudocodigo = hilo->nombre_archivo;
+    t_buffer* buffer_datos = serializar_datos_inicializacion_hilo(datos_a_enviar);
+
+    // Empaquetamos y serializamos los datos junto con el código de operación
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = OPERACION_CREAR_HILO;
+    paquete->buffer = buffer_datos;
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+    send(fd_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
+    buffer_destroy(buffer_datos);
+    destruir_datos_inicializacion_hilo(datos_a_enviar);
+    close(fd_memoria);
+}
+*/
