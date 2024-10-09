@@ -36,6 +36,7 @@ typedef struct {
     uint32_t FX;
     uint32_t GX;
     uint32_t HX;
+    char** archivo_pseudocodigo_th;
 } estructura_hilo;
 
 struct nodo_hilo {
@@ -48,7 +49,7 @@ typedef struct {
     int tamanio;
     uint32_t base;
     uint32_t limite;
-    char* archivo_pseudocodigo;
+    char** archivo_pseudocodigo;
     nodo_hilo* lista_hilos;
 } estructura_proceso;
 
@@ -78,20 +79,20 @@ void atender_peticion_cpu(int cod_op, int socket);
 
 
 
-estructura_proceso* buscar_proceso_por_pid(int pid);
+nodo_proceso* buscar_proceso_por_pid(int pid);
 
-estructura_hilo* buscar_hilo_por_tid(int pid, int tid);
+nodo_hilo* buscar_hilo_por_tid(int pid, int tid);
 
-void iniciar_proceso(int pid, int tamanio, uint32_t base, uint32_t limite, const char* archivo_pseudocodigo);
+void iniciar_proceso(int pid, int tamanio, const char* archivo_pseudocodigo);
 
 void finalizar_proceso(int pid);
 
-void iniciar_hilo(int pid, int tid);
+void iniciar_hilo(int pid, int tid, const char* archivo_pseudocodigo);
 
 void finalizar_hilo(int pid, int tid);
 
 
-char* leer_archivo_pseudocodigo(const char* nombre_archivo);
+char** leer_archivo_pseudocodigo(const char* archivo_pseudocodigo);
 
 void liberar_instrucciones(char** instrucciones);
 
