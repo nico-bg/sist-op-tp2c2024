@@ -108,6 +108,7 @@ static t_tcb* crear_hilo_principal(t_pcb* proceso_padre)
     hilo_principal->nombre_archivo = string_duplicate(proceso_padre->nombre_archivo);
     hilo_principal->tid = 0;
     hilo_principal->prioridad = proceso_padre->prioridad;
+    hilo_principal->hilos_bloqueados = list_create();
 
     return hilo_principal;
 }

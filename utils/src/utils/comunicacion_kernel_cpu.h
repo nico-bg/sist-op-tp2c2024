@@ -23,6 +23,10 @@ typedef struct {
     char* recurso;
 } t_datos_operacion_mutex;
 
+typedef struct {
+    uint32_t tid;
+} t_datos_operacion_hilo;
+
 t_buffer* serializar_hilo_a_cpu(t_hilo_a_cpu* hilo);
 t_hilo_a_cpu* deserializar_hilo_a_cpu(t_buffer* buffer);
 
@@ -37,5 +41,9 @@ void destruir_datos_crear_proceso(t_datos_crear_proceso* datos);
 t_buffer* serializar_datos_operacion_mutex(t_datos_operacion_mutex* datos);
 t_datos_operacion_mutex* deserializar_datos_operacion_mutex(t_buffer* buffer);
 void destruir_datos_operacion_mutex(t_datos_operacion_mutex* datos);
+
+t_buffer* serializar_datos_operacion_hilo(uint32_t tid);
+t_datos_operacion_hilo* deserializar_datos_operacion_hilo(t_buffer* buffer);
+void destruir_datos_operacion_hilo(t_datos_operacion_hilo* datos);
 
 #endif
