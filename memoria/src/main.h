@@ -72,11 +72,11 @@ void hilo_kernel(void* socket);
 
 void atender_kernel(void* socket_cliente);
 
-void atender_peticion_kernel(void* mensaje, int socket);
+void atender_peticion_kernel(int cod_op, int socket);
 
 int atender_cpu(int socket_cliente);
 
-void atender_peticion_cpu(void* mensaje, int socket);
+void atender_peticion_cpu(int cod_op, int socket);
 
 
 
