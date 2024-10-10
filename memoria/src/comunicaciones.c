@@ -1,6 +1,8 @@
 #include "comunicaciones.h"
 
 
+
+
 #define DEVOLVER_CONTEXTO_EJECUCION 1
 #define ACTUALIZAR_CONTEXTO_EJECUCION 2
 #define DEVOLVER_INSTRUCCION 3
@@ -82,6 +84,10 @@ void* leer_buffer_cpu(int cod_op){
     }
 
     return datos;
+}
+
+void enviar_buffer(int cod_op, void* datos){
+
 }
 
 estructura_hilo* convertir_struct(datos_contexto_hilo* datos_contexto_hilo){

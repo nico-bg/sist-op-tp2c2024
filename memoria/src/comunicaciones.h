@@ -1,6 +1,10 @@
 #include <utils/configuracion.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
+#include <utils/buffer.h>
+
+#include <utils/comunicacion_cpu_memoria.h>
+#include <utils/comunicacion_kernel_memoria.h>
 
 #include "main.h"
 
@@ -18,8 +22,6 @@ typedef struct {
 } datos_hilo;
 
 typedef struct {
-    int pid;
-    int tid;
     uint32_t PC;
     uint32_t AX;
     uint32_t BX;
@@ -29,8 +31,9 @@ typedef struct {
     uint32_t FX;
     uint32_t GX;
     uint32_t HX;
+    uint32_t Base;
+    uint32_t Limite;
 } datos_contexto_hilo;
-
 
 
 void* leer_buffer_kernel(int cod_op);
