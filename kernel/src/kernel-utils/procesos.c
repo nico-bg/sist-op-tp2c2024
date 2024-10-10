@@ -44,7 +44,6 @@ void destruir_mutex(void* elemento)
 {
     t_mutex* mutex = (t_mutex*) elemento;
     queue_destroy(mutex->hilos_bloqueados);
-    // pthread_mutex_destroy(mutex->mutex);
     free(mutex->recurso);
     free(mutex);
 }
@@ -66,5 +65,6 @@ void destruir_pcb(t_pcb* pcb)
 void destruir_tcb(t_tcb* tcb)
 {
     list_destroy(tcb->hilos_bloqueados);
+    free(tcb->nombre_archivo);
     free(tcb);
 }
