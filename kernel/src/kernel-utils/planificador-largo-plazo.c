@@ -1,8 +1,11 @@
 #include <kernel-utils/planificador-largo-plazo.h>
+#include <utils/comunicacion_kernel_memoria.h>
+#include <kernel-utils/conexion-a-memoria.h>
 
 static void transicion_new_a_ready(t_pcb* proceso, t_tcb* hilo);
-static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso);
+int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso);
 static t_tcb* crear_hilo_principal(t_pcb* proceso_padre);
+ 
 
 /**
  * @brief Se mantiene escuchando los cambios en los estados NEW y EXIT
@@ -81,7 +84,34 @@ void* liberar_hilos_en_exit()
  */
 int pedir_inicializacion_hilo_a_memoria(t_tcb* hilo)
 {
-    return 0;
+      // Establecer la conexión con Memoria
+    int socket_memoria = crear_conexion_a_memoria();
+    if (socket_memoria == -1) {
+        log_error(logger, "Error al conectar con Memoria");
+
+    }
+    // Serializar los datos de inicialización del hilo
+    t_buffer* buffer_inicializacion = serializar_datos_inicializacion_hilo(&datos_inicializacion);
+
+    // Enviar operación y datos serializados a Memoria
+    enviar_operacion(socket_memoria, INICIALIZAR_HILO);  
+    enviar_buffer(socket_memoria, buffer_inicializacion);
+
+    // Liberar recursos
+    buffer_destroy(buffer_inicializacion);
+
+    // Esperar respuesta de Memoria
+    int resultado;
+    if (recv(socket_memoria, &resultado, sizeof(int), MSG_WAITALL) != sizeof(int)) {
+        log_error(logger, "Error al recibir respuesta de Memoria");
+        resultado = -1;
+    }
+
+    // Cerrar la conexión con Memoria
+    liberar_conexion(socket_memoria);
+
+    // Retornar el resultado
+    return resultado;
 }
 
 static void transicion_new_a_ready(t_pcb* proceso, t_tcb* hilo)
@@ -112,7 +142,40 @@ static t_tcb* crear_hilo_principal(t_pcb* proceso_padre)
     return hilo_principal;
 }
 
-static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso)
+int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso)
 {
-    return 0;
+    int socket_memoria = crear_conexion_a_memoria();
+    if (socket_memoria ==-1){
+        log_error(logger, "No se pudo establecer la coneccion con la memoria")
+    }  
+
+    t_datos_inicializacion_proceso datos_inicializacion;
+    datos_inicializacion.pid = proceso->pid;  // PID del proceso
+    datos_inicializacion.tid = 0;  // TID del hilo principal
+    datos_inicializacion.tamanio_proceso = proceso->tamanio_proceso;  // Tamaño del proceso
+    datos_inicializacion.archivo_pseudocodigo = string_duplicate(proceso->nombre_archivo);  // Copiar el nombre del archivo pseudocódigo
+
+    // Serializar los datos de inicialización del proceso
+    t_buffer* buffer_inicializacion = serializar_datos_inicializacion_proceso(&datos_inicializacion);
+
+    // Enviar los datos serializados a Memoria
+    enviar_operacion(socket_memoria, INICIALIZAR_PROCESO);
+    enviar_buffer(socket_memoria, buffer_inicializacion);
+
+    // Liberar los recursos después de la serialización
+    buffer_destroy(buffer_inicializacion);
+   
+
+    // Esperar respuesta de Memoria
+    int resultado;
+    if (recv(socket_memoria, &resultado, sizeof(int), MSG_WAITALL) != sizeof(int)) {
+        log_error(logger, "Error al recibir respuesta de Memoria");
+        resultado = -1;  
+    }
+
+    // Cerrar la conexión con Memoria
+    liberar_conexion(socket_memoria);
+
+    return resultado; 
 }
+    
