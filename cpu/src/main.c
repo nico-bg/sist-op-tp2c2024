@@ -11,7 +11,7 @@ typedef struct
 } t_thread_args;
 
 sem_t sem_ciclo_de_instruccion;
-
+sem_t sem_operaciones;
 
 int main(int argc, char* argv[]) {
  
@@ -55,6 +55,7 @@ int main(int argc, char* argv[]) {
 
     t_thread_args hilos_args = {socket_dispatch, socket_memoria, logger};  
 
+
     pthread_t thread_dispatch;
     pthread_t thread_ciclo_de_instruccion;
     
@@ -71,29 +72,18 @@ int main(int argc, char* argv[]) {
 
 void iniciar_semaforos (){
     sem_init(&sem_ciclo_de_instruccion, 0, 0);
+    sem_init(&sem_operaciones, 0, 0);
 }
 
 
 void ciclo_de_instruccion (void *args) {
-    
-    while(true){
-    //sem_wait(&sem_ciclo_de_instruccion);
+    sem_wait(&sem_ciclo_de_instruccion);
 
     t_thread_args *thread_args = (t_thread_args *) args;
     t_log *logger =  thread_args -> logger;
     int servidor_memoria =  thread_args -> cliente_memoria;
 
     log_info(logger, "Hilo ciclo_de_instrucción en ejecucion");
-
-    //Fetch
-    //              pedir_intruccion_a_memoria(servidor_memoria, buffer);
-
-    //char* instruccion = pedir_intruccion_a_memoria(servidor_memoria, pcb);
-
-    //estructura_instruccion = string_split(instruccion, );
-
-    }
-
 }
 
 
@@ -106,12 +96,12 @@ void escuchar_dispatch (void *args) {
 
     log_info(logger, "Hilo escuchar_dispatch esperando pid y tid del kernel");
 
-	t_buffer* buffer;    
+	t_buffer* buffer;
     uint32_t size;
     
     while (1) {
         op_code cod_op = recibir_operacion(cliente_dispatch);
-            
+        
         log_info(logger, "me llego el codigo de operacion");
         switch (cod_op) {
             case OPERACION_EJECUTAR_HILO:
@@ -122,7 +112,7 @@ void escuchar_dispatch (void *args) {
 
                 log_info(logger, "me llego el buffer");
 
-                pcb = deserializar_hilo_a_cpu(buffer);
+                 pcb = deserializar_hilo_a_cpu(buffer);
 
                 log_info(logger, "me llego el buffer con primer campo:%d", pcb -> tid );
 
@@ -173,35 +163,122 @@ void procesar_pcb (int socket_mem, t_hilo_a_cpu estructura_pcb, t_log*  logger){
  log_info(logger, "Se ejecuta el pcb");
 }
 */
-/*
+
 void ejecutar_instruccion(t_instruccion *instruccion, uint32_t valor_rw){   //valor_rw seria un valor que tal vez usemos en la ejecucion de read y write al desarrollar una nueva funcion que escriba en memoria//
 	int resultado; //variable para almacenar datos de salida luego de la ejecucion de inst. dependiendo la operacion//
     switch(instruccion->instruc){ //uso de semaforos en cada caso para usar logger//
         case SET:
+        sem_wait(&sem_operaciones);
+        
+        sem_post(&sem_operaciones);
         break;
 
         case READ_MEM:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
         break;
 
         case WRITE_MEM:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
         break;
 
         case SUM:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
         break;
 
         case SUB:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones); sem_wait(&sem_operaciones);
         break;
 
         case JNZ:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
         break;
 
         case LOG:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
+        break;
+
+        case DUMP_MEMORY:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
+        break;
+
+        case IO:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
+        break;
+
+        case PROCESS_CREATE:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
+        break;
+
+        case THREAD_CREATE:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
+        break;
+
+        case THREAD_JOIN:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
+        break;
+
+        case THREAD_CANCEL:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
+        break;
+
+        case MUTEX_CREATE:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
+        break;
+
+        case MUTEX_LOCK:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
+        break;
+
+        case MUTEX_UNLOCK:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
+        break;
+
+        case THREAD_EXIT:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
+        break;
+
+        case PROCESS_EXIT:
+         sem_wait(&sem_operaciones);
+        //...
+        sem_post(&sem_operaciones);
         break;
 
     }
 
 }
-*/
+
 /*
 void chequeo_interrupcion(){
     //uso de semaforos combinados con hilos que no me queda claro//
