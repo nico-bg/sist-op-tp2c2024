@@ -69,7 +69,7 @@ t_buffer* serializar_datos_inicializacion_proceso(t_datos_inicializacion_proceso
     return buffer;
 }
 
-t_datos_finalizacion_proceso* deserializar_datos_inicializacion_proceso(t_buffer* buffer){
+t_datos_inicializacion_proceso* deserializar_datos_inicializacion_proceso(t_buffer* buffer){
 
     t_datos_inicializacion_proceso* datos = malloc(sizeof(t_datos_inicializacion_proceso));
 

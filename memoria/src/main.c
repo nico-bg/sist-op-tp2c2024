@@ -57,6 +57,7 @@ void hilo_kernel(void* fd_escucha)
         pthread_t kernelThread;
         int *socket_kernel = malloc(sizeof(int));
         *socket_kernel = accept((int)fd_escucha, NULL, NULL);
+        log_info(logger, "## Kernel Conectado - FD del socket: %d", socket_kernel);
         pthread_create(&kernelThread, NULL, (void*) atender_kernel, socket_kernel);
         pthread_detach(kernelThread);
     }
@@ -67,26 +68,30 @@ void atender_kernel(void* socket_cliente)
     int socket = *(int*)socket_cliente;
     free(socket_cliente);
 
-    int codigo_operacion = recibir_operacion(socket);
-    switch(codigo_operacion) {
-        case -1:
-            log_error(logger, "El kernel se desconectó");
-            break;
-        default:
-            log_info(logger, "Me llegó el codigo de operación: %d", codigo_operacion);
-            atender_peticion_kernel(codigo_operacion, socket);
-            break;
+    int* aux = -1;
+
+    void* msg = recibir_mensaje_kernel(socket);
+
+    if(msg == aux){
+        log_error(logger, "El kernel se desconectó");
+    } else {
+        atender_peticion_kernel(msg, socket);
     }
 }
 
-void atender_peticion_kernel(int cod_op, int socket)
+void atender_peticion_kernel(void* mensaje, int socket)
 {
+    
+    t_paquete* paquete = (t_paquete*)mensaje;
+    int cod_op = paquete->codigo_operacion;
+    t_buffer* buffer = paquete->buffer;
+
     switch(cod_op) {
 
         case CREAR_PROCESO:
-            datos_proceso* datos_crear_proceso = (datos_proceso*)leer_buffer_kernel(cod_op);
+            t_datos_inicializacion_proceso* datos_crear_proceso = (t_datos_inicializacion_proceso*)leer_buffer_kernel(cod_op, buffer);
             if(hay_espacio_en_memoria(datos_crear_proceso->tamanio)){
-                iniciar_proceso(datos_crear_proceso->pid, datos_crear_proceso->tamanio, datos_crear_proceso->archivo_pseudocodigo);
+                iniciar_proceso(datos_crear_proceso);
                 log_info(logger, "## Proceso Creado -  PID: %d - Tamaño: %d", datos_crear_proceso->pid, datos_crear_proceso->tamanio);
                 //enviar_mensaje("Proceso inicializado con éxito", socket);
             } else {
@@ -95,28 +100,28 @@ void atender_peticion_kernel(int cod_op, int socket)
             break;
 
         case FINALIZAR_PROCESO:
-            datos_proceso* datos_finalizar_proceso = (datos_proceso*)leer_buffer_kernel(cod_op);
-            finalizar_proceso(datos_finalizar_proceso->pid);
-            log_info(logger, "## Proceso Destruido -  PID: %d - Tamaño: %d", datos_finalizar_proceso->pid, datos_finalizar_proceso->tamanio);
+            t_datos_finalizacion_proceso* datos_finalizar_proceso = (t_datos_finalizacion_proceso*)leer_buffer_kernel(cod_op, buffer);
+            int tam = finalizar_proceso(datos_finalizar_proceso);
+            log_info(logger, "## Proceso Destruido -  PID: %d - Tamaño: %d", datos_finalizar_proceso->pid, tam);
             //enviar_mensaje("Proceso finalizado con éxito", socket);
             break;
 
         case CREAR_HILO:
-            datos_hilo* datos_crear_hilo = (datos_hilo*)leer_buffer_kernel(cod_op);
-            iniciar_hilo(datos_crear_hilo->pid, datos_crear_hilo->tid, datos_crear_hilo->archivo_pseudocodigo);
+            t_datos_inicializacion_hilo* datos_crear_hilo = (t_datos_inicializacion_hilo*)leer_buffer_kernel(cod_op, buffer);
+            iniciar_hilo(datos_crear_hilo);
             log_info(logger, "## Hilo Creado - (PID:TID) - (%d:%d)", datos_crear_hilo->pid, datos_crear_hilo->tid);
             //enviar_mensaje("Hilo inicializado con éxito", socket);
             break;
 
         case FINALIZAR_HILO:
-            datos_hilo* datos_finalizar_hilo = (datos_hilo*)leer_buffer_kernel(cod_op);
-            finalizar_hilo(datos_finalizar_hilo->pid, datos_finalizar_hilo->tid);
+            t_datos_finalizacion_hilo* datos_finalizar_hilo = (t_datos_finalizacion_hilo*)leer_buffer_kernel(cod_op, buffer);
+            finalizar_hilo(datos_finalizar_hilo);
             log_info(logger, "## Hilo Destruido - (PID:TID) - (%d:%d)", datos_finalizar_hilo->pid, datos_finalizar_hilo->tid);
             //enviar_mensaje("Hilo finalizado con éxito", socket);
             break;
 
-        case MEMORY_DUMP:
-            datos_hilo* datos_mem_dump = (datos_hilo*)leer_buffer_kernel(cod_op);
+        case MEMORY_DUMP: //Los datos de la struct finalizar hilo & mem dump son los mismos, por ende se reutiliza la estructura
+            t_datos_finalizacion_hilo* datos_mem_dump = (t_datos_finalizacion_hilo*)leer_buffer_kernel(cod_op, buffer);
             log_info(logger, "## Memory Dump solicitado - (PID:TID) - (%d:%d)", datos_mem_dump->pid, datos_mem_dump->tid);
             //enviar_mensaje("Operacion MEM_DUMP realizada con éxito", socket); //temporal - checkpoint-2
             break;
@@ -141,31 +146,34 @@ int atender_cpu(int socket_cliente)
     return codigo_operacion;
 }
 
-void atender_peticion_cpu(int cod_op, int socket)
+void atender_peticion_cpu(void* mensaje, int socket)
 {
+    t_paquete* paquete = (t_paquete*)mensaje;
+    int cod_op = paquete->codigo_operacion;
+    t_buffer* buffer = paquete->buffer;
 
     switch(cod_op) {
 
         case DEVOLVER_CONTEXTO_EJECUCION:
-            datos_hilo* datos_devolver_contexto = (datos_hilo*)leer_buffer_cpu(cod_op);
+            t_cpu_solicitar_contexto* datos_devolver_contexto = (t_cpu_solicitar_contexto*)leer_buffer_cpu(cod_op, buffer);
             log_info(logger, "## Contexto Solicitado - (PID:TID) - (%d:%d)", datos_devolver_contexto->pid, datos_devolver_contexto->tid);
-            estructura_hilo* contexto_ejecucion = devolver_contexto_ejecucion(datos_devolver_contexto->pid, datos_devolver_contexto->tid);
+            estructura_hilo* contexto_ejecucion = devolver_contexto_ejecucion(datos_devolver_contexto);
             enviar_buffer(cod_op, contexto_ejecucion);
             break;
 
         case ACTUALIZAR_CONTEXTO_EJECUCION:
-            datos_contexto_hilo* datos_actualizar_contexto = (datos_contexto_hilo*)leer_buffer_cpu(cod_op);
+            t_contexto* datos_actualizar_contexto = (t_contexto*)leer_buffer_cpu(cod_op, buffer);
             estructura_hilo* hilo = convertir_struct(datos_actualizar_contexto);
-            actualizar_contexto_ejecucion(datos_actualizar_contexto->pid, datos_actualizar_contexto->tid, hilo);
+            actualizar_contexto_ejecucion(datos_actualizar_contexto);
             log_info(logger, "## Contexto Actualizado - (PID:TID) - (%d:%d)", datos_actualizar_contexto->pid, datos_actualizar_contexto->tid);
             //enviar_mensaje("Contexto actualizado con éxito", socket);
             break;
 
         case DEVOLVER_INSTRUCCION:
-            datos_hilo* datos_devolver_instruccion = (datos_hilo*)leer_buffer_cpu(cod_op);
-            char* inst = devolver_instruccion(datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, datos_devolver_instruccion->PC);
+            t_datos_obtener_instruccion* datos_devolver_instruccion = (t_datos_obtener_instruccion*)leer_buffer_cpu(cod_op, buffer);
+            char* inst = devolver_instruccion(datos_devolver_instruccion);
+            log_info(logger, "## Obtener instrucción - (PID:TID) - (%d:%d) - Instrucción: <%s> <Args...>", datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, inst);
             enviar_buffer(cod_op, inst);
-            log_info(logger, "## Obtener instrucción - (PID:TID) - (%d:%d) - Instrucción: <%s> <%s>", datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, inst, datos_devolver_instruccion->archivo_pseudocodigo);
             break;
 
         case LEER_MEMORIA:

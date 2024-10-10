@@ -158,9 +158,9 @@ t_datos_obtener_instruccion* deserializar_datos_solicitar_instruccion(t_buffer* 
 
     t_datos_obtener_instruccion* datos = malloc(sizeof(t_datos_obtener_instruccion));
 
-    datos.pid = buffer_read_uint32(buffer);
-    datos.tid = buffer_read_uint32(buffer);
-    datos.PC = buffer_read_uint32(buffer);
+    datos->pid = buffer_read_uint32(buffer);
+    datos->tid = buffer_read_uint32(buffer);
+    datos->PC = buffer_read_uint32(buffer);
 
     return datos;
 }
@@ -172,7 +172,7 @@ void destruir_datos_solicitar_instruccion(t_datos_obtener_instruccion* datos){
 
 t_buffer* serializar_datos_devolver_instruccion(t_datos_devolver_instruccion* datos){
 
-    t_buffer* buffer = buffer_create(sizeof(t_devolver_instruccion));
+    t_buffer* buffer = buffer_create(sizeof(t_datos_devolver_instruccion));
     uint32_t length = strlen(datos->instruccion);
 
     buffer_add_string(buffer, length, datos->instruccion);
@@ -182,8 +182,9 @@ t_buffer* serializar_datos_devolver_instruccion(t_datos_devolver_instruccion* da
 
 t_datos_devolver_instruccion* deserializar_datos_devolver_instruccion(t_buffer* buffer){
 
-    t_devolver_instruccion* datos = malloc(sizeof(t_devolver_instruccion));
-    uint32_t length;
+    t_datos_devolver_instruccion* datos = malloc(sizeof(t_datos_devolver_instruccion));
+    
+    uint32_t* length;
 
     datos->instruccion = buffer_read_string(buffer, length);
 

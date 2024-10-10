@@ -5,6 +5,9 @@
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
 
+#include <utils/comunicacion_cpu_memoria.h>
+#include <utils/comunicacion_kernel_memoria.h>
+
 
 /* Temporal hasta implementar */
 #define DEVOLVER_CONTEXTO_EJECUCION 1
@@ -22,8 +25,6 @@
 
 typedef struct nodo_hilo nodo_hilo;
 typedef struct nodo_proceso nodo_proceso;
-
-static nodo_proceso* nodo_primer_proceso = NULL;
 
 typedef struct {
     int tid;
@@ -71,11 +72,11 @@ void hilo_kernel(void* socket);
 
 void atender_kernel(void* socket_cliente);
 
-void atender_peticion_kernel(int cod_op, int socket);
+void atender_peticion_kernel(void* mensaje, int socket);
 
 int atender_cpu(int socket_cliente);
 
-void atender_peticion_cpu(int cod_op, int socket);
+void atender_peticion_cpu(void* mensaje, int socket);
 
 
 
@@ -83,13 +84,13 @@ nodo_proceso* buscar_proceso_por_pid(int pid);
 
 nodo_hilo* buscar_hilo_por_tid(int pid, int tid);
 
-void iniciar_proceso(int pid, int tamanio, const char* archivo_pseudocodigo);
+void iniciar_proceso(t_datos_inicializacion_proceso* datos);
 
-void finalizar_proceso(int pid);
+int finalizar_proceso(t_datos_finalizacion_proceso* datos);
 
-void iniciar_hilo(int pid, int tid, const char* archivo_pseudocodigo);
+void iniciar_hilo(t_datos_inicializacion_hilo* datos);
 
-void finalizar_hilo(int pid, int tid);
+void finalizar_hilo(t_datos_finalizacion_hilo* datos);
 
 
 char** leer_archivo_pseudocodigo(const char* archivo_pseudocodigo);
@@ -103,10 +104,12 @@ nodo_proceso* buscar_ultimo_proceso(void);
 nodo_hilo* buscar_ultimo_hilo(int pid);
 
 
-estructura_hilo* devolver_contexto_ejecucion(int pid, int tid);
+t_contexto* devolver_contexto_ejecucion(t_cpu_solicitar_contexto* datos);
 
-void actualizar_contexto_ejecucion(int pid, int tid, estructura_hilo* contexto_hilo);
+void actualizar_contexto_ejecucion(t_contexto* datos);
 
-char* devolver_instruccion(int pid, int tid, int PC);
+char* devolver_instruccion(t_datos_obtener_instruccion* datos);
+
+estructura_hilo* convertir_struct(t_contexto* contexto);
 
 #endif

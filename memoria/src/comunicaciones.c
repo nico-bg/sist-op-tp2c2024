@@ -1,8 +1,6 @@
 #include "comunicaciones.h"
 
 
-
-
 #define DEVOLVER_CONTEXTO_EJECUCION 1
 #define ACTUALIZAR_CONTEXTO_EJECUCION 2
 #define DEVOLVER_INSTRUCCION 3
@@ -16,31 +14,44 @@
 #define MEMORY_DUMP 10
 
 
-void* leer_buffer_kernel(int cod_op){
+void* recibir_mensaje_kernel(int socket){
+
+	void* msg = NULL;
+
+	if(recv(socket, msg, sizeof(t_paquete), MSG_WAITALL) > 0)
+		return msg;
+	else {
+		close(socket);
+        int* aux = -1;
+		return aux;
+	}
+}
+
+
+void* leer_buffer_kernel(int cod_op, t_buffer* buffer){
 
     void* datos;
-    t_buffer* buffer;
 
     switch(cod_op){
 
         case CREAR_PROCESO:
-            //codigo
+            datos = (t_datos_inicializacion_proceso*)deserializar_datos_inicializacion_proceso(buffer);
             break;
 
         case FINALIZAR_PROCESO:
-            //codigo
+            datos = (t_datos_finalizacion_proceso*)deserializar_datos_finalizacion_proceso(buffer);
             break;
 
         case CREAR_HILO:
-            //codigo
+            datos = (t_datos_inicializacion_hilo*)deserializar_datos_inicializacion_hilo(buffer);
             break;
 
         case FINALIZAR_HILO:
-            //codigo
+            datos = (t_datos_finalizacion_hilo*)deserializar_datos_finalizacion_hilo(buffer);
             break;
 
         case MEMORY_DUMP:
-            //codigo
+            //log_info(logger, "Función aún no implementada!")
             break;
 
         default:
@@ -51,35 +62,34 @@ void* leer_buffer_kernel(int cod_op){
     return datos;
 }
 
-void* leer_buffer_cpu(int cod_op){
+void* leer_buffer_cpu(int cod_op, t_buffer* buffer){
 
     void* datos;
-    t_buffer* buffer;
 
     switch(cod_op){
 
         case DEVOLVER_CONTEXTO_EJECUCION:
-            //codigo
+            datos = (t_cpu_solicitar_contexto*)deserializar_datos_solicitar_contexto(buffer);
             break;
 
         case ACTUALIZAR_CONTEXTO_EJECUCION:
-            //codigo
+            datos = (t_contexto*)deserializar_datos_contexto(buffer);
             break;
 
         case DEVOLVER_INSTRUCCION:
-            //codigo
+            datos = (t_datos_devolver_instruccion*)deserializar_datos_solicitar_instruccion(buffer);
             break;
 
         case LEER_MEMORIA:
-            //codigo
+            //log_info(logger, "Función aún no implementada!")
             break;
 
         case ESCRIBIR_MEMORIA:
-            //codigo
+            //log_info(logger, "Función aún no implementada!")
             break;
 
         default:
-            //codigo
+            //log_error(logger, "CPU envió un código de operacion desconocido - %d", cod_op);
             break;
     }
 
@@ -87,23 +97,17 @@ void* leer_buffer_cpu(int cod_op){
 }
 
 void enviar_buffer(int cod_op, void* datos){
+    switch(cod_op){
+        case DEVOLVER_CONTEXTO_EJECUCION:
+        //codigo
+        break;
 
-}
+        case DEVOLVER_INSTRUCCION:
+        //codigo
+        break;
 
-estructura_hilo* convertir_struct(datos_contexto_hilo* datos_contexto_hilo){
-
-    estructura_hilo* hilo;
-
-    hilo->tid = datos_contexto_hilo->tid;
-    hilo->PC = datos_contexto_hilo->PC;
-    hilo->AX = datos_contexto_hilo->AX;
-    hilo->BX = datos_contexto_hilo->BX;
-    hilo->CX = datos_contexto_hilo->CX;
-    hilo->DX = datos_contexto_hilo->DX;
-    hilo->EX = datos_contexto_hilo->EX;
-    hilo->FX = datos_contexto_hilo->FX;
-    hilo->GX = datos_contexto_hilo->GX;
-    hilo->HX = datos_contexto_hilo->HX;
-
-    return hilo;
+        default:
+        //codigo
+        break;
+    }
 }
