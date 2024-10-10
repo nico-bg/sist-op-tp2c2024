@@ -22,31 +22,36 @@ void* recibir_mensaje_kernel(int socket){
 		return msg;
 	else {
 		close(socket);
-        int* aux = -1;
-		return aux;
+		return msg;
 	}
 }
 
 
-void* leer_buffer_kernel(int cod_op, t_buffer* buffer){
+void* leer_buffer_kernel(int cod_op, int socket_cliente){
 
+    t_buffer* buffer;
+    uint32_t length;
     void* datos;
 
     switch(cod_op){
 
         case CREAR_PROCESO:
+            buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_inicializacion_proceso*)deserializar_datos_inicializacion_proceso(buffer);
             break;
 
         case FINALIZAR_PROCESO:
+            buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_finalizacion_proceso*)deserializar_datos_finalizacion_proceso(buffer);
             break;
 
         case CREAR_HILO:
+            buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_inicializacion_hilo*)deserializar_datos_inicializacion_hilo(buffer);
             break;
 
         case FINALIZAR_HILO:
+            buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_finalizacion_hilo*)deserializar_datos_finalizacion_hilo(buffer);
             break;
 
@@ -62,21 +67,26 @@ void* leer_buffer_kernel(int cod_op, t_buffer* buffer){
     return datos;
 }
 
-void* leer_buffer_cpu(int cod_op, t_buffer* buffer){
+void* leer_buffer_cpu(int cod_op, int socket_cliente){
 
+    t_buffer* buffer;
+    uint32_t length;
     void* datos;
 
     switch(cod_op){
 
         case DEVOLVER_CONTEXTO_EJECUCION:
+            buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_cpu_solicitar_contexto*)deserializar_datos_solicitar_contexto(buffer);
             break;
 
         case ACTUALIZAR_CONTEXTO_EJECUCION:
+            buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_contexto*)deserializar_datos_contexto(buffer);
             break;
 
         case DEVOLVER_INSTRUCCION:
+            buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_devolver_instruccion*)deserializar_datos_solicitar_instruccion(buffer);
             break;
 
@@ -96,7 +106,7 @@ void* leer_buffer_cpu(int cod_op, t_buffer* buffer){
     return datos;
 }
 
-void enviar_buffer(int cod_op, void* datos){
+void enviar_buffer(int cod_op, int socket_cliente, void* datos){
     switch(cod_op){
         case DEVOLVER_CONTEXTO_EJECUCION:
         //codigo
