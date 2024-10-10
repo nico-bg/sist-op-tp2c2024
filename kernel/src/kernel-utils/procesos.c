@@ -65,5 +65,6 @@ void destruir_pcb(t_pcb* pcb)
 void destruir_tcb(t_tcb* tcb)
 {
     list_destroy(tcb->hilos_bloqueados);
+    free(tcb->nombre_archivo);
     free(tcb);
 }
