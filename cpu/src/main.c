@@ -1,5 +1,16 @@
 #include <main.h>
 #include <pthread.h>
+#include <semaphore.h>
+
+
+typedef struct
+{
+    int cliente_socket;
+    int cliente_memoria;
+    t_log *logger;
+} t_thread_args;
+
+sem_t sem_ciclo_de_instruccion;
 
 
 int main(int argc, char* argv[]) {
@@ -8,6 +19,7 @@ int main(int argc, char* argv[]) {
     char* puerto_memoria;
     char* puerto_escucha_dispatch;
     char* puerto_escucha_interrupt;
+    
     t_log* logger;
     t_config* config;
     
@@ -21,9 +33,12 @@ int main(int argc, char* argv[]) {
     puerto_escucha_dispatch = config_get_string_value(config, "PUERTO_ESCUCHA_DISPATCH");
     puerto_escucha_interrupt = config_get_string_value(config, "PUERTO_ESCUCHA_INTERRUPT");
 
-    int socket_memoria = conectar_a_socket(ip_memoria, puerto_memoria);
-    log_info(logger, "Conectado a Memoria");    
-    enviar_mensaje("Hola, soy el CPU", socket_memoria);
+    //int socket_memoria = conectar_a_socket(ip_memoria, puerto_memoria);
+    
+    int socket_memoria = 1;
+    
+    //log_info(logger, "Conectado a Memoria");    
+    //enviar_mensaje("Hola, soy el CPU", socket_memoria);
 
    int fd_dispatch = iniciar_servidor(puerto_escucha_dispatch);
 /* Esperamos a que se conecte el Kernel por el puerto dispatch */
@@ -37,8 +52,8 @@ int main(int argc, char* argv[]) {
 */
     log_info(logger, "Hola, el kernel se conecto por puerto interrupt");
 
-    t_thread_args hilos_args = {socket_dispatch, socket_memoria, logger};  
 
+    t_thread_args hilos_args = {socket_dispatch, socket_memoria, logger};  
 
     pthread_t thread_dispatch;
     pthread_t thread_ciclo_de_instruccion;
@@ -60,11 +75,25 @@ void iniciar_semaforos (){
 
 
 void ciclo_de_instruccion (void *args) {
-    sem_wait(&sem_ciclo_de_instruccion);
+    
+    while(true){
+    //sem_wait(&sem_ciclo_de_instruccion);
 
     t_thread_args *thread_args = (t_thread_args *) args;
     t_log *logger =  thread_args -> logger;
+    int servidor_memoria =  thread_args -> cliente_memoria;
+
     log_info(logger, "Hilo ciclo_de_instrucción en ejecucion");
+
+    //Fetch
+    //              pedir_intruccion_a_memoria(servidor_memoria, buffer);
+
+    //char* instruccion = pedir_intruccion_a_memoria(servidor_memoria, pcb);
+
+    //estructura_instruccion = string_split(instruccion, );
+
+    }
+
 }
 
 
@@ -77,18 +106,12 @@ void escuchar_dispatch (void *args) {
 
     log_info(logger, "Hilo escuchar_dispatch esperando pid y tid del kernel");
 
-
-	t_buffer* buffer;
-    
+	t_buffer* buffer;    
     uint32_t size;
-    
     
     while (1) {
         op_code cod_op = recibir_operacion(cliente_dispatch);
-        
-        //op_code cod_op = OPERACION_EJECUTAR_HILO;
-
-        
+            
         log_info(logger, "me llego el codigo de operacion");
         switch (cod_op) {
             case OPERACION_EJECUTAR_HILO:
@@ -99,17 +122,20 @@ void escuchar_dispatch (void *args) {
 
                 log_info(logger, "me llego el buffer");
 
-                 pcb = deserializar_hilo_a_cpu(buffer);
+                pcb = deserializar_hilo_a_cpu(buffer);
 
                 log_info(logger, "me llego el buffer con primer campo:%d", pcb -> tid );
 
                 log_info(logger, "me llego el buffer con segundo campo:%d", pcb -> pid );
-/*
-                contexto = pedir_contexto_a_memoria(servidor_memoria);
-*/
-               // contexto = { '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11' };  
 
-                sem_post(&sem_ciclo_de_instruccion);
+
+                t_buffer* contexto_devuelto = pedir_contexto(servidor_memoria, buffer);
+
+                contexto = deserializar_datos_contexto(contexto_devuelto);
+
+                
+                log_info(logger, "me llego el buffer con segundo campo:%d", contexto.AX );
+
 
                 break;
             case -1:
@@ -126,9 +152,20 @@ void escuchar_dispatch (void *args) {
 
 
 
+t_buffer* pedir_contexto(int servidor_memoria, t_buffer* buffer_pedido_contexto)
+{
+    // Empaquetamos y serializamos los datos junto con el código de operación
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = DEVOLVER_CONTEXTO_EJECUCION;
+    paquete->buffer = buffer_pedido_contexto;
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
 
+    send(servidor_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
 
-
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
+    recibir_operacion(servidor_memoria);    
+}
 
 /*
 
@@ -136,7 +173,7 @@ void procesar_pcb (int socket_mem, t_hilo_a_cpu estructura_pcb, t_log*  logger){
  log_info(logger, "Se ejecuta el pcb");
 }
 */
-
+/*
 void ejecutar_instruccion(t_instruccion *instruccion, uint32_t valor_rw){   //valor_rw seria un valor que tal vez usemos en la ejecucion de read y write al desarrollar una nueva funcion que escriba en memoria//
 	int resultado; //variable para almacenar datos de salida luego de la ejecucion de inst. dependiendo la operacion//
     switch(instruccion->instruc){ //uso de semaforos en cada caso para usar logger//
@@ -164,12 +201,13 @@ void ejecutar_instruccion(t_instruccion *instruccion, uint32_t valor_rw){   //va
     }
 
 }
-
+*/
+/*
 void chequeo_interrupcion(){
     //uso de semaforos combinados con hilos que no me queda claro//
     //es una funcion que se la llama al final de cada "case" de la funcion ejecutar_instruccion//
 }
-
+*/
 
 void terminar_programa(t_log* logger, t_config* config, int conexion)
 {

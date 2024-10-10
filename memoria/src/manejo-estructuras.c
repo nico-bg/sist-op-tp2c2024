@@ -1,22 +1,250 @@
 #include "main.h"
 
-void iniciar_proceso(){
 
+/* Para el manejo de instrucciones */
+#define MAX_LINE_LENGTH 255
+
+nodo_proceso* buscar_proceso_por_pid(int pid){
+
+    nodo_proceso* actual = nodo_primer_proceso;
+
+    while(actual != NULL && actual->proceso.pid != pid){
+        actual = actual->siguiente_nodo_proceso;
+    }
+
+    return actual;
 }
 
-void finalizar_proceso(){
+nodo_hilo* buscar_hilo_por_tid(int pid, int tid){
+
+    nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
+    nodo_hilo* actual = nodo_proceso->proceso.lista_hilos;
+
+    while(actual != NULL && actual->hilo.tid != tid){
+        actual = actual->siguiente_nodo_hilo;
+    }
+
+    return actual;
+}
+
+
+void iniciar_proceso(int pid, int tamanio, const char* archivo_pseudocodigo){
     
+    nodo_proceso* nuevo_nodo_proceso = (nodo_proceso*)malloc(sizeof(nodo_proceso));
+
+    nuevo_nodo_proceso->proceso.pid = pid;
+    nuevo_nodo_proceso->proceso.tamanio = tamanio;
+    nuevo_nodo_proceso->proceso.base = 0;
+    nuevo_nodo_proceso->proceso.limite = nuevo_nodo_proceso->proceso.base + tamanio;
+    nuevo_nodo_proceso->proceso.archivo_pseudocodigo = leer_archivo_pseudocodigo(archivo_pseudocodigo);
+    nuevo_nodo_proceso->proceso.lista_hilos = NULL; //No inicializamos ningún hilo todavía
+
+    nuevo_nodo_proceso->siguiente_nodo_proceso = NULL; //Inicializamos el puntero al siguiente elemento de la lista (vacío)
+
+    if(nodo_primer_proceso == NULL){ //Si aún no se creó ningún proceso
+        nodo_primer_proceso = nuevo_nodo_proceso;
+    } else { //Si ya hay al menos un proceso creado
+         nodo_proceso* proceso = buscar_ultimo_proceso();
+         proceso->siguiente_nodo_proceso = nuevo_nodo_proceso;
+    }
+
+    return;
 }
 
-void agregar_hilo(estructura_proceso* proceso, estructura_hilo nuevo_hilo;){
-    nodo_hilo* nuevo_nodo = (nodo_hilo*) malloc(sizeof(nodo_hilo));
-    nuevo_nodo->hilo = nuevo_hilo;
-    nuevo_nodo->siguiente = proceso->hilos;
-    proceso->hilos = nuevo_nodo;
+void finalizar_proceso(int pid){
+
+    nodo_proceso* proceso = buscar_proceso_por_pid(pid);
+
+    nodo_hilo* actual = proceso->proceso.lista_hilos;
+    nodo_hilo* siguiente;
+
+    while(actual != NULL){ //Eliminamos todos los hilos del programa
+        siguiente = actual->siguiente_nodo_hilo;
+        free(actual);
+        actual = siguiente;
+    }
+
+    liberar_instrucciones(proceso->proceso.archivo_pseudocodigo);
+    free(proceso);
+    return;
 }
 
-void finalizar_hilo(){
+void iniciar_hilo(int pid, int tid, const char* archivo){
+
+    nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
+    nodo_hilo* nuevo_nodo_hilo = (nodo_hilo*)malloc(sizeof(nodo_hilo));
+
+    nuevo_nodo_hilo->hilo.tid = tid;
+    nuevo_nodo_hilo->hilo.PC = 0;
+    nuevo_nodo_hilo->hilo.AX = 0;
+    nuevo_nodo_hilo->hilo.BX = 0;
+    nuevo_nodo_hilo->hilo.CX = 0;
+    nuevo_nodo_hilo->hilo.DX = 0;
+    nuevo_nodo_hilo->hilo.EX = 0;
+    nuevo_nodo_hilo->hilo.FX = 0;
+    nuevo_nodo_hilo->hilo.GX = 0;
+    nuevo_nodo_hilo->hilo.HX = 0;
+
+    nuevo_nodo_hilo->hilo.archivo_pseudocodigo_th = leer_archivo_pseudocodigo(archivo);
+
+    nuevo_nodo_hilo->siguiente_nodo_hilo = NULL;
+
+    if(nodo_proceso->proceso.lista_hilos == NULL){   // Aun no se inicializó ningún hilo en el proceso
+        nodo_proceso->proceso.lista_hilos = nuevo_nodo_hilo;
+    } else {                                // El proceso ya tenía al menos un hilo
+        nodo_hilo* ultimo_hilo = buscar_ultimo_hilo(nodo_proceso->proceso.lista_hilos->hilo.tid);
+        ultimo_hilo->siguiente_nodo_hilo = nuevo_nodo_hilo;
+    }
+
+    return;
+}
+
+void finalizar_hilo(int pid, int tid){
+
+    nodo_hilo* actual = buscar_hilo_por_tid(pid, tid);
+
+    free(actual);
 
 }
 
-void
+
+char** leer_archivo_pseudocodigo(const char* archivo_pseudocodigo){
+
+    int cant_lineas = contar_lineas(archivo_pseudocodigo);
+
+    FILE* archivo = fopen(archivo_pseudocodigo, "r");
+
+    char** instrucciones = (char**)malloc((cant_lineas + 1)*sizeof(char*));
+
+    char buffer[MAX_LINE_LENGTH];
+    int cont = 0;
+
+    while(fgets(buffer, MAX_LINE_LENGTH, archivo) != NULL && cont < cant_lineas){
+        buffer[strcspn(buffer, "\n")] = 0;
+
+        instrucciones[cont] = (char*)malloc((strlen(buffer) + 1) * sizeof(char));
+
+        strcpy(instrucciones[cont], buffer);
+        cont++;
+    }
+
+    instrucciones[cont] = NULL; //La ultima linea del array será NULL, indica que terminan las instrucciones
+
+    fclose(archivo);
+    return instrucciones;
+
+}
+
+void liberar_instrucciones(char** instrucciones){
+    int i = 0;
+    while(instrucciones[i]!=NULL){
+        free(instrucciones[i]);
+        i++;
+    }
+    free(instrucciones);
+}
+
+int contar_lineas(const char* nombre_archivo){
+
+    FILE *archivo = fopen(nombre_archivo, "r"); //Abrimos el archivo como solo lectura
+    
+    int cont = 0;
+    char linea[MAX_LINE_LENGTH];
+
+    while(fgets(linea, sizeof(linea), archivo) != NULL){
+        cont++;
+    }
+
+    fclose(archivo);
+    return cont;
+}
+
+
+nodo_proceso* buscar_ultimo_proceso(void){
+    if(nodo_primer_proceso == NULL){
+        return nodo_primer_proceso;
+    }
+
+    nodo_proceso* actual = nodo_primer_proceso;
+    while(actual->siguiente_nodo_proceso != NULL){
+        actual = actual->siguiente_nodo_proceso;
+    }
+    return actual;
+}
+
+nodo_hilo* buscar_ultimo_hilo(int pid){
+
+    nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
+    nodo_hilo* actual = nodo_proceso->proceso.lista_hilos;
+
+    while(actual->siguiente_nodo_hilo != NULL){
+        actual = actual->siguiente_nodo_hilo;
+    }
+
+    return actual;
+}
+
+
+estructura_hilo* devolver_contexto_ejecucion(int pid, int tid){
+
+    nodo_hilo* hilo = buscar_hilo_por_tid(pid, tid);
+
+    return &(hilo->hilo);
+}
+
+void actualizar_contexto_ejecucion(int pid, int tid, estructura_hilo* contexto_hilo){
+
+    nodo_hilo* hilo_a_actualizar = buscar_hilo_por_tid(pid, tid);
+
+    hilo_a_actualizar->hilo.AX = contexto_hilo->AX;
+    hilo_a_actualizar->hilo.BX = contexto_hilo->BX;
+    hilo_a_actualizar->hilo.CX = contexto_hilo->CX;
+    hilo_a_actualizar->hilo.DX = contexto_hilo->DX;
+    hilo_a_actualizar->hilo.EX = contexto_hilo->EX;
+    hilo_a_actualizar->hilo.FX = contexto_hilo->FX;
+    hilo_a_actualizar->hilo.GX = contexto_hilo->GX;
+    hilo_a_actualizar->hilo.HX = contexto_hilo->HX;
+    hilo_a_actualizar->hilo.PC = contexto_hilo->PC;
+
+    return;
+}
+
+char* devolver_instruccion(int pid, int tid, int PC){
+
+    nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
+    //estructura_hilo* hilo = buscar_hilo_por_tid(pid, tid);
+
+    char* inst = nodo_proceso->proceso.archivo_pseudocodigo[PC];
+
+    return inst;
+}
+
+
+/*
+static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo)
+{
+    // Nos conectamos a la Memoria
+    int fd_memoria = crear_conexion_a_memoria();
+
+    // Serializamos los datos a enviar en un buffer
+    t_datos_inicializacion_hilo* datos_a_enviar = malloc(sizeof(t_datos_inicializacion_hilo));
+    datos_a_enviar->pid = hilo->pid_padre;
+    datos_a_enviar->tid = hilo->tid;
+    datos_a_enviar->archivo_pseudocodigo = hilo->nombre_archivo;
+    t_buffer* buffer_datos = serializar_datos_inicializacion_hilo(datos_a_enviar);
+
+    // Empaquetamos y serializamos los datos junto con el código de operación
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = OPERACION_CREAR_HILO;
+    paquete->buffer = buffer_datos;
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+    send(fd_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
+    buffer_destroy(buffer_datos);
+    destruir_datos_inicializacion_hilo(datos_a_enviar);
+    close(fd_memoria);
+}
+*/
