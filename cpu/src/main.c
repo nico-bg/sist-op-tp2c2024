@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     socket_memoria = conectar_a_socket(ip_memoria, puerto_memoria);
 
     log_info(logger, "Conectado a Memoria");    
-    enviar_mensaje("Hola, soy el CPU", socket_memoria);
+   // enviar_mensaje("Hola, soy el CPU", socket_memoria);
 
    int fd_dispatch = iniciar_servidor(puerto_escucha_dispatch);
    int fd_interrupt = iniciar_servidor(puerto_escucha_interrupt);
@@ -96,19 +96,18 @@ void escuchar_dispatch () {
 
                 t_buffer* contexto_devuelto = pedir_contexto(socket_memoria, buffer);
 
-
-                //contexto = deserializar_datos_contexto(contexto_devuelto);
+                contexto = deserializar_datos_contexto(contexto_devuelto);
 //READ_MEM AX BX
-                 contexto.PC = 1;
-                 contexto.AX = 2;
-                 contexto.BX = 3;
-                 contexto.CX = 0;
-                 contexto.DX = 2;
-                 contexto.EX = 0;
-                 contexto.FX = 0;
-                 contexto.GX = 9;
-                 contexto.Base = 1000;
-                 contexto.Limite = 2000;
+               //   contexto.PC = 1;
+               //   contexto.AX = 2;
+               //   contexto.BX = 3;
+               //   contexto.CX = 0;
+               //   contexto.DX = 2;
+               //   contexto.EX = 0;
+               //   contexto.FX = 0;
+               //   contexto.GX = 9;
+               //   contexto.Base = 1000;
+               //   contexto.Limite = 2000;
 
                 log_info(logger, "El valor de GX es:%d",contexto.GX);
 
@@ -138,7 +137,7 @@ void ciclo_de_instruccion () {
 
     //Fetch
     
-    //stringInstrucciones* intruccionString = pedir_proxima_instruccion(obtenerPid(), obtenerTid(), obtenerPC());
+   // stringInstrucciones* intruccionString = pedir_proxima_instruccion(obtenerPid(), obtenerTid(), obtenerPC());
 
     char* instruccion = "LOG AX";
 
@@ -285,7 +284,11 @@ t_buffer* pedir_contexto(int servidor_memoria, t_buffer* buffer_pedido_contexto)
 
     buffer_destroy(paquete_serializado);
     eliminar_paquete(paquete);
-    recibir_operacion(servidor_memoria);    
+    recibir_operacion(servidor_memoria);   
+
+    u_int32_t tamaño_buffer;
+
+    return recibir_buffer(&tamaño_buffer, socket_memoria); 
 }
 
 void terminar_programa()
