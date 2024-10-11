@@ -62,6 +62,7 @@ int main(int argc, char* argv[]) {
 
 void iniciar_semaforos (){
     sem_init(&sem_ciclo_de_instruccion, 0, 0);
+    sem_init(&sem_operaciones, 0, 0);
 }
 
 
@@ -86,7 +87,7 @@ void escuchar_dispatch () {
 
                log_info(logger, "me llego el buffer");
 
-    // pcb estructura global
+               // pcb estructura global
                 pcb = deserializar_hilo_a_cpu(buffer);
 
         

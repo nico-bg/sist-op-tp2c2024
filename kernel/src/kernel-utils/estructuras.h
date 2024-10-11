@@ -7,14 +7,26 @@
 #include <commons/collections/queue.h>
 
 typedef struct {
+    uint32_t tid;
+    uint32_t prioridad;
+    // Para poder buscar al proceso padre en `lista_procesos`
+    uint32_t pid_padre;
+    // Archivo de pseudocodigo a procesar
+    char* nombre_archivo;
+    // Lista de TCBs que se encuentren en estado BLOCKED esperando hasta que este hilo finalice
+    // Nos va a servir para saber qué hilos mandar a READY cuando este hilo finalice
+    t_list* hilos_bloqueados;
+} t_tcb;
+
+typedef struct {
     // Nombre del recurso creado con MUTEX_CREATE
     char* recurso;
-    // // Valor del mutex para garantizar mutua exclusión cuando quieran modificar el recurso
-    // pthread_mutex_t* mutex;
     // Nos va a servir para validar si el recurso se encuentra asignado o no
     bool esta_libre;
     // Cola de hilos que están esperando el mutex
     t_queue* hilos_bloqueados;
+    // Hilo al que se le asignó primero el mutex 
+    t_tcb* hilo_asignado;
 } t_mutex;
 
 typedef struct {
@@ -33,18 +45,6 @@ typedef struct {
     char* nombre_archivo;
 } t_pcb;
 
-typedef struct {
-    uint32_t tid;
-    uint32_t prioridad;
-    // Para poder buscar al proceso padre en `lista_procesos`
-    uint32_t pid_padre;
-    // Archivo de pseudocodigo a procesar
-    char* nombre_archivo;
-    // Lista de TCBs que se encuentren en estado BLOCKED esperando hasta que este hilo finalice
-    // Nos va a servir para saber qué hilos mandar a READY cuando este hilo finalice
-    t_list* hilos_bloqueados;
-} t_tcb;
-
 typedef enum {
     ESTADO_NEW,
     ESTADO_READY,
@@ -52,5 +52,10 @@ typedef enum {
     ESTADO_EXIT,
     ESTADO_BLOCKED
 } t_estado;
+
+typedef struct {
+    t_tcb* hilo;
+    uint32_t tiempo;
+} t_solicitud_io;
 
 #endif

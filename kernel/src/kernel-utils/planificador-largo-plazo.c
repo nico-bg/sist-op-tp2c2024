@@ -1,6 +1,9 @@
 #include <kernel-utils/planificador-largo-plazo.h>
+#include <utils/comunicacion_kernel_memoria.h>
+#include <kernel-utils/conexion-a-memoria.h>
 
 static void transicion_new_a_ready(t_pcb* proceso, t_tcb* hilo);
+static int pedir_inicializacion_hilo_a_memoria(t_tcb* hilo);
 static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso);
 static t_tcb* crear_hilo_principal(t_pcb* proceso_padre);
 
@@ -46,6 +49,7 @@ void* planificador_largo_plazo()
         // Si la respuesta es exitosa, pasamos el tcb a `estado_ready` y sacamos el proceso de `estado_new`
         if(resultado == 0) {
             transicion_new_a_ready(proceso_a_inicializar, hilo_principal);
+            log_info(logger, "## (%d:%d) Se crea el Hilo - Estado: READY", hilo_principal->pid_padre, hilo_principal->tid);
         }
     }
 }
@@ -79,9 +83,45 @@ void* liberar_hilos_en_exit()
  * espera la respuesta y devuelve 0 si se pudo inicializar,
  * caso contrario (memoria insuficiente) devuelve -1
  */
-int pedir_inicializacion_hilo_a_memoria(t_tcb* hilo)
+static int pedir_inicializacion_hilo_a_memoria(t_tcb* hilo)
 {
-    return 0;
+    // Establecer la conexión con Memoria
+    int socket_memoria = crear_conexion_a_memoria();
+    if (socket_memoria == -1) {
+        log_error(logger, "Error al conectar con Memoria");
+    }
+
+    // Serializamos los datos a enviar en un buffer
+    t_datos_inicializacion_hilo* datos_inicializacion = malloc(sizeof(t_datos_inicializacion_hilo));
+    datos_inicializacion->pid = hilo->pid_padre;
+    datos_inicializacion->tid = hilo->tid;
+    datos_inicializacion->archivo_pseudocodigo = hilo->nombre_archivo;
+    t_buffer* buffer_inicializacion = serializar_datos_inicializacion_hilo(datos_inicializacion);
+
+    // Empaquetamos y serializamos los datos junto con el código de operación
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = OPERACION_CREAR_HILO;
+    paquete->buffer = buffer_inicializacion;
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+    send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
+    destruir_datos_inicializacion_hilo(datos_inicializacion);
+
+    // Esperar respuesta de Memoria
+    int resultado;
+    if (recv(socket_memoria, &resultado, sizeof(int), MSG_WAITALL) != sizeof(int)) {
+        log_error(logger, "Error al recibir respuesta de Memoria");
+        resultado = -1;
+    }
+
+    // Cerrar la conexión con Memoria
+    close(socket_memoria);
+
+    // Retornar el resultado
+    return resultado;
 }
 
 static void transicion_new_a_ready(t_pcb* proceso, t_tcb* hilo)
@@ -108,11 +148,48 @@ static t_tcb* crear_hilo_principal(t_pcb* proceso_padre)
     hilo_principal->nombre_archivo = string_duplicate(proceso_padre->nombre_archivo);
     hilo_principal->tid = 0;
     hilo_principal->prioridad = proceso_padre->prioridad;
+    hilo_principal->hilos_bloqueados = list_create();
 
     return hilo_principal;
 }
 
 static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso)
 {
-    return 0;
+    int socket_memoria = crear_conexion_a_memoria();
+
+    if (socket_memoria == -1) {
+        log_error(logger, "No se pudo establecer la coneccion con la memoria");
+    }  
+
+    t_datos_inicializacion_proceso* datos_inicializacion = malloc(sizeof(t_datos_inicializacion_proceso));
+    datos_inicializacion->pid = proceso->pid;  // PID del proceso
+    datos_inicializacion->tamanio = proceso->tamanio;  // Tamaño del proceso
+
+    // Serializar los datos de inicialización del proceso
+    t_buffer* buffer_inicializacion = serializar_datos_inicializacion_proceso(datos_inicializacion);
+
+    // Empaquetamos y serializamos los datos junto con el código de operación
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = OPERACION_CREAR_PROCESO;
+    paquete->buffer = buffer_inicializacion;
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+    send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
+    destruir_datos_inicializacion_proceso(datos_inicializacion);
+
+    // Esperar respuesta de Memoria
+    int resultado;
+    if (recv(socket_memoria, &resultado, sizeof(int), MSG_WAITALL) != sizeof(int)) {
+        log_error(logger, "Error al recibir respuesta de Memoria");
+        resultado = -1;
+    }
+
+    // Cerrar la conexión con Memoria
+    close(socket_memoria);
+
+    return resultado; 
 }
+    

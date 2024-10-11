@@ -4,7 +4,6 @@
 int mayor_prioridad_en_ready;
 
 static void transicion_exec_a_ready(t_tcb* hilo);
-static void transicion_exec_a_blocked(t_tcb* hilo);
 static void transicion_ready_a_exec(t_tcb* hilo);
 static t_tcb* obtener_siguiente_a_exec();
 static t_tcb* obtener_siguiente_a_exec_fifo();
@@ -17,6 +16,7 @@ static void solicitar_desalojo_hilo_a_cpu(t_tcb* hilo);
 static void* temporizador_desalojo_por_quantum(void* arg);
 static t_tcb* obtener_siguiente_a_exec_colas_multinivel();
 static void enviar_hilo_a_cpu(t_tcb* hilo);
+static void procesar_instrucciones_cpu(t_tcb* hilo);
 
 void* planificador_corto_plazo()
 {
@@ -30,80 +30,140 @@ void* planificador_corto_plazo()
         transicion_ready_a_exec(siguiente_a_exec);
         pthread_mutex_unlock(&mutex_estado_ready);
 
-        enviar_hilo_a_cpu(siguiente_a_exec);
-
-        // Esperamos la respuesta de la CPU para procesar una syscall, un desalojo, un bloqueo, etc
-        op_code operacion = recibir_operacion(socket_cpu_dispatch);
-        uint32_t size;
-        t_buffer* buffer;
-
-        switch (operacion)
-        {
-        case OPERACION_CREAR_PROCESO:
-            log_info(logger, "## (%d:%d) - Solicitó syscall: PROCESS_CREATE", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
-
-            // Recibimos y deserializamos los datos enviados por la CPU
-            buffer = recibir_buffer(&size, socket_cpu_dispatch);
-            t_datos_crear_proceso* datos_crear_proceso = deserializar_datos_crear_proceso(buffer);
-
-            syscall_crear_proceso(datos_crear_proceso->archivo_pseudocodigo, datos_crear_proceso->tamanio_proceso, datos_crear_proceso->prioridad);
-            destruir_datos_crear_proceso(datos_crear_proceso);
-            break;
-        case OPERACION_FINALIZAR_PROCESO:
-            log_info(logger, "## (%d:%d) - Solicitó syscall: PROCESS_EXIT", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
-
-            syscall_finalizar_proceso();
-            break;
-        case OPERACION_CREAR_HILO:
-            log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_CREATE", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
-
-            // Recibimos y deserializamos los datos enviados por la CPU
-            buffer = recibir_buffer(&size, socket_cpu_dispatch);
-            t_datos_crear_hilo* datos_crear_hilo = deserializar_datos_crear_hilo(buffer);
-
-            syscall_crear_hilo(datos_crear_hilo->archivo_pseudocodigo, datos_crear_hilo->prioridad);
-            destruir_datos_crear_hilo(datos_crear_hilo);
-            break;
-        case OPERACION_FINALIZAR_HILO:
-            log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_EXIT", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
-            syscall_finalizar_hilo();
-            break;
-        case OPERACION_CREAR_MUTEX:
-            log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_CREATE", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
-
-            // Recibimos y deserializamos los datos enviados por la CPU
-            buffer = recibir_buffer(&size, socket_cpu_dispatch);
-            t_datos_operacion_mutex* datos_crear_mutex = deserializar_datos_operacion_mutex(buffer);
-
-            syscall_crear_mutex(datos_crear_mutex->recurso);
-            destruir_datos_operacion_mutex(datos_crear_mutex);
-            break;
-        case OPERACION_BLOQUEAR_MUTEX:
-            log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_LOCK", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
-
-            // Recibimos y deserializamos los datos enviados por la CPU
-            buffer = recibir_buffer(&size, socket_cpu_dispatch);
-            t_datos_operacion_mutex* datos_bloquear_mutex = deserializar_datos_operacion_mutex(buffer);
-
-            syscall_bloquear_mutex(datos_bloquear_mutex->recurso);
-            destruir_datos_operacion_mutex(datos_bloquear_mutex);
-            break;
-        case OPERACION_DESBLOQUEAR_MUTEX:
-            log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_UNLOCK", siguiente_a_exec->pid_padre, siguiente_a_exec->tid);
-            break;
-        case OPERACION_DESALOJAR_HILO:
-            transicion_exec_a_ready(siguiente_a_exec);
-            break;
-        case OPERACION_IO:
-            transicion_exec_a_blocked(siguiente_a_exec);
-            break;
-        default:
-            log_debug(logger_debug, "Motivo de devolución desconocido");
-            break;
-        }
+        procesar_instrucciones_cpu(siguiente_a_exec);
     }
 
     return NULL;
+}
+
+/**
+ * @brief Envía el hilo a que sea procesado por la CPU y espera la llamada de alguna syscall u operación de desalojo
+ * @brief Podemos utilizarla de manera recursiva para no replanificar si la operación no lo requiere
+ */
+static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
+{
+    enviar_hilo_a_cpu(hilo_en_ejecucion);
+
+    // Esperamos la respuesta de la CPU para procesar una syscall, un desalojo, un bloqueo, etc
+    op_code operacion = recibir_operacion(socket_cpu_dispatch);
+    uint32_t size;
+    t_buffer* buffer;
+
+    switch (operacion)
+    {
+    case OPERACION_CREAR_PROCESO:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: PROCESS_CREATE", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        // Recibimos y deserializamos los datos enviados por la CPU
+        buffer = recibir_buffer(&size, socket_cpu_dispatch);
+        t_datos_crear_proceso* datos_crear_proceso = deserializar_datos_crear_proceso(buffer);
+
+        syscall_crear_proceso(datos_crear_proceso->archivo_pseudocodigo, datos_crear_proceso->tamanio_proceso, datos_crear_proceso->prioridad);
+        destruir_datos_crear_proceso(datos_crear_proceso);
+
+        // Continuamos ejecutando el hilo que solicitó la syscall
+        procesar_instrucciones_cpu(hilo_en_ejecucion);
+        break;
+    case OPERACION_FINALIZAR_PROCESO:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: PROCESS_EXIT", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        syscall_finalizar_proceso();
+        break;
+    case OPERACION_CREAR_HILO:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_CREATE", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        // Recibimos y deserializamos los datos enviados por la CPU
+        buffer = recibir_buffer(&size, socket_cpu_dispatch);
+        t_datos_crear_hilo* datos_crear_hilo = deserializar_datos_crear_hilo(buffer);
+
+        syscall_crear_hilo(datos_crear_hilo->archivo_pseudocodigo, datos_crear_hilo->prioridad);
+        destruir_datos_crear_hilo(datos_crear_hilo);
+
+        // Continuamos ejecutando el hilo que solicitó la syscall
+        procesar_instrucciones_cpu(hilo_en_ejecucion);
+        break;
+    case OPERACION_FINALIZAR_HILO:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_EXIT", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+        syscall_finalizar_hilo();
+        break;
+    case OPERACION_ESPERAR_HILO:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_JOIN", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        // Recibimos y deserializamos los datos enviados por la CPU
+        buffer = recibir_buffer(&size, socket_cpu_dispatch);
+        t_datos_operacion_hilo* datos_esperar_hilo = deserializar_datos_operacion_hilo(buffer);
+
+        bool hilo_bloqueado = syscall_esperar_hilo(datos_esperar_hilo->tid);
+        destruir_datos_operacion_hilo(datos_esperar_hilo);
+
+        // Continuamos ejecutando el hilo que solicitó la syscall solo si el hilo no fue bloqueado por la syscall
+        if(!hilo_bloqueado) {
+            procesar_instrucciones_cpu(hilo_en_ejecucion);
+        }
+        break;
+    case OPERACION_CREAR_MUTEX:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_CREATE", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        // Recibimos y deserializamos los datos enviados por la CPU
+        buffer = recibir_buffer(&size, socket_cpu_dispatch);
+        t_datos_operacion_mutex* datos_crear_mutex = deserializar_datos_operacion_mutex(buffer);
+
+        syscall_crear_mutex(datos_crear_mutex->recurso);
+        destruir_datos_operacion_mutex(datos_crear_mutex);
+
+        // Continuamos ejecutando el hilo que solicitó la syscall
+        procesar_instrucciones_cpu(hilo_en_ejecucion);
+        break;
+    case OPERACION_BLOQUEAR_MUTEX:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_LOCK", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        // Recibimos y deserializamos los datos enviados por la CPU
+        buffer = recibir_buffer(&size, socket_cpu_dispatch);
+        t_datos_operacion_mutex* datos_bloquear_mutex = deserializar_datos_operacion_mutex(buffer);
+
+        bool mutex_asignado = syscall_bloquear_mutex(datos_bloquear_mutex->recurso);
+        destruir_datos_operacion_mutex(datos_bloquear_mutex);
+
+        // Continuamos ejecutando el hilo que solicitó la syscall solo si el mutex fue asignado al hilo
+        if(mutex_asignado) {
+            procesar_instrucciones_cpu(hilo_en_ejecucion);
+        }
+        break;
+    case OPERACION_DESBLOQUEAR_MUTEX:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_UNLOCK", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        // Recibimos y deserializamos los datos enviados por la CPU
+        buffer = recibir_buffer(&size, socket_cpu_dispatch);
+        t_datos_operacion_mutex* datos_desbloquear_mutex = deserializar_datos_operacion_mutex(buffer);
+
+        syscall_desbloquear_mutex(datos_desbloquear_mutex->recurso);
+        destruir_datos_operacion_mutex(datos_desbloquear_mutex);
+
+        // Continuamos ejecutando el hilo que solicitó la syscall
+        procesar_instrucciones_cpu(hilo_en_ejecucion);
+        break;
+    case OPERACION_IO:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: IO", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        // Recibimos y deserializamos los datos enviados por la CPU
+        buffer = recibir_buffer(&size, socket_cpu_dispatch);
+        t_datos_operacion_io* datos_io = deserializar_datos_operacion_io(buffer);
+
+        syscall_io(datos_io->tiempo);
+        destruir_datos_operacion_io(datos_io);
+        break;
+    case OPERACION_DUMP_MEMORY:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: DUMP_MEMORY", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        syscall_dump_memory();
+        break;
+    case OPERACION_DESALOJAR_HILO:
+        transicion_exec_a_ready(hilo_en_ejecucion);
+        break;
+    default:
+        log_debug(logger_debug, "Motivo de devolución desconocido");
+        break;
+    }
 }
 
 /* TRANSICIONES */
@@ -121,19 +181,6 @@ static void transicion_exec_a_ready(t_tcb* hilo)
     pthread_mutex_unlock(&mutex_estado_ready);
 
     sem_post(&semaforo_estado_ready);
-}
-
-static void transicion_exec_a_blocked(t_tcb* hilo)
-{
-    // Desalojo el hilo del estado EXEC (El mismo que recibimos como parámetro en esta función)
-    pthread_mutex_lock(&mutex_estado_exec);
-    estado_exec = NULL;
-    pthread_mutex_unlock(&mutex_estado_exec);
-
-    // Agregamos el hilo al estado BLOCKED
-    pthread_mutex_lock(&mutex_estado_blocked);
-    list_add(estado_blocked, hilo);
-    pthread_mutex_unlock(&mutex_estado_blocked);
 }
 
 /**
@@ -262,9 +309,10 @@ static void solicitar_desalojo_hilo_a_cpu(t_tcb* hilo)
     pthread_mutex_unlock(&mutex_estado_exec);
 
     if(sigue_en_exec) {
-        // TODO: Descomentar cuando la CPU pueda recibir esta operacion
-        // uint32_t operacion = OPERACION_DESALOJAR_HILO;
-        // send(socket_cpu_interrupt, &operacion, sizeof(uint32_t), 0);
+        uint32_t operacion = OPERACION_DESALOJAR_HILO;
+        send(socket_cpu_interrupt, &operacion, sizeof(uint32_t), 0);
+
+        log_info(logger, "## (%d:%d) - Desalojado por fin de Quantum", hilo->pid_padre, hilo->tid);
     }
 }
 

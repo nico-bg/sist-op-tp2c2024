@@ -17,8 +17,20 @@ typedef enum
     SUM,
     SUB,
     JNZ,
-    LOG
-} instruccion;
+    LOG, 
+    DUMP_MEMORY,
+    IO,
+    PROCESS_CREATE,
+    THREAD_CREATE,
+    THREAD_JOIN,
+    THREAD_CANCEL,
+    MUTEX_CREATE,
+    MUTEX_LOCK,
+    MUTEX_UNLOCK,
+    THREAD_EXIT,
+    PROCESS_EXIT
+}instruccion;
+
 
 typedef struct
 {
@@ -39,6 +51,7 @@ t_hilo_a_cpu* pcb;
 t_contexto contexto;
 
 //sem_t sem_ciclo_de_instruccion;
+
 
 void escuchar_dispatch();
 
