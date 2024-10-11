@@ -1,19 +1,6 @@
 #include "comunicaciones.h"
 
 
-#define DEVOLVER_CONTEXTO_EJECUCION 1
-#define ACTUALIZAR_CONTEXTO_EJECUCION 2
-#define DEVOLVER_INSTRUCCION 3
-#define LEER_MEMORIA 4
-#define ESCRIBIR_MEMORIA 5
-
-#define CREAR_PROCESO 6
-#define FINALIZAR_PROCESO 7
-#define CREAR_HILO 8
-#define FINALIZAR_HILO 9
-#define MEMORY_DUMP 10
-
-
 void* leer_buffer_kernel(int cod_op, int socket_cliente){
 
     t_buffer* buffer;
@@ -62,26 +49,26 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente){
 
     switch(cod_op){
 
-        case DEVOLVER_CONTEXTO_EJECUCION:
+        case OPERACION_DEVOLVER_CONTEXTO_EJECUCION:
             buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_cpu_solicitar_contexto*)deserializar_datos_solicitar_contexto(buffer);
             break;
 
-        case ACTUALIZAR_CONTEXTO_EJECUCION:
+        case OPERACION_ACTUALIZAR_CONTEXTO:
             buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_contexto*)deserializar_datos_contexto_memoria(buffer);
             break;
 
-        case DEVOLVER_INSTRUCCION:
+        case OPERACION_DEVOLVER_INSTRUCCION:
             buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_devolver_instruccion*)deserializar_datos_solicitar_instruccion(buffer);
             break;
 
-        case LEER_MEMORIA:
+        case OPERACION_LEER_MEMORIA:
             //log_info(logger, "Función aún no implementada!")
             break;
 
-        case ESCRIBIR_MEMORIA:
+        case OPERACION_ESCRIBIR_MEMORIA:
             //log_info(logger, "Función aún no implementada!")
             break;
 
@@ -101,7 +88,7 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
 
     switch(cod_op){
 
-        case DEVOLVER_CONTEXTO_EJECUCION:
+        case OPERACION_DEVOLVER_CONTEXTO_EJECUCION:
 
             t_contexto* contexto = malloc(sizeof(t_contexto));
             contexto = (t_contexto*)datos;
@@ -120,7 +107,7 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
             destruir_datos_contexto(contexto);            
             break;
 
-        case DEVOLVER_INSTRUCCION:
+        case OPERACION_DEVOLVER_INSTRUCCION:
 
             t_datos_devolver_instruccion* instruccion = malloc(sizeof(t_datos_devolver_instruccion));
             instruccion = (t_datos_devolver_instruccion*)datos;
