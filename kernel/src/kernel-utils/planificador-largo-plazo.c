@@ -6,6 +6,7 @@ static void transicion_new_a_ready(t_pcb* proceso, t_tcb* hilo);
 static int pedir_inicializacion_hilo_a_memoria(t_tcb* hilo);
 static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso);
 static t_tcb* crear_hilo_principal(t_pcb* proceso_padre);
+// static t_pcb* buscar_proceso(uint32_t pid);
 
 /**
  * @brief Se mantiene escuchando los cambios en los estados NEW y EXIT
@@ -32,7 +33,7 @@ void* planificador_largo_plazo()
         int resultado_proceso = pedir_inicializacion_proceso_a_memoria(proceso_a_inicializar);
 
         // Si no hubo memoria suficiente pasamos a la siguiente iteración donde se va a bloquear por el `semaforo_memoria_suficiente`
-        if(resultado_proceso != 0) {
+        if(resultado_proceso != OPERACION_NOTIFICAR_ERROR) {
             continue;
         }
 
@@ -47,7 +48,7 @@ void* planificador_largo_plazo()
         int resultado = pedir_inicializacion_hilo_a_memoria(hilo_principal);
 
         // Si la respuesta es exitosa, pasamos el tcb a `estado_ready` y sacamos el proceso de `estado_new`
-        if(resultado == 0) {
+        if(resultado == OPERACION_CONFIRMAR) {
             transicion_new_a_ready(proceso_a_inicializar, hilo_principal);
             log_info(logger, "## (%d:%d) Se crea el Hilo - Estado: READY", hilo_principal->pid_padre, hilo_principal->tid);
         }
@@ -71,6 +72,8 @@ void* liberar_hilos_en_exit()
 
         // Si el TID corresponde al hilo principal de un proceso, lo buscamos y liberamos de `lista_procesos`
         if(hilo_a_liberar->tid == 0) {
+            // pedir_finalizacion_proceso_a_memoria(proceso);
+
             // TODO: Buscar proceso y liberarlo
         }
 
@@ -111,17 +114,18 @@ static int pedir_inicializacion_hilo_a_memoria(t_tcb* hilo)
     destruir_datos_inicializacion_hilo(datos_inicializacion);
 
     // Esperar respuesta de Memoria
-    int resultado;
-    if (recv(socket_memoria, &resultado, sizeof(int), MSG_WAITALL) != sizeof(int)) {
-        log_error(logger, "Error al recibir respuesta de Memoria");
-        resultado = -1;
-    }
+    op_code respuesta = recibir_operacion(socket_memoria);
+    // int resultado;
+    // if (recv(socket_memoria, &resultado, sizeof(int), MSG_WAITALL) != sizeof(int)) {
+    //     log_error(logger, "Error al recibir respuesta de Memoria");
+    //     resultado = -1;
+    // }
 
     // Cerrar la conexión con Memoria
     close(socket_memoria);
 
     // Retornar el resultado
-    return resultado;
+    return respuesta;
 }
 
 static void transicion_new_a_ready(t_pcb* proceso, t_tcb* hilo)
@@ -181,15 +185,32 @@ static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso)
     destruir_datos_inicializacion_proceso(datos_inicializacion);
 
     // Esperar respuesta de Memoria
-    int resultado;
-    if (recv(socket_memoria, &resultado, sizeof(int), MSG_WAITALL) != sizeof(int)) {
-        log_error(logger, "Error al recibir respuesta de Memoria");
-        resultado = -1;
-    }
+    op_code respuesta = recibir_operacion(socket_memoria);
+    // int resultado;
+    // if (recv(socket_memoria, &resultado, sizeof(int), MSG_WAITALL) != sizeof(int)) {
+    //     log_error(logger, "Error al recibir respuesta de Memoria");
+    //     resultado = -1;
+    // }
 
     // Cerrar la conexión con Memoria
     close(socket_memoria);
 
-    return resultado; 
+    return respuesta; 
 }
-    
+
+// /**
+//  * @brief Devuelve la referencia al PCB de la `lista_procesos` cuyo `pid` coincida con el solicitado
+//  */
+// static t_pcb* buscar_proceso(uint32_t pid)
+// {
+//     pthread_mutex_lock(&mutex_lista_procesos);
+//     t_pcb* proceso_encontrado = list_find(lista_procesos, encontrar_proceso_por_pid_auxiliar);
+//     pthread_mutex_unlock(&mutex_lista_procesos);
+
+//     if(proceso_encontrado == NULL) {
+//         log_debug(logger_debug, "buscar_proceso: No se encontró el proceso con pid %d", pid);
+//         abort();
+//     }
+
+//     return proceso_encontrado;
+// }
