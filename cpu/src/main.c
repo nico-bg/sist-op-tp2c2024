@@ -10,7 +10,6 @@ int socket_interrupt;
 
 sem_t sem_ciclo_de_instruccion;
 
-
 int main(int argc, char* argv[]) {
  
     char* ip_memoria;
@@ -350,529 +349,529 @@ void setear_registro(char * registro, char * valor)
  void sum_registro(char * registro1, char * registro2)
 {
 //SUM PC otroRegistro
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.PC = contexto.PC + contexto.PC;
     }
 
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.PC = contexto.PC + contexto.AX;
     }
 
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.PC = contexto.PC + contexto.BX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.PC = contexto.PC + contexto.CX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.PC = contexto.PC + contexto.DX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.PC = contexto.PC + contexto.EX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.PC = contexto.PC + contexto.FX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.PC = contexto.PC + contexto.GX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.PC = contexto.PC + contexto.HX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.PC = contexto.PC + contexto.Base;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.PC = contexto.PC + contexto.Limite;
     }
 
 //SUM AX otroRegistro
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.AX = contexto.AX + contexto.PC;
     }
 
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.AX = contexto.AX + contexto.AX;
     }
 
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.AX = contexto.AX + contexto.BX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.AX = contexto.AX + contexto.CX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.AX = contexto.AX + contexto.DX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.AX = contexto.AX + contexto.EX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.AX = contexto.AX + contexto.FX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.AX = contexto.AX + contexto.GX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.AX = contexto.AX + contexto.HX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.AX = contexto.AX + contexto.Base;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.AX = contexto.AX + contexto.Limite;
     }
 
 //SUM BX otroRegistro
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.BX = contexto.BX + contexto.PC;
     }
 
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.BX = contexto.BX + contexto.AX;
     }
 
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.BX = contexto.BX + contexto.BX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.BX = contexto.BX + contexto.CX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.BX = contexto.BX + contexto.DX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.BX = contexto.BX + contexto.EX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.BX = contexto.BX + contexto.FX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.BX = contexto.BX + contexto.GX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.BX = contexto.BX + contexto.HX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.BX = contexto.BX + contexto.Base;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.BX = contexto.BX + contexto.Limite;
     }
 
 //SUM CX otroRegistro
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.CX = contexto.CX + contexto.PC;
     }
 
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.CX = contexto.CX + contexto.AX;
     }
 
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.CX = contexto.CX + contexto.BX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.CX = contexto.CX + contexto.CX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.CX = contexto.CX + contexto.DX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.CX = contexto.CX + contexto.EX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.CX = contexto.CX + contexto.FX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.CX = contexto.CX + contexto.GX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.CX = contexto.CX + contexto.HX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.CX = contexto.CX + contexto.Base;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.CX = contexto.CX + contexto.Limite;
     }
 
 //SUM DX otroRegistro
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.DX = contexto.DX + contexto.PC;
     }
 
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.DX = contexto.DX + contexto.AX;
     }
 
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.DX = contexto.DX + contexto.BX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.DX = contexto.DX + contexto.CX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.DX = contexto.DX + contexto.DX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.DX = contexto.DX + contexto.EX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.DX = contexto.DX + contexto.FX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.DX = contexto.DX + contexto.GX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.DX = contexto.DX + contexto.HX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.DX = contexto.DX + contexto.Base;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.DX = contexto.DX + contexto.Limite;
     }
 
 //SUM EX otroRegistro
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.EX = contexto.EX + contexto.PC;
     }
 
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.EX = contexto.EX + contexto.AX;
     }
 
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.EX = contexto.EX + contexto.BX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.EX = contexto.EX + contexto.CX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.EX = contexto.EX + contexto.DX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.EX = contexto.EX + contexto.EX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.EX = contexto.EX + contexto.FX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.EX = contexto.EX + contexto.GX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.EX = contexto.EX + contexto.HX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.EX = contexto.EX + contexto.Base;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.EX = contexto.EX + contexto.Limite;
     }
 
 //SUM FX otroRegistro
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.FX = contexto.FX + contexto.PC;
     }
 
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.FX = contexto.FX + contexto.AX;
     }
 
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.FX = contexto.FX + contexto.BX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.FX = contexto.FX + contexto.CX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.FX = contexto.FX + contexto.DX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.FX = contexto.FX + contexto.EX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.FX = contexto.FX + contexto.FX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.FX = contexto.FX + contexto.GX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.FX = contexto.FX + contexto.HX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.FX = contexto.FX + contexto.Base;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.FX = contexto.FX + contexto.Limite;
     }
 
 //SUM GX otroRegistro
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.GX = contexto.GX + contexto.PC;
     }
 
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.GX = contexto.GX + contexto.AX;
     }
 
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.GX = contexto.GX + contexto.BX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.GX = contexto.GX + contexto.CX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.GX = contexto.GX + contexto.DX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.GX = contexto.GX + contexto.EX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.GX = contexto.GX + contexto.FX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.GX = contexto.GX + contexto.GX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.GX = contexto.GX + contexto.HX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.GX = contexto.GX + contexto.Base;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.GX = contexto.GX + contexto.Limite;
     }
 
 //SUM HX otroRegistro
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.HX = contexto.HX + contexto.PC;
     }
 
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.HX = contexto.HX + contexto.AX;
     }
 
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.HX = contexto.HX + contexto.BX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.HX = contexto.HX + contexto.CX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.HX = contexto.HX + contexto.DX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.HX = contexto.HX + contexto.EX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.HX = contexto.HX + contexto.FX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.HX = contexto.HX + contexto.GX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.HX = contexto.HX + contexto.HX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.HX = contexto.HX + contexto.Base;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.HX = contexto.HX + contexto.Limite;
     }
 
 //SUM Base otroRegistro
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.Base = contexto.Base + contexto.PC;
     }
 
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.Base = contexto.Base + contexto.AX;
     }
 
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.Base = contexto.Base + contexto.BX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.Base = contexto.Base + contexto.CX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.Base = contexto.Base + contexto.DX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.Base = contexto.Base + contexto.EX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.Base = contexto.Base + contexto.FX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.Base = contexto.Base + contexto.GX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.Base = contexto.Base + contexto.HX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.Base = contexto.Base + contexto.Base;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.Base = contexto.Base + contexto.Limite;
     }
 
 //SUM Limite otroRegistro
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.Limite = contexto.Limite + contexto.PC;
     }
 
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.Limite = contexto.Limite + contexto.AX;
     }
 
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.Limite = contexto.Limite + contexto.BX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.Limite = contexto.Limite + contexto.CX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.Limite = contexto.Limite + contexto.DX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.Limite = contexto.Limite + contexto.EX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.Limite = contexto.Limite + contexto.FX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.Limite = contexto.Limite + contexto.GX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.Limite = contexto.Limite + contexto.HX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.Limite = contexto.Limite + contexto.Base;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.Limite = contexto.Limite + contexto.Limite;
     }
@@ -882,513 +881,513 @@ void setear_registro(char * registro, char * valor)
 void sub_registro(char * registro1, char * registro2)
 {
 //SUB PC otroRegistro
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.PC = contexto.PC - contexto.PC;
     }
 
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.PC = contexto.PC - contexto.AX;
     }
 
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.PC = contexto.PC - contexto.BX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.PC = contexto.PC - contexto.CX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.PC = contexto.PC - contexto.DX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.PC = contexto.PC - contexto.EX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.PC = contexto.PC - contexto.FX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.PC = contexto.PC - contexto.GX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.PC = contexto.PC - contexto.HX;
     }
-   if((strcmp(registro1, "PC") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "PC") == 0)&&(strcmp(registro2, "Base") == 0))
 
 
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.AX = contexto.AX - contexto.AX;
     }
 
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.AX = contexto.AX - contexto.BX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.AX = contexto.AX - contexto.CX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.AX = contexto.AX - contexto.DX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.AX = contexto.AX - contexto.EX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.AX = contexto.AX - contexto.FX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.AX = contexto.AX - contexto.GX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.AX = contexto.AX - contexto.HX;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.AX = contexto.AX - contexto.Base;
     }
-   if((strcmp(registro1, "AX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "AX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.AX = contexto.AX - contexto.Limite;
     }
 
 //SUB BX otroRegistro
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.BX = contexto.BX - contexto.PC;
     }
 
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.BX = contexto.BX - contexto.AX;
     }
 
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.BX = contexto.BX - contexto.BX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.BX = contexto.BX - contexto.CX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.BX = contexto.BX - contexto.DX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.BX = contexto.BX - contexto.EX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.BX = contexto.BX - contexto.FX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.BX = contexto.BX - contexto.GX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.BX = contexto.BX - contexto.HX;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.BX = contexto.BX - contexto.Base;
     }
-   if((strcmp(registro1, "BX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "BX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.BX = contexto.BX - contexto.Limite;
     }
 
 //SUB CX otroRegistro
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.CX = contexto.CX - contexto.PC;
     }
 
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.CX = contexto.CX - contexto.AX;
     }
 
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.CX = contexto.CX - contexto.BX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.CX = contexto.CX - contexto.CX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.CX = contexto.CX - contexto.DX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.CX = contexto.CX - contexto.EX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.CX = contexto.CX - contexto.FX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.CX = contexto.CX - contexto.GX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.CX = contexto.CX - contexto.HX;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.CX = contexto.CX - contexto.Base;
     }
-   if((strcmp(registro1, "CX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "CX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.CX = contexto.CX - contexto.Limite;
     }
 
 //SUB DX otroRegistro
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.DX = contexto.DX - contexto.PC;
     }
 
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.DX = contexto.DX - contexto.AX;
     }
 
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.DX = contexto.DX - contexto.BX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.DX = contexto.DX - contexto.CX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.DX = contexto.DX - contexto.DX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.DX = contexto.DX - contexto.EX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.DX = contexto.DX - contexto.FX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.DX = contexto.DX - contexto.GX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.DX = contexto.DX - contexto.HX;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.DX = contexto.DX - contexto.Base;
     }
-   if((strcmp(registro1, "DX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "DX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.DX = contexto.DX - contexto.Limite;
     }
 
 //SUB EX otroRegistro
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.EX = contexto.EX - contexto.PC;
     }
 
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.EX = contexto.EX - contexto.AX;
     }
 
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.EX = contexto.EX - contexto.BX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.EX = contexto.EX - contexto.CX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.EX = contexto.EX - contexto.DX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.EX = contexto.EX - contexto.EX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.EX = contexto.EX - contexto.GX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.EX = contexto.EX - contexto.HX;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.EX = contexto.EX - contexto.Base;
     }
-   if((strcmp(registro1, "EX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.EX = contexto.EX - contexto.Limite;
     }
 
 //SUB FX otroRegistro
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.FX = contexto.FX - contexto.PC;
     }
 
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.FX = contexto.FX - contexto.AX;
     }
 
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.FX = contexto.FX - contexto.BX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.FX = contexto.FX - contexto.CX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.FX = contexto.FX - contexto.DX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.FX = contexto.FX - contexto.EX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.FX = contexto.FX - contexto.FX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.FX = contexto.FX - contexto.GX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.FX = contexto.FX - contexto.HX;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.FX = contexto.FX - contexto.Base;
     }
-   if((strcmp(registro1, "FX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "FX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.FX = contexto.FX - contexto.Limite;
     }
 
 //SUB GX otroRegistro
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.GX = contexto.GX - contexto.PC;
     }
 
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.GX = contexto.GX - contexto.AX;
     }
 
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.GX = contexto.GX - contexto.BX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.GX = contexto.GX - contexto.CX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.GX = contexto.GX - contexto.DX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.GX = contexto.GX - contexto.EX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.GX = contexto.GX - contexto.FX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.GX = contexto.GX - contexto.GX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.GX = contexto.GX - contexto.HX;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.GX = contexto.GX - contexto.Base;
     }
-   if((strcmp(registro1, "GX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "GX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.GX = contexto.GX - contexto.Limite;
     }
 
 //SUB HX otroRegistro
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.HX = contexto.HX - contexto.PC;
     }
 
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.HX = contexto.HX - contexto.AX;
     }
 
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.HX = contexto.HX - contexto.BX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.HX = contexto.HX - contexto.CX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.HX = contexto.HX - contexto.DX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.HX = contexto.HX - contexto.EX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.HX = contexto.HX - contexto.FX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.HX = contexto.HX - contexto.GX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.HX = contexto.HX - contexto.HX;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.HX = contexto.HX - contexto.Base;
     }
-   if((strcmp(registro1, "HX") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "HX") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.HX = contexto.HX - contexto.Limite;
     }
 
 //SUB Base otroRegistro
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.Base = contexto.Base - contexto.PC;
     }
 
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.Base = contexto.Base - contexto.AX;
     }
 
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.Base = contexto.Base - contexto.BX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.Base = contexto.Base - contexto.CX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.Base = contexto.Base - contexto.DX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.Base = contexto.Base - contexto.EX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.Base = contexto.Base - contexto.FX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.Base = contexto.Base - contexto.GX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.Base = contexto.Base - contexto.HX;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.Base = contexto.Base - contexto.Base;
     }
-   if((strcmp(registro1, "Base") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "Base") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.Base = contexto.Base - contexto.Limite;
     }
 
 //SUB Limite otroRegistro
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "PC") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "PC") == 0))
     {
          contexto.Limite = contexto.Limite - contexto.PC;
     }
 
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "AX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "AX") == 0))
     {
          contexto.Limite = contexto.Limite - contexto.AX;
     }
 
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "BX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "BX") == 0))
     {
          contexto.Limite = contexto.Limite - contexto.BX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "CX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "CX") == 0))
     {
          contexto.Limite = contexto.Limite - contexto.CX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "DX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "DX") == 0))
     {
          contexto.Limite = contexto.Limite - contexto.DX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "EX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "EX") == 0))
     {
          contexto.Limite = contexto.Limite - contexto.EX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "FX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "FX") == 0))
     {
          contexto.Limite = contexto.Limite - contexto.FX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "GX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.Limite = contexto.Limite - contexto.GX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "HX") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.Limite = contexto.Limite - contexto.HX;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "Base") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.Limite = contexto.Limite - contexto.Base;
     }
-   if((strcmp(registro1, "Limite") == 0)&(strcmp(registro2, "Limite") == 0))
+   if((strcmp(registro1, "Limite") == 0)&&(strcmp(registro2, "Limite") == 0))
     {
          contexto.Limite = contexto.Limite - contexto.Limite;
     }
@@ -1400,56 +1399,56 @@ void sub_registro(char * registro1, char * registro2)
       //u_int32_t dir_logica = lectura_memoria(pid, tid, dir_fisica);
       dir_logica = 300; 
 // READ_MEM AX OtroRegistro
-      if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "AX") == 0))
+      if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "AX") == 0))
             {
                if(mmu(contexto.AX) == 1)
                      {    
                         contexto.AX = dir_logica;
                    }
        }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
       if(mmu(contexto.BX) == 1)
       {    
        contexto.AX = dir_logica;
       }
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
       if(mmu(contexto.CX) == 1)
       {    
        contexto.AX = dir_logica;
       }
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       if(mmu(contexto.DX) == 1)
       {    
        contexto.AX = dir_logica;
       }
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
       if(mmu(contexto.EX) == 1)
       {    
        contexto.AX = dir_logica;
       }
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       if(mmu(contexto.FX) == 1)
       {    
        contexto.AX = dir_logica;
       }
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
       if(mmu(contexto.GX) == 1)
       {    
        contexto.AX = dir_logica;
       }
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
       if(mmu(contexto.HX) == 1)
       {    
@@ -1459,55 +1458,55 @@ if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "HX") == 0))
 
 
 // READ_MEM BX OtroRegistro
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
       if(mmu(contexto.AX) == 1)
       {    
        contexto.BX = dir_logica;
       }
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
       if(mmu(contexto.BX) == 1)
       {    
        contexto.BX = dir_logica;
       }
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
       if(mmu(contexto.CX) == 1)
       {    
        contexto.BX = dir_logica;
       }
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       if(mmu(contexto.DX) == 1)
       {    
 return 1;
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
       if(mmu(contexto.EX) == 1)
       {    
        contexto.BX = dir_logica;
       }
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       if(mmu(contexto.FX) == 1)
       {    
        contexto.BX = dir_logica;
       }
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
       if(mmu(contexto.GX) == 1)
       {    
        contexto.BX = dir_logica;
       }
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
       if(mmu(contexto.HX) == 1)
       {    
@@ -1516,56 +1515,56 @@ if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "HX") == 0))
     }
 
 // READ_MEM CX OtroRegistro
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
       if(mmu(contexto.AX) == 1)
       {    
        contexto.CX = dir_logica;
       }
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
       if(mmu(contexto.BX) == 1)
       {    
        contexto.CX = dir_logica;
       }
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
       if(mmu(contexto.CX) == 1)
       {    
        contexto.CX = dir_logica;
       }
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       if(mmu(contexto.DX) == 1)
       {    
        contexto.CX = dir_logica;
       }
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
       if(mmu(contexto.EX) == 1)
       {    
        contexto.CX = dir_logica;
       }
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       if(mmu(contexto.FX) == 1)
       {    
        contexto.CX = dir_logica;
       }
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
       if(mmu(contexto.GX) == 1)
       {    
        contexto.CX = dir_logica;
       }
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
       if(mmu(contexto.HX) == 1)
       {    
@@ -1574,56 +1573,56 @@ if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "HX") == 0))
     }
 
 // READ_MEM DX OtroRegistro
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
       if(mmu(contexto.AX) == 1)
       {    
        contexto.DX = dir_logica;
       }
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
       if(mmu(contexto.BX) == 1)
       {    
        contexto.DX = dir_logica;
       }
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
       if(mmu(contexto.CX) == 1)
       {    
        contexto.DX = dir_logica;
       }
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       if(mmu(contexto.DX) == 1)
       {    
        contexto.DX = dir_logica;
       }
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
       if(mmu(contexto.EX) == 1)
       {    
        contexto.DX = dir_logica;
       }
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       if(mmu(contexto.FX) == 1)
       {    
        contexto.DX = dir_logica;
       }
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
       if(mmu(contexto.GX) == 1)
       {    
        contexto.DX = dir_logica;
       }
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
       if(mmu(contexto.HX) == 1)
       {    
@@ -1633,56 +1632,56 @@ if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "HX") == 0))
 
 
 // READ_MEM EX OtroRegistro
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
       if(mmu(contexto.AX) == 1)
       {    
        contexto.EX = dir_logica;
       }
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
       if(mmu(contexto.BX) == 1)
       {    
        contexto.EX = dir_logica;
       }
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
       if(mmu(contexto.CX) == 1)
       {    
        contexto.EX = dir_logica;
       }
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       if(mmu(contexto.DX) == 1)
       {    
        contexto.EX = dir_logica;
       }
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
       if(mmu(contexto.EX) == 1)
       {    
        contexto.EX = dir_logica;
       }
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       if(mmu(contexto.FX) == 1)
       {    
        contexto.EX = dir_logica;
       }
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
       if(mmu(contexto.GX) == 1)
       {    
        contexto.EX = dir_logica;
       }
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
       if(mmu(contexto.HX) == 1)
       {    
@@ -1691,56 +1690,56 @@ if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "HX") == 0))
     }
 
 // READ_MEM FX OtroRegistro
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
       if(mmu(contexto.AX) == 1)
       {    
        contexto.FX = dir_logica;
       }
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
       if(mmu(contexto.BX) == 1)
       {    
        contexto.FX = dir_logica;
       }
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
       if(mmu(contexto.CX) == 1)
       {    
        contexto.FX = dir_logica;
       }
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       if(mmu(contexto.DX) == 1)
       {    
        contexto.FX = dir_logica;
       }
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
       if(mmu(contexto.EX) == 1)
       {    
        contexto.FX = dir_logica;
       }
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       if(mmu(contexto.FX) == 1)
       {    
        contexto.FX = dir_logica;
       }
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
       if(mmu(contexto.GX) == 1)
       {    
        contexto.FX = dir_logica;
       }
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
       if(mmu(contexto.HX) == 1)
       {    
@@ -1749,56 +1748,56 @@ if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "HX") == 0))
     }
 
 // READ_MEM GX OtroRegistro
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
       if(mmu(contexto.AX) == 1)
       {    
        contexto.GX = dir_logica;
       }
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
       if(mmu(contexto.BX) == 1)
       {    
        contexto.GX = dir_logica;
       }
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
       if(mmu(contexto.CX) == 1)
       {    
        contexto.GX = dir_logica;
       }
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       if(mmu(contexto.DX) == 1)
       {    
        contexto.GX = dir_logica;
       }
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
       if(mmu(contexto.EX) == 1)
       {    
        contexto.GX = dir_logica;
       }
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       if(mmu(contexto.FX) == 1)
       {    
        contexto.GX = dir_logica;
       }
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
       if(mmu(contexto.GX) == 1)
       {    
        contexto.GX = dir_logica;
       }
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
       if(mmu(contexto.HX) == 1)
       {    
@@ -1807,56 +1806,56 @@ if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "HX") == 0))
     }
 
 // READ_MEM HX OtroRegistro
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
       if(mmu(contexto.AX) == 1)
       {    
        contexto.HX = dir_logica;
       }
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
       if(mmu(contexto.BX) == 1)
       {    
        contexto.HX = dir_logica;
       }
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
       if(mmu(contexto.CX) == 1)
       {    
        contexto.HX = dir_logica;
       }
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       if(mmu(contexto.DX) == 1)
       {    
        contexto.HX = dir_logica;
       }
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
       if(mmu(contexto.EX) == 1)
       {    
        contexto.HX = dir_logica;
       }
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       if(mmu(contexto.FX) == 1)
       {    
        contexto.HX = dir_logica;
       }
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
       if(mmu(contexto.GX) == 1)
       {    
        contexto.HX = dir_logica;
       }
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
       if(mmu(contexto.HX) == 1)
       {    
@@ -1878,9 +1877,8 @@ terminar_hilo(socket_kernel, tid);
 */
 
 }
-
 }
-
+}
 
 int mmu(int dir_fisica)
 {
@@ -1896,7 +1894,6 @@ else
 return 0;
 }
 }
-
 
 void write_mem(char * registro1, char * registro2)
  {
@@ -2324,8 +2321,7 @@ if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "HX") == 0))
     }
  }
 
-
-int mmu_dirLog_dirfis(int dir_logica)
+ int mmu_dirLog_dirfis(int dir_logica)
 {
 return (dir_logica + contexto.Base);
 }
@@ -2409,8 +2405,4 @@ if(strcmp(registro, "Limite") == 0)
        contexto.PC = atoi(valor);
        }
     } 
-}   
-return 0;
 }
-
-
