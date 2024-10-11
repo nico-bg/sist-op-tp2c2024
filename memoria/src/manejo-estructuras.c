@@ -216,7 +216,7 @@ t_contexto* devolver_contexto_ejecucion(t_cpu_solicitar_contexto* datos){
     nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);
     nodo_hilo* hilo = buscar_hilo_por_tid(datos->pid, datos->tid);
 
-    t_contexto* contexto;
+    t_contexto* contexto = malloc(sizeof(t_contexto));
 
     contexto->pid = proceso->proceso.pid;
     contexto->Base = proceso->proceso.base;
