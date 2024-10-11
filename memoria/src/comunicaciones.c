@@ -35,27 +35,27 @@ void* leer_buffer_kernel(int cod_op, int socket_cliente){
 
     switch(cod_op){
 
-        case CREAR_PROCESO:
+        case OPERACION_CREAR_PROCESO:
             buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_inicializacion_proceso*)deserializar_datos_inicializacion_proceso(buffer);
             break;
 
-        case FINALIZAR_PROCESO:
+        case OPERACION_FINALIZAR_PROCESO:
             buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_finalizacion_proceso*)deserializar_datos_finalizacion_proceso(buffer);
             break;
 
-        case CREAR_HILO:
+        case OPERACION_CREAR_HILO:
             buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_inicializacion_hilo*)deserializar_datos_inicializacion_hilo(buffer);
             break;
 
-        case FINALIZAR_HILO:
+        case OPERACION_FINALIZAR_HILO:
             buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_finalizacion_hilo*)deserializar_datos_finalizacion_hilo(buffer);
             break;
 
-        case MEMORY_DUMP:
+        case OPERACION_DUMP_MEMORY:
             //log_info(logger, "Función aún no implementada!")
             break;
 
