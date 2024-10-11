@@ -28,17 +28,20 @@ extern t_list* estado_ready;
 extern t_tcb* estado_exec; // Solo podemos tener 1 hilo en este estado
 extern t_list* estado_blocked;
 extern t_list* estado_exit;
+extern t_queue* cola_io; // Cola de t_solicitud_io para poder manejar 
 
 /* Semáforos y Mutex para los estados que los requieren */
 extern sem_t semaforo_estado_new; // Indica la cantidad de veces que puede iterar el planificador de largo plazo
 extern sem_t semaforo_memoria_suficiente; // Indica si el planificador de largo plazo puede volver a intentar inicializar un proceso para el que no hubo memoria
 extern sem_t semaforo_estado_ready;
 extern sem_t semaforo_estado_exit;
+extern sem_t semaforo_io;
 extern pthread_mutex_t mutex_lista_procesos;
 extern pthread_mutex_t mutex_estado_new;
 extern pthread_mutex_t mutex_estado_ready;
 extern pthread_mutex_t mutex_estado_exec;
 extern pthread_mutex_t mutex_estado_blocked;
 extern pthread_mutex_t mutex_estado_exit;
+extern pthread_mutex_t mutex_io;
 
 #endif

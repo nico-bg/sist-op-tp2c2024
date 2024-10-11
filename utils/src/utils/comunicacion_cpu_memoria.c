@@ -113,9 +113,9 @@ t_datos_devolver_instruccion* deserializar_datos_devolver_instruccion(t_buffer* 
 
     t_datos_devolver_instruccion* datos = malloc(sizeof(t_datos_devolver_instruccion));
     
-    uint32_t* length;
+    uint32_t length;
 
-    datos->instruccion = buffer_read_string(buffer, length);
+    datos->instruccion = buffer_read_string(buffer, &length);
 
     return datos;
 }

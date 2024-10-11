@@ -11,6 +11,7 @@
 #include <kernel-utils/planificador-largo-plazo.h>
 #include <kernel-utils/syscalls.h>
 #include <kernel-utils/planificador-corto-plazo.h>
+#include <kernel-utils/dispositivo-io.h>
 
 void terminar_programa();
 

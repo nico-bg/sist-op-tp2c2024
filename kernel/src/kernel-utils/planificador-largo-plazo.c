@@ -49,6 +49,7 @@ void* planificador_largo_plazo()
         // Si la respuesta es exitosa, pasamos el tcb a `estado_ready` y sacamos el proceso de `estado_new`
         if(resultado == 0) {
             transicion_new_a_ready(proceso_a_inicializar, hilo_principal);
+            log_info(logger, "## (%d:%d) Se crea el Hilo - Estado: READY", hilo_principal->pid_padre, hilo_principal->tid);
         }
     }
 }

@@ -53,4 +53,9 @@ typedef enum {
     ESTADO_BLOCKED
 } t_estado;
 
+typedef struct {
+    t_tcb* hilo;
+    uint32_t tiempo;
+} t_solicitud_io;
+
 #endif

@@ -86,6 +86,9 @@ bool syscall_esperar_hilo(uint32_t tid)
         // Agrego el hilo que invocó la syscall en la lista de bloqueados del hilo que se quiere esperar (asociado al TID recibido)
         list_add(hilo_a_esperar->hilos_bloqueados, hilo_en_ejecucion);
         transicion_exec_a_blocked();
+
+        log_info(logger, "## (%d:%d) - Bloqueado por: PTHREAD_JOIN", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
         return true;
     }
 
@@ -155,6 +158,8 @@ bool syscall_bloquear_mutex(char* recurso)
         transicion_exec_a_blocked();
         queue_push(mutex->hilos_bloqueados, estado_exec);
 
+        log_info(logger, "## (%d:%d) - Bloqueado por: MUTEX", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
         return false;
     }
 }
@@ -189,7 +194,21 @@ void syscall_desbloquear_mutex(char* recurso)
 
 void syscall_io(uint32_t tiempo)
 {
+    pthread_mutex_lock(&mutex_estado_exec);
+    t_tcb* hilo_en_ejecucion = estado_exec;
+    pthread_mutex_unlock(&mutex_estado_exec);
 
+    transicion_exec_a_blocked();
+
+    t_solicitud_io* solicitud_io = malloc(sizeof(t_solicitud_io));
+    solicitud_io->hilo = hilo_en_ejecucion;
+    solicitud_io->tiempo = tiempo;
+
+    pthread_mutex_lock(&mutex_io);
+    queue_push(cola_io, solicitud_io);
+    pthread_mutex_unlock(&mutex_io);
+
+    sem_post(&semaforo_io);
 }
 
 void syscall_dump_memory()
@@ -217,13 +236,15 @@ void syscall_dump_memory()
     // Pasamos el hilo a BLOCKED
     transicion_exec_a_blocked();
 
+    log_info(logger, "## (%d:%d) - Bloqueado por: DUMP_MEMORY", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
     t_args_esperar_respuesta_dump_memory* args_hilo = malloc(sizeof(t_args_esperar_respuesta_dump_memory));
     args_hilo->fd_conexion = fd_conexion;
     args_hilo->hilo = hilo_en_ejecucion;
 
     // Creamos un hilo para paralelizar la espera de la respuesta del DUMP_MEMORY
     pthread_t hilo_dump_memory;
-    pthread_create(&hilo_dump_memory, NULL, esperar_respuesta_dump_memory, args_hilo);
+    pthread_create(&hilo_dump_memory, NULL, (void*) esperar_respuesta_dump_memory, args_hilo);
     pthread_detach(hilo_dump_memory);
 
     // Liberamos la memoria de las estructuras utilizadas
