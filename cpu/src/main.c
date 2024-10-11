@@ -86,7 +86,7 @@ void escuchar_dispatch () {
 
                log_info(logger, "me llego el buffer");
 
-               // pcb estructura global
+    // pcb estructura global
                 pcb = deserializar_hilo_a_cpu(buffer);
 
         
@@ -94,29 +94,25 @@ void escuchar_dispatch () {
 
                 log_info(logger, "me llego el buffer con segundo campo:%d", pcb->pid );
 
-                //t_buffer* contexto_devuelto = pedir_contexto(socket_memoria, buffer);
+                t_buffer* contexto_devuelto = pedir_contexto(socket_memoria, buffer);
 
-    
-    // contexto estructura global
-    
+
                 //contexto = deserializar_datos_contexto(contexto_devuelto);
 //READ_MEM AX BX
-                contexto.PC = 1;
-                contexto.AX = 2;
-                contexto.BX = 3;
-                contexto.CX = 0;
-                contexto.DX = 2;
-                contexto.EX = 0;
-                contexto.FX = 0;
-                contexto.GX = 9;
-                contexto.Base = 1000;
-                contexto.Limite = 2000;
+                 contexto.PC = 1;
+                 contexto.AX = 2;
+                 contexto.BX = 3;
+                 contexto.CX = 0;
+                 contexto.DX = 2;
+                 contexto.EX = 0;
+                 contexto.FX = 0;
+                 contexto.GX = 9;
+                 contexto.Base = 1000;
+                 contexto.Limite = 2000;
 
                 log_info(logger, "El valor de GX es:%d",contexto.GX);
 
                 sem_post(&sem_ciclo_de_instruccion);
-
-                //ciclo_de_instruccion();
 
                 break;
             case -1:
@@ -199,38 +195,54 @@ void ciclo_de_instruccion () {
 
     if(strcmp(estructura_instruccion[0], "MUTEX_CREATE") == 0)
     {
+     //actualizacion_contexto(socket_memoria, pid, tid, contexto);
+
+     //devolver_control();
+
 
     }
 
     if(strcmp(estructura_instruccion[0], "MUTEX_LOCK") == 0)
     {
+    //actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
+     //devolver_control();
     }
 
     if(strcmp(estructura_instruccion[0], "MUTEX_UNLOCK") == 0)
     {
+    //actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
+     //devolver_control();
     }
 
     if(strcmp(estructura_instruccion[0], "DUMP_MEMORY") == 0)
     {
+    //actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
+     //devolver_control();
     }
 
     if(strcmp(estructura_instruccion[0], "IO") == 0)
     {
+    //actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
+     //devolver_control();
     }
 
 
     if(strcmp(estructura_instruccion[0], "PROCESS_CREATE") == 0)
     {
+    //actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
+     //devolver_control();
     }
 
     if(strcmp(estructura_instruccion[0], "THREAD_CREATE") == 0)
     {
+    //actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
+     //devolver_control();
     }
 
     if(strcmp(estructura_instruccion[0], "THREAD_CANCEL") == 0)
