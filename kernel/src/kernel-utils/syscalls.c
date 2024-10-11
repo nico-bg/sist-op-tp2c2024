@@ -3,6 +3,7 @@
 static void transicion_exec_a_exit();
 static void transicion_exec_a_blocked();
 static void transicion_blocked_a_ready(t_tcb* hilo);
+static void transicion_blocked_a_exit(t_tcb* hilo);
 static void solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid);
 static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo);
 static t_pcb* buscar_proceso(uint32_t pid);
@@ -10,6 +11,7 @@ static bool encontrar_proceso_por_pid_auxiliar(void* elemento);
 static bool existe_tid_en_lista(void* elemento);
 static t_tcb* buscar_hilo_en_proceso(t_pcb* proceso, uint32_t tid);
 static bool encontrar_mutex_proceso_en_ejecucion(void* elemento);
+static void esperar_respuesta_dump_memory(void* args);
 
 uint32_t pid_auxiliar;
 uint32_t tid_auxiliar;
@@ -185,6 +187,51 @@ void syscall_desbloquear_mutex(char* recurso)
     }
 }
 
+void syscall_io(uint32_t tiempo)
+{
+
+}
+
+void syscall_dump_memory()
+{
+    // Obtenemos el hilo que se encuentra en estado EXEC
+    pthread_mutex_lock(&mutex_estado_exec);
+    t_tcb* hilo_en_ejecucion = estado_exec;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    int fd_conexion = crear_conexion_a_memoria();
+
+    // Guardamos los datos a enviar en la estructura correspondiente
+    t_datos_dump_memory* datos_a_enviar = malloc(sizeof(t_datos_dump_memory));
+    datos_a_enviar->pid = hilo_en_ejecucion->pid_padre;
+    datos_a_enviar->tid = hilo_en_ejecucion->tid;
+
+    // Empaquetamos y serializamos los datos junto con el código de operación
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = OPERACION_DUMP_MEMORY;
+    paquete->buffer = serializar_datos_dump_memory(datos_a_enviar);
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+    send(fd_conexion, paquete_serializado->stream, paquete_serializado->size, 0);
+
+    // Pasamos el hilo a BLOCKED
+    transicion_exec_a_blocked();
+
+    t_args_esperar_respuesta_dump_memory* args_hilo = malloc(sizeof(t_args_esperar_respuesta_dump_memory));
+    args_hilo->fd_conexion = fd_conexion;
+    args_hilo->hilo = hilo_en_ejecucion;
+
+    // Creamos un hilo para paralelizar la espera de la respuesta del DUMP_MEMORY
+    pthread_t hilo_dump_memory;
+    pthread_create(&hilo_dump_memory, NULL, esperar_respuesta_dump_memory, args_hilo);
+    pthread_detach(hilo_dump_memory);
+
+    // Liberamos la memoria de las estructuras utilizadas
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
+    destruir_datos_dump_memory(datos_a_enviar);
+}
+
 /* UTILIDADES */
 
 static void transicion_exec_a_exit()
@@ -230,6 +277,18 @@ static void transicion_blocked_a_ready(t_tcb* hilo)
     pthread_mutex_unlock(&mutex_estado_ready);
 
     sem_post(&semaforo_estado_ready);
+}
+
+static void transicion_blocked_a_exit(t_tcb* hilo)
+{
+    pthread_mutex_lock(&mutex_estado_blocked);
+    list_remove_element(estado_blocked, hilo);
+    pthread_mutex_unlock(&mutex_estado_blocked);
+
+    pthread_mutex_lock(&mutex_estado_exit);
+    list_add(estado_exit, hilo);
+    pthread_mutex_unlock(&mutex_estado_exit);
+    sem_post(&semaforo_estado_exit);
 }
 
 static void solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid)
@@ -344,4 +403,20 @@ static bool encontrar_mutex_proceso_en_ejecucion(void* elemento)
     bool encontrado = strcmp(mutex->recurso, recurso_buscado) == 0;
 
     return encontrado;
+}
+
+static void esperar_respuesta_dump_memory(void* args)
+{
+    t_args_esperar_respuesta_dump_memory* datos = (t_args_esperar_respuesta_dump_memory*) args;
+
+    op_code respuesta = recibir_operacion(datos->fd_conexion);
+
+    if(respuesta == OPERACION_CONFIRMAR_DUMP_MEMORY) {
+        transicion_blocked_a_ready(datos->hilo);
+    } else {
+        transicion_blocked_a_exit(datos->hilo);
+    }
+
+    close(datos->fd_conexion);
+    free(args);
 }

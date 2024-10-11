@@ -143,13 +143,16 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
         // Continuamos ejecutando el hilo que solicitó la syscall
         procesar_instrucciones_cpu(hilo_en_ejecucion);
         break;
-    case OPERACION_DESALOJAR_HILO:
-        transicion_exec_a_ready(hilo_en_ejecucion);
-        break;
     case OPERACION_IO:
         transicion_exec_a_blocked(hilo_en_ejecucion);
         break;
     case OPERACION_DUMP_MEMORY:
+        log_info(logger, "## (%d:%d) - Solicitó syscall: DUMP_MEMORY", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        syscall_dump_memory();
+        break;
+    case OPERACION_DESALOJAR_HILO:
+        transicion_exec_a_ready(hilo_en_ejecucion);
         break;
     default:
         log_debug(logger_debug, "Motivo de devolución desconocido");
