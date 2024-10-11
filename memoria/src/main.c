@@ -86,7 +86,7 @@ void atender_peticion_kernel(int cod_op, int socket)
 
     switch(cod_op) {
 
-        case CREAR_PROCESO:
+        case OPERACION_CREAR_PROCESO:
             t_datos_inicializacion_proceso* datos_crear_proceso = (t_datos_inicializacion_proceso*)leer_buffer_kernel(cod_op, socket);
             if(hay_espacio_en_memoria(datos_crear_proceso->tamanio)){
                 iniciar_proceso(datos_crear_proceso);
@@ -97,28 +97,28 @@ void atender_peticion_kernel(int cod_op, int socket)
             }
             break;
 
-        case FINALIZAR_PROCESO:
+        case OPERACION_FINALIZAR_PROCESO:
             t_datos_finalizacion_proceso* datos_finalizar_proceso = (t_datos_finalizacion_proceso*)leer_buffer_kernel(cod_op, socket);
             int tam = finalizar_proceso(datos_finalizar_proceso);
             log_info(logger, "## Proceso Destruido -  PID: %d - Tamaño: %d", datos_finalizar_proceso->pid, tam);
             //enviar_mensaje("Proceso finalizado con éxito", socket);
             break;
 
-        case CREAR_HILO:
+        case OPERACION_CREAR_HILO:
             t_datos_inicializacion_hilo* datos_crear_hilo = (t_datos_inicializacion_hilo*)leer_buffer_kernel(cod_op, socket);
             iniciar_hilo(datos_crear_hilo);
             log_info(logger, "## Hilo Creado - (PID:TID) - (%d:%d)", datos_crear_hilo->pid, datos_crear_hilo->tid);
             //enviar_mensaje("Hilo inicializado con éxito", socket);
             break;
 
-        case FINALIZAR_HILO:
+        case OPERACION_FINALIZAR_HILO:
             t_datos_finalizacion_hilo* datos_finalizar_hilo = (t_datos_finalizacion_hilo*)leer_buffer_kernel(cod_op, socket);
             finalizar_hilo(datos_finalizar_hilo);
             log_info(logger, "## Hilo Destruido - (PID:TID) - (%d:%d)", datos_finalizar_hilo->pid, datos_finalizar_hilo->tid);
             //enviar_mensaje("Hilo finalizado con éxito", socket);
             break;
 
-        case MEMORY_DUMP: //Los datos de la struct finalizar hilo & mem dump son los mismos, por ende se reutiliza la estructura
+        case OPERACION_DUMP_MEMORY: //Los datos de la struct finalizar hilo & mem dump son los mismos, por ende se reutiliza la estructura
             t_datos_finalizacion_hilo* datos_mem_dump = (t_datos_finalizacion_hilo*)leer_buffer_kernel(cod_op, socket);
             log_info(logger, "## Memory Dump solicitado - (PID:TID) - (%d:%d)", datos_mem_dump->pid, datos_mem_dump->tid);
             //enviar_mensaje("Operacion MEM_DUMP realizada con éxito", socket); //temporal - checkpoint-2

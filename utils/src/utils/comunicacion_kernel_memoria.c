@@ -59,8 +59,9 @@ void destruir_datos_finalizacion_hilo(t_datos_finalizacion_hilo* datos)
 
 t_buffer* serializar_datos_inicializacion_proceso(t_datos_inicializacion_proceso* datos){
 
-    t_buffer* buffer = buffer_create((2 * sizeof(uint32_t)) + sizeof(char*));
     int archivo_pseudocodigo_length = strlen(datos->archivo_pseudocodigo) + 1;
+
+    t_buffer* buffer = buffer_create(2 * sizeof(uint32_t) + archivo_pseudocodigo_length);
 
     buffer_add_uint32(buffer, datos->pid);
     buffer_add_uint32(buffer, datos->tamanio);
