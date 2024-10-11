@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     socket_memoria = conectar_a_socket(ip_memoria, puerto_memoria);
 
     log_info(logger, "Conectado a Memoria");    
-    enviar_mensaje("Hola, soy el CPU", socket_memoria);
+     //enviar_mensaje("Hola, soy el CPU", socket_memoria);
 
    int fd_dispatch = iniciar_servidor(puerto_escucha_dispatch);
    int fd_interrupt = iniciar_servidor(puerto_escucha_interrupt);
