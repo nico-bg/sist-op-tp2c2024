@@ -93,7 +93,7 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente){
     return datos;
 }
 
-void enviar_buffer_kernel(int cod_op, int socket_cliente, void* datos){
+void enviar_buffer(int cod_op, int socket_cliente, void* datos){
 
     t_buffer* buffer;
     t_buffer* paquete_serializado;
@@ -143,4 +143,11 @@ void enviar_buffer_kernel(int cod_op, int socket_cliente, void* datos){
             //codigo
             break;
     }
+}
+
+void notificar_confirmacion (int socket_cliente){
+
+    uint32_t op = OPERACION_CONFIRMAR;
+
+    send(socket_cliente, &op, sizeof(uint32_t), 0);
 }
