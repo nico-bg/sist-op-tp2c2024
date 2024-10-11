@@ -311,6 +311,8 @@ static void solicitar_desalojo_hilo_a_cpu(t_tcb* hilo)
     if(sigue_en_exec) {
         uint32_t operacion = OPERACION_DESALOJAR_HILO;
         send(socket_cpu_interrupt, &operacion, sizeof(uint32_t), 0);
+
+        log_info(logger, "## (%d:%d) - Desalojado por fin de Quantum", hilo->pid_padre, hilo->tid);
     }
 }
 

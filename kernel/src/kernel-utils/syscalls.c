@@ -86,6 +86,9 @@ bool syscall_esperar_hilo(uint32_t tid)
         // Agrego el hilo que invocó la syscall en la lista de bloqueados del hilo que se quiere esperar (asociado al TID recibido)
         list_add(hilo_a_esperar->hilos_bloqueados, hilo_en_ejecucion);
         transicion_exec_a_blocked();
+
+        log_info(logger, "## (%d:%d) - Bloqueado por: PTHREAD_JOIN", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
         return true;
     }
 
@@ -154,6 +157,8 @@ bool syscall_bloquear_mutex(char* recurso)
     } else {
         transicion_exec_a_blocked();
         queue_push(mutex->hilos_bloqueados, estado_exec);
+
+        log_info(logger, "## (%d:%d) - Bloqueado por: MUTEX", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
 
         return false;
     }
@@ -230,6 +235,8 @@ void syscall_dump_memory()
 
     // Pasamos el hilo a BLOCKED
     transicion_exec_a_blocked();
+
+    log_info(logger, "## (%d:%d) - Bloqueado por: DUMP_MEMORY", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
 
     t_args_esperar_respuesta_dump_memory* args_hilo = malloc(sizeof(t_args_esperar_respuesta_dump_memory));
     args_hilo->fd_conexion = fd_conexion;
