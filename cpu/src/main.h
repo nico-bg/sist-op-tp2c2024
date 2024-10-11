@@ -65,5 +65,7 @@ int mmu_dirLog_dirfis(int dir_logica);
 
 void jnz_pc(char* registro, char* valor);
 
+uint32_t obtener_registro(char* registro);
+
 
 #endif

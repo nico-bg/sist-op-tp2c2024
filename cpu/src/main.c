@@ -102,7 +102,7 @@ void escuchar_dispatch () {
                 //contexto = deserializar_datos_contexto(contexto_devuelto);
 //READ_MEM AX BX
                 contexto.PC = 1;
-                contexto.AX = 5;
+                contexto.AX = 2;
                 contexto.BX = 3;
                 contexto.CX = 0;
                 contexto.DX = 2;
@@ -144,7 +144,7 @@ void ciclo_de_instruccion () {
     
     //stringInstrucciones* intruccionString = pedir_proxima_instruccion(obtenerPid(), obtenerTid(), obtenerPC());
 
-    char* instruccion = "READ_MEM AX BX";
+    char* instruccion = "LOG AX";
 
     log_info(logger, "Fetch finalizado");
 
@@ -169,7 +169,11 @@ void ciclo_de_instruccion () {
 
     if(strcmp(estructura_instruccion[0], "READ_MEM") == 0)
     {
+      log_info(logger, "Entra por read_mem");
+
       read_mem(estructura_instruccion[1], estructura_instruccion[2]);
+
+      log_info(logger, "El valor de AX es:%d", contexto.AX);
     }
 
     if(strcmp(estructura_instruccion[0], "WRITE_MEM") == 0)
@@ -180,23 +184,17 @@ void ciclo_de_instruccion () {
 
     if(strcmp(estructura_instruccion[0], "JNZ") == 0)
     {
-//JNZ AX 4 
-//contexto.PC = 0;
-//contexto.AX = 3;
-
-      log_info(logger, "Entró a hacer el decode del JNZ");
-      log_info(logger, "El valor de PC antes es:%d",contexto.BX);
-      log_info(logger, "El valor de AX antes es:%d",contexto.AX);
-
+    
       jnz_pc(estructura_instruccion[1], estructura_instruccion[2]);
-
-      log_info(logger, "El valor de PC despues es:%d",contexto.PC);
-
+    
     }
 
     if(strcmp(estructura_instruccion[0], "LOG") == 0)
+
     {
 
+     log_info(logger, "El valor leido por instruccion LOG es:%d", obtener_registro(estructura_instruccion[1]));
+    
     }
 
     if(strcmp(estructura_instruccion[0], "MUTEX_CREATE") == 0)
@@ -1138,11 +1136,11 @@ void sub_registro(char * registro1, char * registro2)
    if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "GX") == 0))
     {
          contexto.EX = contexto.EX - contexto.GX;
-    }
+    }       
    if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "HX") == 0))
     {
          contexto.EX = contexto.EX - contexto.HX;
-    }
+    }       
    if((strcmp(registro1, "EX") == 0)&&(strcmp(registro2, "Base") == 0))
     {
          contexto.EX = contexto.EX - contexto.Base;
@@ -1397,6 +1395,7 @@ void sub_registro(char * registro1, char * registro2)
  {
       u_int32_t dir_logica;
       //u_int32_t dir_logica = lectura_memoria(pid, tid, dir_fisica);
+
       dir_logica = 300; 
 // READ_MEM AX OtroRegistro
       if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "AX") == 0))
@@ -1410,7 +1409,10 @@ if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
       if(mmu(contexto.BX) == 1)
       {    
+       log_info(logger, "Va a actualizar la direccion lógica de AX");
        contexto.AX = dir_logica;
+       log_info(logger, "Direccion lógica de AX:%d", contexto.AX);
+       
       }
     }
 if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "CX") == 0))
@@ -1880,13 +1882,12 @@ terminar_hilo(socket_kernel, tid);
 }
 }
 
-int mmu(int dir_fisica)
+int mmu(int dir_logica)
 {
-if((dir_fisica >= contexto.Base)& (dir_fisica <= contexto.Base + contexto.Limite))
+if(( (dir_logica + contexto.Base) <= (contexto.Limite) ))
 {
 return 1;
 log_info(logger, "Esta devolviendo 1");
-
 }
 else
 {
@@ -1905,7 +1906,7 @@ u_int32_t dir_fisica;
       dir_fisica = 300; 
 
 // WRITE_MEM AX OtroRegistro
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
 
     int dir_fisica = mmu_dirLog_dirfis(contexto.AX);
@@ -1913,43 +1914,43 @@ if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "AX") == 0))
     //////escritura_memoria(socket_memoria, pid, dir_fisica, contexto.AX);
       
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.AX);
 
     ////escritura_memoria(socket_memoria, pid, dir_fisica, contexto.BX);
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.AX);
 
     ////escritura_memoria(socket_memoria, pid, dir_fisica, contexto.CX);
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.AX);
 
     ////escritura_memoria(socket_memoria, pid, dir_fisica, contexto.DX);
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
         int dir_fisica = mmu_dirLog_dirfis(contexto.AX);
 
     ////escritura_memoria(socket_memoria, pid, dir_fisica, contexto.EX);
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.AX);
 
     ////escritura_memoria(socket_memoria, pid, dir_fisica, contexto.FX);
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
      int dir_fisica = mmu_dirLog_dirfis(contexto.AX);
 
     ////escritura_memoria(socket_memoria, pid, dir_fisica, contexto.GX);
     }
-if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "AX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
    int dir_fisica = mmu_dirLog_dirfis(contexto.AX);
 
@@ -1958,7 +1959,7 @@ if((strcmp(registro1, "AX") == 0)& (strcmp(registro2, "HX") == 0))
 
 
 // WRITE_MEM BX OtroRegistro
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
 
     int dir_fisica = mmu_dirLog_dirfis(contexto.BX);
@@ -1966,43 +1967,43 @@ if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "AX") == 0))
     ////escritura_memoria(socket_memoria, pid, dir_fisica, contexto.AX);
       
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.BX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.BX);
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.BX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.CX);
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.BX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.DX);
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
         int dir_fisica = mmu_dirLog_dirfis(contexto.BX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.EX);
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.BX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.FX);
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
      int dir_fisica = mmu_dirLog_dirfis(contexto.BX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.GX);
     }
-if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "BX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
    int dir_fisica = mmu_dirLog_dirfis(contexto.BX);
 
@@ -2010,7 +2011,7 @@ if((strcmp(registro1, "BX") == 0)& (strcmp(registro2, "HX") == 0))
     }
 
 // WRITE_MEM CX OtroRegistro
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
 
     int dir_fisica = mmu_dirLog_dirfis(contexto.CX);
@@ -2018,43 +2019,43 @@ if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "AX") == 0))
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.AX);
       
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.CX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.BX);
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.CX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.CX);
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.CX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.DX);
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
         int dir_fisica = mmu_dirLog_dirfis(contexto.CX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.EX);
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.CX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.FX);
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
      int dir_fisica = mmu_dirLog_dirfis(contexto.CX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.GX);
     }
-if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "CX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
    int dir_fisica = mmu_dirLog_dirfis(contexto.CX);
 
@@ -2062,7 +2063,7 @@ if((strcmp(registro1, "CX") == 0)& (strcmp(registro2, "HX") == 0))
     }
 
 // WRITE_MEM DX OtroRegistro
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
 
     int dir_fisica = mmu_dirLog_dirfis(contexto.DX);
@@ -2070,43 +2071,43 @@ if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "AX") == 0))
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.AX);
       
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.DX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.BX);
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.DX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.CX);
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.DX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.DX);
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
         int dir_fisica = mmu_dirLog_dirfis(contexto.DX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.EX);
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.DX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.FX);
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
      int dir_fisica = mmu_dirLog_dirfis(contexto.DX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.GX);
     }
-if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "DX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
    int dir_fisica = mmu_dirLog_dirfis(contexto.DX);
 
@@ -2114,7 +2115,7 @@ if((strcmp(registro1, "DX") == 0)& (strcmp(registro2, "HX") == 0))
     }
 
 // WRITE_MEM EX OtroRegistro
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
 
     int dir_fisica = mmu_dirLog_dirfis(contexto.EX);
@@ -2122,43 +2123,43 @@ if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "AX") == 0))
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.AX);
       
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.EX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.BX);
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.EX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.CX);
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.EX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.DX);
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
         int dir_fisica = mmu_dirLog_dirfis(contexto.EX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.EX);
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.AX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.FX);
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
      int dir_fisica = mmu_dirLog_dirfis(contexto.EX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.GX);
     }
-if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "EX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
    int dir_fisica = mmu_dirLog_dirfis(contexto.EX);
 
@@ -2166,50 +2167,50 @@ if((strcmp(registro1, "EX") == 0)& (strcmp(registro2, "HX") == 0))
     }
 
 // WRITE_MEM FX OtroRegistro
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
     int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.AX);
       
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.BX);
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.CX);
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.DX);
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
         int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.EX);
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.FX);
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
      int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.GX);
     }
-if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
    int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
@@ -2217,7 +2218,7 @@ if((strcmp(registro1, "FX") == 0)& (strcmp(registro2, "HX") == 0))
     }
 
 // WRITE_MEM GX OtroRegistro
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
 
     int dir_fisica = mmu_dirLog_dirfis(contexto.GX);
@@ -2225,43 +2226,43 @@ if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "AX") == 0))
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.AX);
       
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.GX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.BX);
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.GX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.CX);
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.GX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.DX);
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
         int dir_fisica = mmu_dirLog_dirfis(contexto.GX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.EX);
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.GX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.FX);
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
      int dir_fisica = mmu_dirLog_dirfis(contexto.GX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.GX);
     }
-if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "GX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
    int dir_fisica = mmu_dirLog_dirfis(contexto.GX);
 
@@ -2269,7 +2270,7 @@ if((strcmp(registro1, "GX") == 0)& (strcmp(registro2, "HX") == 0))
     }
 
 // WRITE_MEM HX OtroRegistro
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "AX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "AX") == 0))
     {
 
     int dir_fisica = mmu_dirLog_dirfis(contexto.HX);
@@ -2277,43 +2278,43 @@ if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "AX") == 0))
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.AX);
       
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "BX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.HX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.BX);
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "CX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "CX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.HX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.CX);
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "DX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "DX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.HX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.DX);
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "EX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "EX") == 0))
     {
         int dir_fisica = mmu_dirLog_dirfis(contexto.HX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.EX);
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "FX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "FX") == 0))
     {
       int dir_fisica = mmu_dirLog_dirfis(contexto.HX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.FX);
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "GX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
      int dir_fisica = mmu_dirLog_dirfis(contexto.HX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.GX);
     }
-if((strcmp(registro1, "HX") == 0)& (strcmp(registro2, "HX") == 0))
+if((strcmp(registro1, "HX") == 0)&& (strcmp(registro2, "HX") == 0))
     {
    int dir_fisica = mmu_dirLog_dirfis(contexto.HX);
 
@@ -2406,3 +2407,44 @@ if(strcmp(registro, "Limite") == 0)
        }
     } 
 }
+uint32_t obtener_registro(char* registro)
+{
+     if(strcmp(registro, "PC") == 0 ){
+          return contexto.PC;
+     }
+     if(strcmp(registro, "AX") == 0 ){
+          return contexto.AX;
+     }
+     if(strcmp(registro, "BX") == 0 ){
+          return contexto.BX;
+     }
+     if(strcmp(registro, "CX") == 0 ){
+          return contexto.CX;
+     }
+     if(strcmp(registro, "DX") == 0 ){
+          return contexto.DX;
+     }
+     if(strcmp(registro, "EX") == 0 ){
+          return contexto.EX;
+     }
+     if(strcmp(registro, "FX") == 0 ){
+          return contexto.FX;
+     }
+     if(strcmp(registro, "GX") == 0 ){
+          return contexto.GX;
+     }
+     if(strcmp(registro, "HX") == 0 ){
+          return contexto.HX;
+     }
+      if(strcmp(registro, "Base") == 0 ){
+          return contexto.Base;
+     }
+     if(strcmp(registro, "Limite") == 0 ){
+          return contexto.Limite;
+     }
+
+}
+
+
+
+
