@@ -14,19 +14,6 @@
 #define MEMORY_DUMP 10
 
 
-void* recibir_mensaje_kernel(int socket){
-
-	void* msg = NULL;
-
-	if(recv(socket, msg, sizeof(t_paquete), MSG_WAITALL) > 0)
-		return msg;
-	else {
-		close(socket);
-		return msg;
-	}
-}
-
-
 void* leer_buffer_kernel(int cod_op, int socket_cliente){
 
     t_buffer* buffer;
@@ -106,18 +93,54 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente){
     return datos;
 }
 
-void enviar_buffer(int cod_op, int socket_cliente, void* datos){
+void enviar_buffer_kernel(int cod_op, int socket_cliente, void* datos){
+
+    t_buffer* buffer;
+    t_buffer* paquete_serializado;
+    t_paquete* paquete;
+
     switch(cod_op){
+
         case DEVOLVER_CONTEXTO_EJECUCION:
-        //codigo
-        break;
+
+            t_contexto* contexto = malloc(sizeof(t_contexto));
+            contexto = (t_contexto*)datos;
+
+            buffer = serializar_datos_contexto(contexto);
+
+            paquete = malloc(sizeof(t_paquete));
+            paquete->codigo_operacion = OPERACION_DEVOLVER_CONTEXTO_EJECUCION;
+            paquete->buffer = buffer;
+            paquete_serializado = serializar_paquete(paquete);
+
+            send(socket_cliente, paquete_serializado->stream, paquete_serializado->size, 0);
+
+            buffer_destroy(paquete_serializado);
+            eliminar_paquete(paquete);
+            destruir_datos_contexto(contexto);            
+            break;
 
         case DEVOLVER_INSTRUCCION:
-        //codigo
-        break;
+
+            t_datos_devolver_instruccion* instruccion = malloc(sizeof(t_datos_devolver_instruccion));
+            instruccion = (t_datos_devolver_instruccion*)datos;
+
+            buffer = serializar_datos_devolver_instruccion(instruccion);
+
+            paquete = malloc(sizeof(t_paquete));
+            paquete->codigo_operacion = OPERACION_DEVOLVER_INSTRUCCION;
+            paquete->buffer = buffer;
+            paquete_serializado = serializar_paquete(paquete);
+
+            send(socket_cliente, paquete_serializado->stream, paquete_serializado->size, 0);
+
+            buffer_destroy(paquete_serializado);
+            eliminar_paquete(paquete);
+            destruir_datos_devolver_instruccion(instruccion);
+            break;
 
         default:
-        //codigo
-        break;
+            //codigo
+            break;
     }
 }

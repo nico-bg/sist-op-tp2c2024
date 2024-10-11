@@ -66,11 +66,8 @@ typedef struct {
 } t_datos_finalizacion_proceso;
 */
 
-void* recibir_mensaje_kernel(int socket);
-
-
 void* leer_buffer_kernel(int cod_op, int socket_cliente);
 
 void* leer_buffer_cpu(int cod_op, int socket_cliente);
 
-void enviar_buffer(int cod_op, int socket_cliente, void* datos);
+void enviar_buffer_kernel(int cod_op, int socket_cliente, void* datos);
