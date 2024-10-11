@@ -14,19 +14,6 @@
 #define MEMORY_DUMP 10
 
 
-void* recibir_mensaje_kernel(int socket){
-
-	void* msg = NULL;
-
-	if(recv(socket, msg, sizeof(t_paquete), MSG_WAITALL) > 0)
-		return msg;
-	else {
-		close(socket);
-		return msg;
-	}
-}
-
-
 void* leer_buffer_kernel(int cod_op, int socket_cliente){
 
     t_buffer* buffer;
@@ -106,10 +93,10 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente){
     return datos;
 }
 
-void enviar_buffer(int cod_op, int socket_cliente, void* datos){
+void enviar_buffer_kernel(int cod_op, int socket_cliente, void* datos){
     switch(cod_op){
         case DEVOLVER_CONTEXTO_EJECUCION:
-        //codigo
+        //
         break;
 
         case DEVOLVER_INSTRUCCION:

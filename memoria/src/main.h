@@ -27,7 +27,7 @@ typedef struct nodo_hilo nodo_hilo;
 typedef struct nodo_proceso nodo_proceso;
 
 typedef struct {
-    int tid;
+    uint32_t tid;
     uint32_t PC;
     uint32_t AX;
     uint32_t BX;
@@ -37,7 +37,7 @@ typedef struct {
     uint32_t FX;
     uint32_t GX;
     uint32_t HX;
-    char** archivo_pseudocodigo_th;
+    char** archivo_pseudocodigo;
 } estructura_hilo;
 
 struct nodo_hilo {
@@ -46,11 +46,10 @@ struct nodo_hilo {
 };
 
 typedef struct {
-    int pid;
-    int tamanio;
+    uint32_t pid;
+    uint32_t tamanio;
     uint32_t base;
     uint32_t limite;
-    char** archivo_pseudocodigo;
     nodo_hilo* lista_hilos;
 } estructura_proceso;
 
@@ -64,7 +63,7 @@ typedef struct {
     int socket;
 } parametros_hilo;
 
-bool hay_espacio_en_memoria(int tamanio);
+bool hay_espacio_en_memoria(uint32_t tamanio);
 
 void terminar_programa(t_config* config, int conexion);
 
@@ -80,28 +79,30 @@ void atender_peticion_cpu(int cod_op, int socket);
 
 
 
-nodo_proceso* buscar_proceso_por_pid(int pid);
+nodo_proceso* buscar_proceso_por_pid(uint32_t pid);
 
-nodo_hilo* buscar_hilo_por_tid(int pid, int tid);
+nodo_hilo* buscar_hilo_por_tid(uint32_t pid, uint32_t tid);
 
 void iniciar_proceso(t_datos_inicializacion_proceso* datos);
 
-int finalizar_proceso(t_datos_finalizacion_proceso* datos);
+uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos);
 
 void iniciar_hilo(t_datos_inicializacion_hilo* datos);
 
 void finalizar_hilo(t_datos_finalizacion_hilo* datos);
 
 
-char** leer_archivo_pseudocodigo(const char* archivo_pseudocodigo);
+char** leer_archivo_pseudocodigo(const char* nombre_archivo);
 
 void liberar_instrucciones(char** instrucciones);
 
 int contar_lineas(const char* nombre_archivo);
 
+char* obtener_path_completo(const char* nombre_archivo);
+
 nodo_proceso* buscar_ultimo_proceso(void);
 
-nodo_hilo* buscar_ultimo_hilo(int pid);
+nodo_hilo* buscar_ultimo_hilo(uint32_t pid);
 
 
 t_contexto* devolver_contexto_ejecucion(t_cpu_solicitar_contexto* datos);

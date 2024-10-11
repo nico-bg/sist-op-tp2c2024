@@ -6,7 +6,7 @@
 
 static nodo_proceso* nodo_primer_proceso = NULL;
 
-nodo_proceso* buscar_proceso_por_pid(int pid){
+nodo_proceso* buscar_proceso_por_pid(uint32_t pid){
 
     nodo_proceso* actual = nodo_primer_proceso;
 
@@ -17,7 +17,7 @@ nodo_proceso* buscar_proceso_por_pid(int pid){
     return actual;
 }
 
-nodo_hilo* buscar_hilo_por_tid(int pid, int tid){
+nodo_hilo* buscar_hilo_por_tid(uint32_t pid, uint32_t tid){
 
     nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
     nodo_hilo* actual = nodo_proceso->proceso.lista_hilos;
@@ -38,7 +38,6 @@ void iniciar_proceso(t_datos_inicializacion_proceso* datos){
     nuevo_nodo_proceso->proceso.tamanio = datos->tamanio;
     nuevo_nodo_proceso->proceso.base = 0;
     nuevo_nodo_proceso->proceso.limite = nuevo_nodo_proceso->proceso.base + datos->tamanio;
-    // nuevo_nodo_proceso->proceso.archivo_pseudocodigo = leer_archivo_pseudocodigo(datos->archivo_pseudocodigo);
     nuevo_nodo_proceso->proceso.lista_hilos = NULL; //No inicializamos ningún hilo todavía
 
     nuevo_nodo_proceso->siguiente_nodo_proceso = NULL; //Inicializamos el puntero al siguiente elemento de la lista (vacío)
@@ -53,7 +52,7 @@ void iniciar_proceso(t_datos_inicializacion_proceso* datos){
     return;
 }
 
-int finalizar_proceso(t_datos_finalizacion_proceso* datos){
+uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
 
     nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);
 
@@ -68,7 +67,6 @@ int finalizar_proceso(t_datos_finalizacion_proceso* datos){
         actual = siguiente;
     }
 
-    liberar_instrucciones(proceso->proceso.archivo_pseudocodigo);
     free(proceso);
 
     return tamanio;
@@ -90,7 +88,7 @@ void iniciar_hilo(t_datos_inicializacion_hilo* datos){
     nuevo_nodo_hilo->hilo.GX = 0;
     nuevo_nodo_hilo->hilo.HX = 0;
 
-    nuevo_nodo_hilo->hilo.archivo_pseudocodigo_th = leer_archivo_pseudocodigo(datos->archivo_pseudocodigo);
+    nuevo_nodo_hilo->hilo.archivo_pseudocodigo = leer_archivo_pseudocodigo(datos->archivo_pseudocodigo);
 
     nuevo_nodo_hilo->siguiente_nodo_hilo = NULL;
 
@@ -108,16 +106,18 @@ void finalizar_hilo(t_datos_finalizacion_hilo* datos){
 
     nodo_hilo* actual = buscar_hilo_por_tid(datos->pid, datos->tid);
 
+    liberar_instrucciones(actual->hilo.archivo_pseudocodigo);
     free(actual);
 
 }
 
 
-char** leer_archivo_pseudocodigo(const char* archivo_pseudocodigo){
+char** leer_archivo_pseudocodigo(const char* nombre_archivo_codigo){
 
-    int cant_lineas = contar_lineas(archivo_pseudocodigo);
+    char* path_archivo = obtener_path_completo(nombre_archivo_codigo);
+    int cant_lineas = contar_lineas(path_archivo);
 
-    FILE* archivo = fopen(archivo_pseudocodigo, "r");
+    FILE* archivo = fopen(path_archivo, "r");
 
     char** instrucciones = (char**)malloc((cant_lineas + 1)*sizeof(char*));
 
@@ -149,9 +149,9 @@ void liberar_instrucciones(char** instrucciones){
     free(instrucciones);
 }
 
-int contar_lineas(const char* nombre_archivo){
+int contar_lineas(const char* path_archivo){
 
-    FILE *archivo = fopen(nombre_archivo, "r"); //Abrimos el archivo como solo lectura
+    FILE *archivo = fopen(path_archivo, "r"); //Abrimos el archivo como solo lectura
     
     int cont = 0;
     char linea[MAX_LINE_LENGTH];
@@ -164,6 +164,20 @@ int contar_lineas(const char* nombre_archivo){
     return cont;
 }
 
+char* obtener_path_completo(const char* nombre_archivo){
+
+    t_config* config = iniciar_config("memoria.config");
+    
+    char* path_config = config_get_string_value(config, "PATH_INSTRUCCIONES");
+
+    char* path_completo = malloc(strlen(path_config) + strlen(nombre_archivo) + 2); // +1 para '/' y +1 para '\0'
+
+    strcpy(path_completo, path_config);
+    strcpy(path_completo, "/");
+    strcpy(path_completo, nombre_archivo);
+
+    return path_completo;
+}
 
 nodo_proceso* buscar_ultimo_proceso(void){
     if(nodo_primer_proceso == NULL){
@@ -171,13 +185,14 @@ nodo_proceso* buscar_ultimo_proceso(void){
     }
 
     nodo_proceso* actual = nodo_primer_proceso;
+    
     while(actual->siguiente_nodo_proceso != NULL){
         actual = actual->siguiente_nodo_proceso;
     }
     return actual;
 }
 
-nodo_hilo* buscar_ultimo_hilo(int pid){
+nodo_hilo* buscar_ultimo_hilo(uint32_t pid){
 
     nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
     nodo_hilo* actual = nodo_proceso->proceso.lista_hilos;
@@ -235,13 +250,8 @@ char* devolver_instruccion(t_datos_obtener_instruccion* datos){
 
     char* inst = NULL;
 
-    if(datos->tid == NULL){
-        nodo_proceso* nodo_proceso = buscar_proceso_por_pid(datos->pid);
-        inst = nodo_proceso->proceso.archivo_pseudocodigo[datos->PC];
-    } else {
-        nodo_hilo* nodo_hilo = buscar_hilo_por_tid(datos->pid, datos->tid);
-        inst = nodo_hilo->hilo.archivo_pseudocodigo_th[datos->PC];
-    }
+    nodo_hilo* nodo_hilo = buscar_hilo_por_tid(datos->pid, datos->tid);
+    inst = nodo_hilo->hilo.archivo_pseudocodigo[datos->PC];
 
     return inst;
 }
@@ -258,7 +268,7 @@ estructura_hilo* convertir_struct(t_contexto* contexto) {
     hilo->FX = contexto->FX;
     hilo->GX = contexto->GX;
     hilo->HX = contexto->HX;
-    hilo->archivo_pseudocodigo_th = NULL;
+    hilo->archivo_pseudocodigo = NULL;
 
     return hilo;
 }
