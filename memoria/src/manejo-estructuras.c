@@ -164,7 +164,7 @@ int contar_lineas(const char* path_archivo){
     return cont;
 }
 
-char* obtener_path_completo(const char* nombre_archivo){
+char* obtener_path_completo(char* nombre_archivo){
 
     t_config* config = iniciar_config("memoria.config");
     
@@ -172,9 +172,13 @@ char* obtener_path_completo(const char* nombre_archivo){
 
     char* path_completo = malloc(strlen(path_config) + strlen(nombre_archivo) + 2); // +1 para '/' y +1 para '\0'
 
+    // string_append(&path_completo, path_config);
+    // string_append(&path_completo, "/");
+    // string_append(&path_completo, nombre_archivo);
+
     strcpy(path_completo, path_config);
-    strcpy(path_completo, "/");
-    strcpy(path_completo, nombre_archivo);
+    strcat(path_completo, "/");
+    strcat(path_completo, nombre_archivo);
 
     config_destroy(config);
 

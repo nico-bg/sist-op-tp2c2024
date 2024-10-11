@@ -3,7 +3,7 @@
 t_buffer* serializar_datos_inicializacion_hilo(t_datos_inicializacion_hilo* datos)
 {
     int archivo_pseudocodigo_length = strlen(datos->archivo_pseudocodigo) + 1;
-    int tamanio_buffer = 2 * sizeof(uint32_t) + archivo_pseudocodigo_length;
+    int tamanio_buffer = 3 * sizeof(uint32_t) + archivo_pseudocodigo_length;
     t_buffer* buffer = buffer_create(tamanio_buffer);
 
     buffer_add_uint32(buffer, datos->pid);

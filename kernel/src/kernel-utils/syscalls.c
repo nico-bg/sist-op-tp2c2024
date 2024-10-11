@@ -432,7 +432,7 @@ static void esperar_respuesta_dump_memory(void* args)
 
     op_code respuesta = recibir_operacion(datos->fd_conexion);
 
-    if(respuesta == OPERACION_CONFIRMAR_DUMP_MEMORY) {
+    if(respuesta == OPERACION_CONFIRMAR) {
         transicion_blocked_a_ready(datos->hilo);
     } else {
         transicion_blocked_a_exit(datos->hilo);
