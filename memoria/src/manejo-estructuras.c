@@ -176,6 +176,8 @@ char* obtener_path_completo(const char* nombre_archivo){
     strcpy(path_completo, "/");
     strcpy(path_completo, nombre_archivo);
 
+    config_destroy(config);
+
     return path_completo;
 }
 
