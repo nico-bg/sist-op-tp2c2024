@@ -18,7 +18,6 @@ typedef struct
     uint32_t Limite;
 } t_contexto;
 
-
 typedef struct {
     uint32_t tid;
     uint32_t pid;
