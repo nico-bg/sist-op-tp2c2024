@@ -54,6 +54,9 @@ void destruir_datos_solicitar_contexto(t_cpu_solicitar_contexto* datos);
 
 t_buffer* serializar_datos_contexto(t_contexto* datos);
 t_contexto deserializar_datos_contexto(t_buffer* buffer);
+
+t_contexto* deserializar_datos_contexto_memoria(t_buffer* buffer);
+
 void destruir_datos_contexto(t_contexto* datos);
 
 t_buffer* serializar_datos_solicitar_instruccion(t_datos_obtener_instruccion* datos);

@@ -67,6 +67,28 @@ t_contexto deserializar_datos_contexto(t_buffer* buffer){
     return datos;
 }
 
+t_contexto* deserializar_datos_contexto_memoria(t_buffer* buffer){
+
+    t_contexto* datos = malloc(sizeof(t_contexto));
+    
+    datos->pid = buffer_read_uint32(buffer);
+    datos->tid = buffer_read_uint32(buffer);
+    datos->PC = buffer_read_uint32(buffer);
+    datos->AX = buffer_read_uint32(buffer);
+    datos->BX = buffer_read_uint32(buffer);
+    datos->CX = buffer_read_uint32(buffer);
+    datos->DX = buffer_read_uint32(buffer);
+    datos->EX = buffer_read_uint32(buffer);
+    datos->FX = buffer_read_uint32(buffer);
+    datos->GX = buffer_read_uint32(buffer);
+    datos->HX = buffer_read_uint32(buffer);
+    datos->Base = buffer_read_uint32(buffer);
+    datos->Limite = buffer_read_uint32(buffer);
+
+    return datos;
+}
+
+
 void destruir_datos_contexto(t_contexto* datos){
     free(datos);
 }

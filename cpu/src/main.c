@@ -97,6 +97,8 @@ void escuchar_dispatch () {
                 t_buffer* contexto_devuelto = pedir_contexto(socket_memoria, buffer);
 
                 contexto = deserializar_datos_contexto(contexto_devuelto);
+
+
 //READ_MEM AX BX
                //   contexto.PC = 1;
                //   contexto.AX = 2;
@@ -136,16 +138,25 @@ void ciclo_de_instruccion () {
     log_info(logger, "Ciclo_de_instrucción en ejecucion");
 
     //Fetch
-    
-   // stringInstrucciones* intruccionString = pedir_proxima_instruccion(obtenerPid(), obtenerTid(), obtenerPC());
 
-    char* instruccion = "LOG AX";
+    t_datos_obtener_instruccion* datos = malloc(sizeof(t_datos_obtener_instruccion));
+
+    datos->PC = contexto.PC;
+    datos->pid = contexto.pid;
+    datos->tid= contexto.tid;
+    
+
+    t_buffer* buffer_pedido_instruccion = serializar_datos_solicitar_instruccion(datos);
+
+    char* intruccion = pedir_proxima_instruccion(socket_memoria, buffer_pedido_instruccion);
+
+   // char* instruccion = "LOG AX";
 
     log_info(logger, "Fetch finalizado");
 
     //Decode
 
-    char** estructura_instruccion = string_split(instruccion, " " );
+    char** estructura_instruccion = string_split(instruccion, " ");
 
     if(strcmp(estructura_instruccion[0], "SET") == 0)
     {
@@ -2461,5 +2472,26 @@ uint32_t obtener_registro(char* registro)
 }
 
 
+ char* pedir_proxima_instruccion(int servidor_memoria, t_buffer* buffer_pedido_devolver_instruccion)
+ {
+     // Empaquetamos y serializamos los datos junto con el código de operación
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = OPERACION_DEVOLVER_INSTRUCCION;
+    paquete->buffer = buffer_pedido_devolver_instruccion;
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
 
+    send(servidor_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
+    recibir_operacion(servidor_memoria);   
+
+    u_int32_t tamaño_buffer;
+
+    t_buffer* instruccion_paquete_recibido = recibir_buffer(&tamaño_buffer, socket_memoria);
+
+    t_datos_devolver_instruccion* datos = deserializar_datos_devolver_instruccion(instruccion_paquete_recibido);
+
+     return datos->instruccion;
+ }
 

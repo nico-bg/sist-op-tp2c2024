@@ -69,7 +69,7 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente){
 
         case ACTUALIZAR_CONTEXTO_EJECUCION:
             buffer = recibir_buffer(&length, socket_cliente);
-            datos = (t_contexto*)deserializar_datos_contexto(buffer);
+            datos = (t_contexto*)deserializar_datos_contexto_memoria(buffer);
             break;
 
         case DEVOLVER_INSTRUCCION:
