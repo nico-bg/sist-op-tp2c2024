@@ -16,8 +16,8 @@ typedef struct
     uint32_t FX;
     uint32_t GX;
     uint32_t HX;
-    uint32_t base;
-    uint32_t limite;
+    uint32_t Base;
+    uint32_t Limite;
 } t_contexto;
 
 typedef struct {

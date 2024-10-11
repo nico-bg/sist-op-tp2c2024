@@ -62,7 +62,6 @@ int main(int argc, char* argv[]) {
 
 void iniciar_semaforos (){
     sem_init(&sem_ciclo_de_instruccion, 0, 0);
-    sem_init(&sem_operaciones, 0, 0);
 }
 
 
@@ -266,7 +265,7 @@ t_buffer* pedir_contexto(int servidor_memoria, t_buffer* buffer_pedido_contexto)
 {
     // Empaquetamos y serializamos los datos junto con el código de operación
     t_paquete* paquete = malloc(sizeof(t_paquete));
-    paquete->codigo_operacion = DEVOLVER_CONTEXTO_EJECUCION;
+    paquete->codigo_operacion = OPERACION_DEVOLVER_CONTEXTO_EJECUCION;
     paquete->buffer = buffer_pedido_contexto;
     t_buffer* paquete_serializado = serializar_paquete(paquete);
 

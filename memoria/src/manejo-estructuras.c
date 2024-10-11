@@ -215,8 +215,8 @@ t_contexto* devolver_contexto_ejecucion(t_cpu_solicitar_contexto* datos){
     t_contexto* contexto;
 
     contexto->pid = proceso->proceso.pid;
-    contexto->base = proceso->proceso.base;
-    contexto->limite = proceso->proceso.limite;
+    contexto->Base = proceso->proceso.base;
+    contexto->Limite = proceso->proceso.limite;
     contexto->tid = hilo->hilo.tid;
     contexto->PC = hilo->hilo.PC;
     contexto->AX = hilo->hilo.AX;
