@@ -6,7 +6,7 @@
 
 static nodo_proceso* nodo_primer_proceso = NULL;
 
-nodo_proceso* buscar_proceso_por_pid(int pid){
+nodo_proceso* buscar_proceso_por_pid(uint32_t pid){
 
     nodo_proceso* actual = nodo_primer_proceso;
 
@@ -17,7 +17,7 @@ nodo_proceso* buscar_proceso_por_pid(int pid){
     return actual;
 }
 
-nodo_hilo* buscar_hilo_por_tid(int pid, int tid){
+nodo_hilo* buscar_hilo_por_tid(uint32_t pid, uint32_t tid){
 
     nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
     nodo_hilo* actual = nodo_proceso->proceso.lista_hilos;
@@ -53,7 +53,7 @@ void iniciar_proceso(t_datos_inicializacion_proceso* datos){
     return;
 }
 
-int finalizar_proceso(t_datos_finalizacion_proceso* datos){
+uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
 
     nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);
 
@@ -171,13 +171,14 @@ nodo_proceso* buscar_ultimo_proceso(void){
     }
 
     nodo_proceso* actual = nodo_primer_proceso;
+    
     while(actual->siguiente_nodo_proceso != NULL){
         actual = actual->siguiente_nodo_proceso;
     }
     return actual;
 }
 
-nodo_hilo* buscar_ultimo_hilo(int pid){
+nodo_hilo* buscar_ultimo_hilo(uint32_t pid){
 
     nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
     nodo_hilo* actual = nodo_proceso->proceso.lista_hilos;

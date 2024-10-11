@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     /* Conexión con el Filesystem */
     int socket_filesystem = conectar_a_socket(ip_filesystem, puerto_filesystem);
     log_info(logger, "Conectado al Filesystem");
-    //enviar_mensaje("Hola, soy la Memoria", socket_filesystem);
+    enviar_mensaje("Hola, soy la Memoria", socket_filesystem);
 
 
     /* Conexión con la CPU */
@@ -70,14 +70,13 @@ void atender_kernel(void* socket_cliente)
 
     int cod_op = recibir_operacion(socket);
 
-    switch (cod_op)
-    {
-    case -1:
-        log_error(logger, "El KERNEL se desconectó");
-        break;
-    default:
-    atender_peticion_kernel(cod_op, socket);
-        break;
+    switch (cod_op) {
+        case -1:
+            log_error(logger, "El KERNEL se desconectó");
+            break;
+        default:
+            atender_peticion_kernel(cod_op, socket);
+            break;
     }
 }
 
@@ -93,6 +92,7 @@ void atender_peticion_kernel(int cod_op, int socket)
                 log_info(logger, "## Proceso Creado -  PID: %d - Tamaño: %d", datos_crear_proceso->pid, datos_crear_proceso->tamanio);
                 //enviar_mensaje("Proceso inicializado con éxito", socket);
             } else {
+                log_info(logger, "No hay suficiente espacio para inicializar proceso");
                 enviar_mensaje("No hay suficiente espacio para inicializar proceso", socket);
             }
             break;
@@ -194,6 +194,6 @@ void terminar_programa(t_config* config, int conexion)
     close(conexion);
 }
 
-bool hay_espacio_en_memoria(int tamanio){
+bool hay_espacio_en_memoria(uint32_t tamanio){
     return true; //checkpoint-2
 }
