@@ -4,7 +4,6 @@
 int mayor_prioridad_en_ready;
 
 static void transicion_exec_a_ready(t_tcb* hilo);
-static void transicion_exec_a_blocked(t_tcb* hilo);
 static void transicion_ready_a_exec(t_tcb* hilo);
 static t_tcb* obtener_siguiente_a_exec();
 static t_tcb* obtener_siguiente_a_exec_fifo();
@@ -144,7 +143,14 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
         procesar_instrucciones_cpu(hilo_en_ejecucion);
         break;
     case OPERACION_IO:
-        transicion_exec_a_blocked(hilo_en_ejecucion);
+        log_info(logger, "## (%d:%d) - Solicitó syscall: IO", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        // Recibimos y deserializamos los datos enviados por la CPU
+        buffer = recibir_buffer(&size, socket_cpu_dispatch);
+        t_datos_operacion_io* datos_io = deserializar_datos_operacion_io(buffer);
+
+        syscall_io(datos_io->tiempo);
+        destruir_datos_operacion_io(datos_io);
         break;
     case OPERACION_DUMP_MEMORY:
         log_info(logger, "## (%d:%d) - Solicitó syscall: DUMP_MEMORY", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
@@ -175,19 +181,6 @@ static void transicion_exec_a_ready(t_tcb* hilo)
     pthread_mutex_unlock(&mutex_estado_ready);
 
     sem_post(&semaforo_estado_ready);
-}
-
-static void transicion_exec_a_blocked(t_tcb* hilo)
-{
-    // Desalojo el hilo del estado EXEC (El mismo que recibimos como parámetro en esta función)
-    pthread_mutex_lock(&mutex_estado_exec);
-    estado_exec = NULL;
-    pthread_mutex_unlock(&mutex_estado_exec);
-
-    // Agregamos el hilo al estado BLOCKED
-    pthread_mutex_lock(&mutex_estado_blocked);
-    list_add(estado_blocked, hilo);
-    pthread_mutex_unlock(&mutex_estado_blocked);
 }
 
 /**

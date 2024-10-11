@@ -128,3 +128,26 @@ void destruir_datos_operacion_hilo(t_datos_operacion_hilo* datos)
 {
     free(datos);
 }
+
+t_buffer* serializar_datos_operacion_io(t_datos_operacion_io* datos)
+{
+    t_buffer* buffer = buffer_create(sizeof(uint32_t));
+
+    buffer_add_uint32(buffer, datos->tiempo);
+
+    return buffer;
+}
+
+t_datos_operacion_io* deserializar_datos_operacion_io(t_buffer* buffer)
+{
+    t_datos_operacion_io* datos = malloc(sizeof(t_datos_operacion_io));
+
+    datos->tiempo = buffer_read_uint32(buffer);
+
+    return datos;
+}
+
+void destruir_datos_operacion_io(t_datos_operacion_io* datos)
+{
+    free(datos);
+}

@@ -35,6 +35,10 @@ int main(int argc, char* argv[]) {
     // Creamos el primer proceso
     crear_proceso(argumentos->archivo_pseudocodigo, argumentos->tamanio_proceso, 0);
 
+    // Iniciamos el dispositivo de entrada/salida
+    pthread_t hilo_io;
+    pthread_create(&hilo_io, NULL, dispositivo_io, NULL);
+
     // Iniciamos el planificador de largo plazo
     pthread_t hilo_planificador_largo_plazo;
     pthread_create(&hilo_planificador_largo_plazo, NULL, planificador_largo_plazo, NULL);

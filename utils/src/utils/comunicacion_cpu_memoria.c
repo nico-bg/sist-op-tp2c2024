@@ -10,7 +10,7 @@ t_buffer* serializar_pedir_contexto(t_cpu_solicitar_contexto* hilo)
 
     return buffer;
 }
-/*
+
 t_buffer* serializar_hilo_a_cpu(t_hilo_a_cpu* hilo)
 {
     t_buffer* buffer = buffer_create(sizeof(t_hilo_a_cpu));
@@ -184,9 +184,9 @@ t_datos_devolver_instruccion* deserializar_datos_devolver_instruccion(t_buffer* 
 
     t_datos_devolver_instruccion* datos = malloc(sizeof(t_datos_devolver_instruccion));
     
-    uint32_t* length;
+    uint32_t length;
 
-    datos->instruccion = buffer_read_string(buffer, length);
+    datos->instruccion = buffer_read_string(buffer, &length);
 
     return datos;
 }

@@ -189,7 +189,21 @@ void syscall_desbloquear_mutex(char* recurso)
 
 void syscall_io(uint32_t tiempo)
 {
+    pthread_mutex_lock(&mutex_estado_exec);
+    t_tcb* hilo_en_ejecucion = estado_exec;
+    pthread_mutex_unlock(&mutex_estado_exec);
 
+    transicion_exec_a_blocked();
+
+    t_solicitud_io* solicitud_io = malloc(sizeof(t_solicitud_io));
+    solicitud_io->hilo = hilo_en_ejecucion;
+    solicitud_io->tiempo = tiempo;
+
+    pthread_mutex_lock(&mutex_io);
+    queue_push(cola_io, solicitud_io);
+    pthread_mutex_unlock(&mutex_io);
+
+    sem_post(&semaforo_io);
 }
 
 void syscall_dump_memory()
@@ -223,7 +237,7 @@ void syscall_dump_memory()
 
     // Creamos un hilo para paralelizar la espera de la respuesta del DUMP_MEMORY
     pthread_t hilo_dump_memory;
-    pthread_create(&hilo_dump_memory, NULL, esperar_respuesta_dump_memory, args_hilo);
+    pthread_create(&hilo_dump_memory, NULL, (void*) esperar_respuesta_dump_memory, args_hilo);
     pthread_detach(hilo_dump_memory);
 
     // Liberamos la memoria de las estructuras utilizadas
