@@ -33,7 +33,7 @@ void* planificador_largo_plazo()
         int resultado_proceso = pedir_inicializacion_proceso_a_memoria(proceso_a_inicializar);
 
         // Si no hubo memoria suficiente pasamos a la siguiente iteración donde se va a bloquear por el `semaforo_memoria_suficiente`
-        if(resultado_proceso != OPERACION_NOTIFICAR_ERROR) {
+        if(resultado_proceso == OPERACION_NOTIFICAR_ERROR) {
             continue;
         }
 

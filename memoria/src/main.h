@@ -8,6 +8,8 @@
 #include <utils/comunicacion_cpu_memoria.h>
 #include <utils/comunicacion_kernel_memoria.h>
 
+#include <commons/string.h>
+
 
 /* Temporal hasta implementar */
 #define DEVOLVER_CONTEXTO_EJECUCION 1
@@ -98,7 +100,7 @@ void liberar_instrucciones(char** instrucciones);
 
 int contar_lineas(const char* nombre_archivo);
 
-char* obtener_path_completo(const char* nombre_archivo);
+char* obtener_path_completo(char* nombre_archivo);
 
 nodo_proceso* buscar_ultimo_proceso(void);
 
