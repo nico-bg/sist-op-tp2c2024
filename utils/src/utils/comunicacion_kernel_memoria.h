@@ -17,7 +17,6 @@ typedef struct {
 typedef struct {
     uint32_t pid;
     uint32_t tamanio;
-    char* archivo_pseudocodigo;
 } t_datos_inicializacion_proceso;
 
 typedef struct {
