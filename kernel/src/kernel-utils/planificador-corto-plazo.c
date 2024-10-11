@@ -149,6 +149,8 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
     case OPERACION_IO:
         transicion_exec_a_blocked(hilo_en_ejecucion);
         break;
+    case OPERACION_DUMP_MEMORY:
+        break;
     default:
         log_debug(logger_debug, "Motivo de devolución desconocido");
         break;
@@ -311,9 +313,8 @@ static void solicitar_desalojo_hilo_a_cpu(t_tcb* hilo)
     pthread_mutex_unlock(&mutex_estado_exec);
 
     if(sigue_en_exec) {
-        // TODO: Descomentar cuando la CPU pueda recibir esta operacion
-        // uint32_t operacion = OPERACION_DESALOJAR_HILO;
-        // send(socket_cpu_interrupt, &operacion, sizeof(uint32_t), 0);
+        uint32_t operacion = OPERACION_DESALOJAR_HILO;
+        send(socket_cpu_interrupt, &operacion, sizeof(uint32_t), 0);
     }
 }
 
