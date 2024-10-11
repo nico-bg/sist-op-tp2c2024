@@ -163,7 +163,6 @@ static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso)
     t_datos_inicializacion_proceso* datos_inicializacion = malloc(sizeof(t_datos_inicializacion_proceso));
     datos_inicializacion->pid = proceso->pid;  // PID del proceso
     datos_inicializacion->tamanio = proceso->tamanio;  // Tamaño del proceso
-    datos_inicializacion->archivo_pseudocodigo = string_duplicate(proceso->nombre_archivo);  // Copiar el nombre del archivo pseudocódigo
 
     // Serializar los datos de inicialización del proceso
     t_buffer* buffer_inicializacion = serializar_datos_inicializacion_proceso(datos_inicializacion);
@@ -184,7 +183,7 @@ static int pedir_inicializacion_proceso_a_memoria(t_pcb* proceso)
     int resultado;
     if (recv(socket_memoria, &resultado, sizeof(int), MSG_WAITALL) != sizeof(int)) {
         log_error(logger, "Error al recibir respuesta de Memoria");
-        resultado = -1;  
+        resultado = -1;
     }
 
     // Cerrar la conexión con Memoria

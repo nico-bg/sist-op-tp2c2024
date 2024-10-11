@@ -17,13 +17,16 @@ typedef struct {
 typedef struct {
     uint32_t pid;
     uint32_t tamanio;
-    char* archivo_pseudocodigo;
 } t_datos_inicializacion_proceso;
 
 typedef struct {
     uint32_t pid;
 } t_datos_finalizacion_proceso;
 
+typedef struct {
+    uint32_t pid;
+    uint32_t tid;
+} t_datos_dump_memory;
 
 t_buffer* serializar_datos_inicializacion_hilo(t_datos_inicializacion_hilo* datos);
 t_datos_inicializacion_hilo* deserializar_datos_inicializacion_hilo(t_buffer* buffer);
@@ -40,5 +43,9 @@ void destruir_datos_inicializacion_proceso(t_datos_inicializacion_proceso* datos
 t_buffer* serializar_datos_finalizacion_proceso(t_datos_finalizacion_proceso* datos);
 t_datos_finalizacion_proceso* deserializar_datos_finalizacion_proceso(t_buffer* buffer);
 void destruir_datos_finalizacion_proceso(t_datos_finalizacion_proceso* datos);
+
+t_buffer* serializar_datos_dump_memory(t_datos_dump_memory* datos);
+t_datos_dump_memory* deserializar_datos_dump_memory(t_buffer* buffer);
+void destruir_datos_dump_memory(t_datos_dump_memory* datos);
 
 #endif

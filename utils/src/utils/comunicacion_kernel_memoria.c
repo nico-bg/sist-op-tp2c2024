@@ -57,15 +57,12 @@ void destruir_datos_finalizacion_hilo(t_datos_finalizacion_hilo* datos)
 }
 
 
-t_buffer* serializar_datos_inicializacion_proceso(t_datos_inicializacion_proceso* datos){
-
-    int archivo_pseudocodigo_length = strlen(datos->archivo_pseudocodigo) + 1;
-
-    t_buffer* buffer = buffer_create(2 * sizeof(uint32_t) + archivo_pseudocodigo_length);
+t_buffer* serializar_datos_inicializacion_proceso(t_datos_inicializacion_proceso* datos)
+{
+    t_buffer* buffer = buffer_create(2 * sizeof(uint32_t));
 
     buffer_add_uint32(buffer, datos->pid);
     buffer_add_uint32(buffer, datos->tamanio);
-    buffer_add_string(buffer, archivo_pseudocodigo_length, datos->archivo_pseudocodigo);
 
     return buffer;
 }
@@ -77,14 +74,11 @@ t_datos_inicializacion_proceso* deserializar_datos_inicializacion_proceso(t_buff
     datos->pid = buffer_read_uint32(buffer);
     datos->tamanio = buffer_read_uint32(buffer);
 
-    uint32_t archivo_pseudocodigo_length;
-    datos->archivo_pseudocodigo = buffer_read_string(buffer, &archivo_pseudocodigo_length);
-
     return datos;
 }
 
-void destruir_datos_inicializacion_proceso(t_datos_inicializacion_proceso* datos){
-    free(datos->archivo_pseudocodigo);
+void destruir_datos_inicializacion_proceso(t_datos_inicializacion_proceso* datos)
+{
     free(datos);
 }
 
@@ -111,3 +105,27 @@ void destruir_datos_finalizacion_proceso(t_datos_finalizacion_proceso* datos){
     free(datos);
 }
 
+t_buffer* serializar_datos_dump_memory(t_datos_dump_memory* datos)
+{
+    t_buffer* buffer = buffer_create(2 * sizeof(uint32_t));
+
+    buffer_add_uint32(buffer, datos->pid);
+    buffer_add_uint32(buffer, datos->tid);
+
+    return buffer;
+}
+
+t_datos_dump_memory* deserializar_datos_dump_memory(t_buffer* buffer)
+{
+    t_datos_dump_memory* datos = malloc(sizeof(t_datos_dump_memory));
+
+    datos->pid = buffer_read_uint32(buffer);
+    datos->tid = buffer_read_uint32(buffer);
+
+    return datos;
+}
+
+void destruir_datos_dump_memory(t_datos_dump_memory* datos)
+{
+    free(datos);
+}
