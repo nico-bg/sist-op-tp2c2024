@@ -145,7 +145,7 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
     }
 }
 
-void notificar_confirmacion (int socket_cliente){
+void confirmar_operacion (int socket_cliente){
 
     uint32_t op = OPERACION_CONFIRMAR;
 
