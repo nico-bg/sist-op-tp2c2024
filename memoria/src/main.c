@@ -3,20 +3,18 @@
 #include <pthread.h>
 
 t_log* logger;
+t_config* config;
 
 int main(int argc, char* argv[]) {
 
-    t_config* config;
+    config = iniciar_config("memoria.config");
+    logger = iniciar_logger(config, "memoria.log", "MEMORIA");
 
     char* ip_filesystem;
     char* puerto_filesystem;
     char* puerto_escucha;
 
     pthread_t thread_kernel;
-
-    config = iniciar_config("memoria.config");
-
-    logger = iniciar_logger(config, "memoria.log", "MEMORIA");
 
     ip_filesystem = config_get_string_value(config, "IP_FILESYSTEM");
     puerto_filesystem = config_get_string_value(config, "PUERTO_FILESYSTEM");
@@ -153,7 +151,7 @@ void atender_peticion_cpu(int cod_op, int socket)
             t_cpu_solicitar_contexto* datos_devolver_contexto = (t_cpu_solicitar_contexto*)leer_buffer_cpu(cod_op, socket);
             log_info(logger, "## Contexto Solicitado - (PID:TID) - (%d:%d)", datos_devolver_contexto->pid, datos_devolver_contexto->tid);
             t_contexto* contexto_ejecucion = devolver_contexto_ejecucion(datos_devolver_contexto);
-            //enviar_buffer(cod_op, t_contexto);
+            //enviar_buffer(cod_op, contexto_ejecucion);
             break;
 
         case ACTUALIZAR_CONTEXTO_EJECUCION:

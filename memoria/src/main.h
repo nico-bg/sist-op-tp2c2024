@@ -37,7 +37,7 @@ typedef struct {
     uint32_t FX;
     uint32_t GX;
     uint32_t HX;
-    char** archivo_pseudocodigo_th;
+    char** archivo_pseudocodigo;
 } estructura_hilo;
 
 struct nodo_hilo {
@@ -50,7 +50,6 @@ typedef struct {
     uint32_t tamanio;
     uint32_t base;
     uint32_t limite;
-    char** archivo_pseudocodigo;
     nodo_hilo* lista_hilos;
 } estructura_proceso;
 
@@ -93,11 +92,13 @@ void iniciar_hilo(t_datos_inicializacion_hilo* datos);
 void finalizar_hilo(t_datos_finalizacion_hilo* datos);
 
 
-char** leer_archivo_pseudocodigo(const char* archivo_pseudocodigo);
+char** leer_archivo_pseudocodigo(const char* nombre_archivo);
 
 void liberar_instrucciones(char** instrucciones);
 
 int contar_lineas(const char* nombre_archivo);
+
+char* obtener_path_completo(const char* nombre_archivo);
 
 nodo_proceso* buscar_ultimo_proceso(void);
 
