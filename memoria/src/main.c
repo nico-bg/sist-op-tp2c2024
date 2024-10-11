@@ -154,34 +154,34 @@ void atender_peticion_cpu(int cod_op, int socket)
     
     switch(cod_op) {
 
-        case DEVOLVER_CONTEXTO_EJECUCION:
+        case OPERACION_DEVOLVER_CONTEXTO_EJECUCION:
             t_cpu_solicitar_contexto* datos_devolver_contexto = (t_cpu_solicitar_contexto*)leer_buffer_cpu(cod_op, socket);
             log_info(logger, "## Contexto Solicitado - (PID:TID) - (%d:%d)", datos_devolver_contexto->pid, datos_devolver_contexto->tid);
             t_contexto* contexto_ejecucion = devolver_contexto_ejecucion(datos_devolver_contexto);
             enviar_buffer(cod_op, socket, contexto_ejecucion);
             break;
 
-        case ACTUALIZAR_CONTEXTO_EJECUCION:
+        case OPERACION_ACTUALIZAR_CONTEXTO:
             t_contexto* datos_actualizar_contexto = (t_contexto*)leer_buffer_cpu(cod_op, socket);
             actualizar_contexto_ejecucion(datos_actualizar_contexto);
             log_info(logger, "## Contexto Actualizado - (PID:TID) - (%d:%d)", datos_actualizar_contexto->pid, datos_actualizar_contexto->tid);
             //enviar_mensaje("Contexto actualizado con éxito", socket);
             break;
 
-        case DEVOLVER_INSTRUCCION:
+        case OPERACION_DEVOLVER_INSTRUCCION:
             t_datos_obtener_instruccion* datos_devolver_instruccion = (t_datos_obtener_instruccion*)leer_buffer_cpu(cod_op, socket);
             char* inst = devolver_instruccion(datos_devolver_instruccion);
             log_info(logger, "## Obtener instrucción - (PID:TID) - (%d:%d) - Instrucción: <%s> <Args...>", datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, inst);
             enviar_buffer(cod_op, socket, inst);
             break;
 
-        case LEER_MEMORIA:
+        case OPERACION_LEER_MEMORIA:
             log_info(logger, "VALORES HARDCODEADOS");
             log_info(logger, "## Lectura - (PID:TID) - (%d:%d) - Dir. Física: %s - Tamaño: %d", pid, tid, dir_fisica, tamanio);
             //leer memoria
             break;
 
-        case ESCRIBIR_MEMORIA:
+        case OPERACION_ESCRIBIR_MEMORIA:
             log_info(logger, "VALORES HARDCODEADOS");
             log_info(logger, "## Escritura - (PID:TID) - (%d:%d) - Dir. Física: %s - Tamaño: %d", pid, tid, dir_fisica, tamanio);
             //escribir memoria

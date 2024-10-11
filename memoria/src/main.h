@@ -10,21 +10,6 @@
 
 #include <commons/string.h>
 
-
-/* Temporal hasta implementar */
-#define DEVOLVER_CONTEXTO_EJECUCION 1
-#define ACTUALIZAR_CONTEXTO_EJECUCION 2
-#define DEVOLVER_INSTRUCCION 3
-#define LEER_MEMORIA 4
-#define ESCRIBIR_MEMORIA 5
-
-#define CREAR_PROCESO 6
-#define FINALIZAR_PROCESO 7
-#define CREAR_HILO 8
-#define FINALIZAR_HILO 9
-#define MEMORY_DUMP 10
-
-
 typedef struct nodo_hilo nodo_hilo;
 typedef struct nodo_proceso nodo_proceso;
 
