@@ -73,7 +73,6 @@ void iniciar_semaforos (){
 
 void escuchar_dispatch()
 {
-
      log_info(logger, "Hilo escuchar_dispatch esperando pid y tid del kernel");
 
      t_buffer *buffer;
@@ -83,23 +82,14 @@ void escuchar_dispatch()
      {
           op_code cod_op = recibir_operacion(socket_dispatch);
 
-          log_info(logger, "me llego el codigo de operacion");
-
           switch (cod_op)
           {
           case OPERACION_EJECUTAR_HILO:
 
-               log_info(logger, "me llegó un OPERACION_EJECUTAR_HILO!!");
 
                buffer = recibir_buffer(&size, socket_dispatch);
 
-               log_info(logger, "me llego el buffer");
-
                pcb = deserializar_hilo_a_cpu(buffer);
-
-               log_info(logger, "me llego el buffer con primer campo:%d", pcb->tid);
-
-               log_info(logger, "me llego el buffer con segundo campo:%d", pcb->pid);
 
                t_buffer *contexto_devuelto = pedir_contexto(socket_memoria, buffer);
 
@@ -126,9 +116,10 @@ void ciclo_de_instruccion()
      {
           sem_wait(&sem_ciclo_de_instruccion);
 
-          log_info(logger, "Ciclo_de_instrucción en ejecucion");
-
           // Fetch
+          
+          log_info(logger, " ## TID: %d  - FETCH - Program Counter: %d", contexto.tid, contexto.PC);
+    
 
           t_datos_obtener_instruccion *datos = malloc(sizeof(t_datos_obtener_instruccion));
 
@@ -142,13 +133,10 @@ void ciclo_de_instruccion()
 
           if (strlen(instruccion) == 0)
           {
-               log_error(logger, "La instruccion que vino es de tamaño 0!!");
+          
                abort();
           }
 
-          // char* instruccion = "LOG AX";
-
-          log_info(logger, "Fetch finalizado");
 
           // Decode
 
@@ -156,7 +144,8 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "SET") == 0)
           {
-               log_info(logger, "vino un SET");
+     
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
 
                setear_registro(estructura_instruccion[1], estructura_instruccion[2]);
 
@@ -165,6 +154,8 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "SUM") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
+
                sum_registro(estructura_instruccion[1], estructura_instruccion[2]);
 
                sem_post(&sem_ciclo_de_instruccion);
@@ -172,6 +163,9 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "SUB") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
+
+               
                sub_registro(estructura_instruccion[1], estructura_instruccion[2]);
 
                sem_post(&sem_ciclo_de_instruccion);
@@ -179,7 +173,9 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "READ_MEM") == 0)
           {
-               log_info(logger, "Entra por read_mem");
+        
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
+
 
                read_mem(estructura_instruccion[1], estructura_instruccion[2]);
 
@@ -187,11 +183,17 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "WRITE_MEM") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
+
+               
                write_mem(estructura_instruccion[1], estructura_instruccion[2]);
           }
 
           if (strcmp(estructura_instruccion[0], "JNZ") == 0)
           {
+
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
+
 
                jnz_pc(estructura_instruccion[1], estructura_instruccion[2]);
           }
@@ -199,13 +201,18 @@ void ciclo_de_instruccion()
           if (strcmp(estructura_instruccion[0], "LOG") == 0)
 
           {
-               log_info(logger, "instruccion LOG es");
+
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
+
 
                log_info(logger, "El valor leido por instruccion LOG es:%d", obtener_registro(estructura_instruccion[1]));
           }
 
           if (strcmp(estructura_instruccion[0], "MUTEX_CREATE") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
+
+               
                // actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
                // devolver_control();
@@ -213,6 +220,9 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "MUTEX_LOCK") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
+     
+
                // actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
                // devolver_control();
@@ -220,6 +230,9 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "MUTEX_UNLOCK") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
+
+
                // actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
                // devolver_control();
@@ -227,6 +240,8 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "DUMP_MEMORY") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros:  ", contexto.tid, estructura_instruccion[0]);
+
                // actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
                // devolver_control();
@@ -234,6 +249,9 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "IO") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %d ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]));
+
+              
                // actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
                // devolver_control();
@@ -241,6 +259,8 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "PROCESS_CREATE") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d %d ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]),atoi(estructura_instruccion[2]));
+
                // actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
                // devolver_control();
@@ -248,6 +268,9 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "THREAD_CREATE") == 0)
           {
+               
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d  ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]));
+               
                // actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
                // devolver_control();
@@ -255,6 +278,8 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "THREAD_CANCEL") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %d  ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]));
+               
                // actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
                // devolver_control();
@@ -262,6 +287,8 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "THREAD_JOIN") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %d  ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]));
+               
                // actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
                // devolver_control();
@@ -269,6 +296,8 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "THREAD_EXIT") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros:  ", contexto.tid, estructura_instruccion[0]);
+               
                // actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
                // devolver_control();
@@ -276,14 +305,13 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "PROCESS_EXIT") == 0)
           {
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros:  ", contexto.tid, estructura_instruccion[0]);
+
                // actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
                // devolver_control();
           }
 
-          log_info(logger, "Decode finalizado");
-
-          log_info(logger, "Execute finalizado");
 
           contexto.PC = contexto.PC + 1;
 
@@ -294,7 +322,12 @@ void ciclo_de_instruccion()
      pthread_mutex_unlock(&mutex_interrupciones);
 
      if(es_necesario_interrupir) {
+        
+          log_info(logger, "## Llega interrupción al puerto Interrupt");
+
           actualizar_contexto();
+
+     
 
           // Notificamos al Kernel que ya desalojamos el hilo
           t_buffer* buffer_interrupcion = buffer_create(sizeof(uint32_t));
@@ -327,6 +360,8 @@ t_buffer *pedir_contexto(int servidor_memoria, t_buffer *buffer_pedido_contexto)
      paquete->buffer = buffer_pedido_contexto;
      t_buffer *paquete_serializado = serializar_paquete(paquete);
 
+     log_info(logger, "#TID: %d  - Solicito Contexto Ejecución", contexto.tid);
+
      send(servidor_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
 
      buffer_destroy(paquete_serializado);
@@ -351,7 +386,9 @@ void setear_registro(char *registro, char *valor)
 {
      if (strcmp(registro, "PC") == 0)
      {
+
           contexto.PC = atoi(valor);
+
      }
 
      if (strcmp(registro, "AX") == 0)
@@ -421,24 +458,6 @@ void sub_registro(char *registro1, char *registro2)
      setear_registro(registro1, valor_registro1 - valor_registro2);
 }
 
-/*
-
-    t_datos_obtener_instruccion* datos = malloc(sizeof(t_datos_obtener_instruccion));
-
-    datos->PC = contexto.PC;
-    datos->pid = contexto.pid;
-    datos->tid= contexto.tid;
-
-
-    t_buffer* buffer_pedido_instruccion = serializar_datos_solicitar_instruccion(datos);
-
-    char* instruccion = pedir_proxima_instruccion(socket_memoria, buffer_pedido_instruccion);
-
-    if(strlen(instruccion) == 0){
-     log_error(logger, "La instruccion que vino es de tamaño 0!!");
-     abort();
-    }
-*/
 
 void read_mem(char *registro1, char *registro2)
 {
@@ -456,6 +475,11 @@ void read_mem(char *registro1, char *registro2)
      else
      {
           log_info(logger, "Segmentation Fault casero!!!");
+
+
+          log_info(logger, "#TID: %d  - Actualizo Contexto Ejecución", contexto.tid);
+
+
           /*
           devolver el contexto a la memoria
           devolver el tid al kernel con motivo de seg fault
@@ -473,11 +497,10 @@ int mmu(int dir_logica)
      if (((dir_logica + contexto.Base) <= (contexto.Limite)))
      {
           return 1;
-          log_info(logger, "Esta devolviendo 1");
+ 
      }
      else
      {
-          log_info(logger, "Esta devolviendo 0");
           return 0;
      }
 }
@@ -486,6 +509,9 @@ void write_mem(char *registro1, char *registro2)
 {
      uint32_t valor_registro1 = obtener_registro(registro1);
      int dir_fisica = mmu_dirLog_dirfis(valor_registro1);
+
+
+     log_info(logger, " ## TID: %d - Accion: ESCRITURA - Dirección Fisica: %d", contexto.tid, dir_fisica);
 
      //////escritura_memoria(socket_memoria, pid, dir_fisica, contexto.AX);
 }
@@ -591,6 +617,10 @@ u_int32_t lectura_memoria(u_int32_t dir_fisica)
      paquete->buffer = buffer_pedido_leer_memoria;
      t_buffer *paquete_serializado = serializar_paquete(paquete);
 
+
+     log_info(logger, " ## TID: %d - Accion: LEER - Dirección Fisica: %d", contexto.tid, dir_fisica);
+
+
       send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
 
      buffer_destroy(paquete_serializado);
@@ -631,7 +661,11 @@ void actualizar_contexto()
      paquete->buffer = serializar_datos_contexto(contexto_a_memoria);
      t_buffer* paquete_serializado = serializar_paquete(paquete);
 
-  send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+
+     log_info(logger, "#TID: %d  - Actualizo Contexto Ejecución", contexto.tid);
+
+
+     send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
 
      buffer_destroy(paquete_serializado);
      eliminar_paquete(paquete);   
