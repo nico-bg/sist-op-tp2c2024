@@ -135,6 +135,7 @@ static void finalizar_proceso(t_tcb* hilo_principal)
         destruir_tcb(hilo_a_liberar);
     }
 
+    log_info(logger, "## Finaliza el proceso %d", proceso->pid);
     destruir_pcb(proceso);
 }
 
@@ -189,7 +190,9 @@ static void finalizar_hilo(t_tcb* hilo)
         transicion_blocked_a_ready(hilo_a_desbloquear);
     }
 
+    log_info(logger, "## (%d:%d) Finaliza el hilo", hilo->pid_padre, hilo->tid);
     destruir_tcb(hilo);
+
 }
 
 /**

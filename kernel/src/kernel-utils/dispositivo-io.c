@@ -22,6 +22,7 @@ void* dispositivo_io()
         esperar_ms(solicitud->tiempo);
 
         transicion_blocked_a_ready(solicitud->hilo);
+        log_info(logger, "## (%d:%d) finalizó IO y pasa a READY", solicitud->hilo->pid_padre, solicitud->hilo->tid);
 
         free(solicitud);
     }

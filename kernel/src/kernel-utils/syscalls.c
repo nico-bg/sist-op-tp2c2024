@@ -204,6 +204,8 @@ void syscall_io(uint32_t tiempo)
     queue_push(cola_io, solicitud_io);
     pthread_mutex_unlock(&mutex_io);
 
+    log_info(logger, "## (%d:%d) - Bloqueado por: IO", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
     sem_post(&semaforo_io);
 }
 
