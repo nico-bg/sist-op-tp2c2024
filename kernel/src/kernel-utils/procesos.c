@@ -43,6 +43,7 @@ void crear_proceso(char* nombre_archivo, uint32_t tamanio_proceso, uint32_t prio
 void destruir_mutex(void* elemento)
 {
     t_mutex* mutex = (t_mutex*) elemento;
+    mutex->hilo_asignado = NULL;
     queue_destroy(mutex->hilos_bloqueados);
     free(mutex->recurso);
     free(mutex);
@@ -53,7 +54,7 @@ void destruir_mutex(void* elemento)
  */
 void destruir_pcb(t_pcb* pcb)
 {
-    list_destroy_and_destroy_elements(pcb->tids, free);
+    list_destroy(pcb->tids);
     list_destroy_and_destroy_elements(pcb->mutex, destruir_mutex);
     free(pcb->nombre_archivo);
     free(pcb);
