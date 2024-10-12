@@ -88,7 +88,6 @@ t_contexto* deserializar_datos_contexto_memoria(t_buffer* buffer){
     return datos;
 }
 
-
 void destruir_datos_contexto(t_contexto* datos){
     free(datos);
 }
@@ -148,3 +147,62 @@ void destruir_datos_devolver_instruccion(t_datos_devolver_instruccion* datos){
     free(datos);
 }
 
+
+t_buffer* serializar_datos_leer_memoria(t_datos_leer_memoria* datos){
+
+    t_buffer* buffer = buffer_create(4 * sizeof(uint32_t));
+
+    buffer_add_uint32(buffer, datos->pid);
+    buffer_add_uint32(buffer, datos->tid);
+    buffer_add_uint32(buffer, datos->tamanio);
+    buffer_add_uint32(buffer, datos->dir_fisica);
+
+    return buffer;
+}
+
+t_datos_leer_memoria* deserializar_datos_leer_memoria(t_buffer* buffer){
+
+    t_datos_leer_memoria* datos = malloc(sizeof(t_datos_leer_memoria));
+
+    datos->pid = buffer_read_uint32(buffer);
+    datos->tid = buffer_read_uint32(buffer);
+    datos->tamanio = buffer_read_uint32(buffer);
+    datos->dir_fisica = buffer_read_uint32(buffer);
+
+    return datos;
+}
+
+void destruir_datos_leer_memoria(t_datos_leer_memoria* datos){
+    free(datos);
+}
+
+
+t_buffer* serializar_datos_escribir_memoria(t_datos_escribir_memoria* datos){
+
+    t_buffer* buffer = buffer_create(5 * sizeof(uint32_t));
+
+    buffer_add_uint32(buffer, datos->pid);
+    buffer_add_uint32(buffer, datos->tid);
+    buffer_add_uint32(buffer, datos->tamanio);
+    buffer_add_uint32(buffer, datos->dir_fisica);
+    buffer_add_uint32(buffer, datos->dato_a_escribir);
+
+    return buffer;
+}
+
+t_datos_escribir_memoria* deserializar_datos_escribir_memoria(t_buffer* buffer){
+
+    t_datos_escribir_memoria* datos = malloc(sizeof(t_datos_escribir_memoria));
+
+    datos->pid = buffer_read_uint32(buffer);
+    datos->tid = buffer_read_uint32(buffer);
+    datos->tamanio = buffer_read_uint32(buffer);
+    datos->dir_fisica = buffer_read_uint32(buffer);
+    datos->dato_a_escribir = buffer_read_uint32(buffer);
+
+    return datos;
+}
+
+void destruir_datos_escribir_memoria(t_datos_escribir_memoria* datos){
+    free(datos);
+}

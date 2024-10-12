@@ -92,7 +92,7 @@ void atender_peticion_kernel(int cod_op, int socket)
                 confirmar_operacion(socket);
             } else {
                 log_info(logger, "No hay suficiente espacio para inicializar proceso");
-                enviar_mensaje("No hay suficiente espacio para inicializar proceso", socket);
+                notificar_error(socket);
             }
             break;
 
@@ -146,11 +146,6 @@ int atender_cpu(int socket_cliente)
 void atender_peticion_cpu(int cod_op, int socket)
 {
     int espera = config_get_int_value(config, "RETARDO_RESPUESTA");
-
-    char* dir_fisica = "0x0000";    //
-    uint32_t tamanio = 10;          //      Registros temporales
-    uint32_t pid = 0;               //      para el checkpoint-2
-    uint32_t tid = 0;               //
     
     switch(cod_op) {
 
@@ -177,14 +172,14 @@ void atender_peticion_cpu(int cod_op, int socket)
             break;
 
         case OPERACION_LEER_MEMORIA:
-            log_info(logger, "VALORES HARDCODEADOS");
-            log_info(logger, "## Lectura - (PID:TID) - (%d:%d) - Dir. Física: %s - Tamaño: %d", pid, tid, dir_fisica, tamanio);
+            t_datos_leer_memoria* datos_leer_memoria = (t_datos_leer_memoria*)leer_buffer_cpu(cod_op, socket);
+            log_info(logger, "## Lectura - (PID:TID) - (%d:%d) - Dir. Física: %d - Tamaño: %d", datos_leer_memoria->pid, datos_leer_memoria->tid, datos_leer_memoria->dir_fisica, datos_leer_memoria->tamanio);
             //leer memoria
             break;
 
         case OPERACION_ESCRIBIR_MEMORIA:
-            log_info(logger, "VALORES HARDCODEADOS");
-            log_info(logger, "## Escritura - (PID:TID) - (%d:%d) - Dir. Física: %s - Tamaño: %d", pid, tid, dir_fisica, tamanio);
+            t_datos_escribir_memoria* datos_escribir_memoria = (t_datos_escribir_memoria*)leer_buffer_cpu(cod_op, socket);
+            log_info(logger, "## Escritura - (PID:TID) - (%d:%d) - Dir. Física: %d - Tamaño: %d", datos_escribir_memoria->pid, datos_escribir_memoria->tid, datos_escribir_memoria->dir_fisica, datos_escribir_memoria->tamanio);
             //escribir memoria
             break;
 
