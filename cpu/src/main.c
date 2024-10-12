@@ -7,8 +7,11 @@ t_log* logger;
 int socket_memoria;
 int socket_dispatch;
 int socket_interrupt;
+bool hay_interrupcion;
 
 sem_t sem_ciclo_de_instruccion;
+
+pthread_mutex_t mutex_interrupciones;
 
 int main(int argc, char* argv[]) {
  
@@ -35,6 +38,7 @@ int main(int argc, char* argv[]) {
 
    int fd_dispatch = iniciar_servidor(puerto_escucha_dispatch);
    int fd_interrupt = iniciar_servidor(puerto_escucha_interrupt);
+
 /* Esperamos a que se conecte el Kernel por el puerto dispatch */
     socket_dispatch = esperar_cliente(fd_dispatch);
     log_info(logger, "Hola, el kernel se conecto por puerto dispatch");
@@ -48,9 +52,11 @@ int main(int argc, char* argv[]) {
 
     pthread_t thread_dispatch;
     pthread_t thread_ciclo_de_instruccion;
+    pthread_t thread_interrupt;
     
     pthread_create(&thread_dispatch, NULL, escuchar_dispatch, NULL);    
     pthread_create(&thread_ciclo_de_instruccion, NULL, ciclo_de_instruccion, NULL);    
+    pthread_create(&thread_interrupt, NULL, escuchar_interrupciones, NULL);
 
     pthread_join(thread_dispatch, NULL);
     pthread_join(thread_ciclo_de_instruccion, NULL);
@@ -62,6 +68,7 @@ int main(int argc, char* argv[]) {
 
 void iniciar_semaforos (){
     sem_init(&sem_ciclo_de_instruccion, 0, 0);
+    pthread_mutex_init(&mutex_interrupciones, NULL);
 }
 
 
@@ -287,10 +294,46 @@ void ciclo_de_instruccion () {
 
     }
 
+     // CHECK INTERRUPT
+     pthread_mutex_lock(&mutex_interrupciones);
+     bool es_necesario_interrupir = hay_interrupcion;
+     hay_interrupcion = false;
+     pthread_mutex_unlock(&mutex_interrupciones);
 
+     if(es_necesario_interrupir) {
+          actualizar_contexto();
 
+          // Notificamos al Kernel que ya desalojamos el hilo
+          t_buffer* buffer_interrupcion = buffer_create(sizeof(uint32_t));
+          buffer_add_uint32(buffer_interrupcion, OPERACION_DESALOJAR_HILO);
+
+          send(socket_dispatch, buffer_interrupcion->stream, buffer_interrupcion->size, 0);
+
+          buffer_destroy(buffer_interrupcion);
+
+          // Si se supone que se debe seguir ejecutando la siguiente instrucción (semáforo con valor 1)
+          // ...decrementamos el semáforo para que se bloquee al inicio del while
+          // Si el semáforo se iba a bloquear al inicio del while (semáforo con valor 0), no hace nada
+          // ...continúa ejecutando para que se bloquee como estaba previsto
+          sem_trywait(&sem_ciclo_de_instruccion);
+     }
 }
 
+void escuchar_interrupciones() {
+     op_code operacion = recibir_operacion(socket_interrupt);
+
+     switch (operacion)
+     {
+     case OPERACION_DESALOJAR_HILO:
+          pthread_mutex_lock(&mutex_interrupciones);
+          hay_interrupcion = true;
+          pthread_mutex_unlock(&mutex_interrupciones);
+          break;
+     default:
+          log_debug(logger, "Operación desconocida en interrupt: %d", operacion);
+          break;
+     }
+}
 
 t_buffer* pedir_contexto(int servidor_memoria, t_buffer* buffer_pedido_contexto)
 {
@@ -2499,3 +2542,33 @@ uint32_t obtener_registro(char* registro)
      return datos->instruccion;
  }
 
+void actualizar_contexto()
+{
+     // Armamos los datos que debemos enviar a Memoria
+     t_contexto* contexto_a_memoria = malloc(sizeof(t_contexto));
+     contexto_a_memoria->pid = contexto.pid;
+     contexto_a_memoria->tid = contexto.tid;
+     contexto_a_memoria->PC = contexto.PC;
+     contexto_a_memoria->AX = contexto.AX;
+     contexto_a_memoria->BX = contexto.BX;
+     contexto_a_memoria->CX = contexto.CX;
+     contexto_a_memoria->DX = contexto.DX;
+     contexto_a_memoria->EX = contexto.EX;
+     contexto_a_memoria->FX = contexto.FX;
+     contexto_a_memoria->GX = contexto.GX;
+     contexto_a_memoria->HX = contexto.HX;
+     contexto_a_memoria->Base = contexto.Base;
+     contexto_a_memoria->Limite = contexto.Limite;
+
+     // Armamos y serializamos el paquete con los datos a enviar
+     t_paquete* paquete = malloc(sizeof(t_paquete));
+     paquete->codigo_operacion = OPERACION_ACTUALIZAR_CONTEXTO;
+     paquete->buffer = serializar_datos_contexto(contexto_a_memoria);
+     t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+     send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+
+     buffer_destroy(paquete_serializado);
+     eliminar_paquete(paquete);
+     destruir_datos_contexto(contexto_a_memoria);
+}

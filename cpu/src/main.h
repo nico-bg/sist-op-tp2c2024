@@ -82,5 +82,8 @@ void jnz_pc(char* registro, char* valor);
 
 uint32_t obtener_registro(char* registro);
 
+void escuchar_interrupciones();
+
+void actualizar_contexto();
 
 #endif
