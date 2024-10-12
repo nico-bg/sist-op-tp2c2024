@@ -148,7 +148,7 @@ void ciclo_de_instruccion () {
 
     t_buffer* buffer_pedido_instruccion = serializar_datos_solicitar_instruccion(datos);
 
-    char* intruccion = pedir_proxima_instruccion(socket_memoria, buffer_pedido_instruccion);
+    char* instruccion = pedir_proxima_instruccion(socket_memoria, buffer_pedido_instruccion);
 
    // char* instruccion = "LOG AX";
 
