@@ -4,7 +4,8 @@ static void transicion_exec_a_exit();
 static void transicion_exec_a_blocked();
 static void transicion_blocked_a_ready(t_tcb* hilo);
 static void transicion_blocked_a_exit(t_tcb* hilo);
-static void solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid);
+// static op_code solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid);
+// static op_code solicitar_finalizacion_proceso_a_memoria(uint32_t pid);
 static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo);
 static t_pcb* buscar_proceso(uint32_t pid);
 static bool encontrar_proceso_por_pid_auxiliar(void* elemento);
@@ -19,13 +20,6 @@ char* recurso_buscado;
 
 void syscall_finalizar_hilo()
 {
-    // Guardamos en una variable auxiliar el hilo que invocó la syscall (Es el que está en estado EXEC)
-    // pthread_mutex_lock(&mutex_estado_exec);
-    // t_tcb* hilo_invocador = estado_exec;
-    // pthread_mutex_unlock(&mutex_estado_exec);
-
-    // TODO: Revisar si es necesario mover esta peticion al Planificador de largo plazo
-    // solicitar_finalizacion_hilo_a_memoria(hilo_invocador->pid_padre ,hilo_invocador->tid);
     // El planificador de largo plazo se encarga de liberar los procesos
     transicion_exec_a_exit();
 }
@@ -180,6 +174,8 @@ void syscall_desbloquear_mutex(char* recurso)
     bool hay_mas_hilos_bloqueados = !queue_is_empty(mutex->hilos_bloqueados);
 
     if(correctamente_asignado && hay_mas_hilos_bloqueados) {
+        // TODO: Evaluar si es necesario bloquear con mutex
+        // ...porque se puede producir una RC con la liberación de hilos en EXIT
         t_tcb* hilo_a_desbloquear = queue_pop(mutex->hilos_bloqueados);
 
         mutex->hilo_asignado = hilo_a_desbloquear;
@@ -312,26 +308,52 @@ static void transicion_blocked_a_exit(t_tcb* hilo)
     sem_post(&semaforo_estado_exit);
 }
 
-static void solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid)
-{
-    int fd_conexion = crear_conexion_a_memoria();
 
-    t_datos_finalizacion_hilo* datos_a_enviar = malloc(sizeof(t_datos_finalizacion_hilo));
-    datos_a_enviar->pid = pid;
-    datos_a_enviar->tid = tid;
+// static op_code solicitar_finalizacion_proceso_a_memoria(uint32_t pid)
+// {
+//     int socket_memoria = crear_conexion_a_memoria();
 
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    paquete->codigo_operacion = OPERACION_FINALIZAR_HILO;
-    paquete->buffer = serializar_datos_finalizacion_hilo(datos_a_enviar);
+//     t_datos_finalizacion_proceso* datos = malloc(sizeof(t_datos_finalizacion_proceso));
+//     datos->pid = pid;
 
-    t_buffer* paquete_serializado = serializar_paquete(paquete);
+//     t_paquete* paquete = malloc(sizeof(t_paquete));
+//     paquete->codigo_operacion = OPERACION_FINALIZAR_PROCESO;
+//     paquete->buffer = serializar_datos_finalizacion_proceso(datos);
+//     t_buffer* paquete_serializado = serializar_paquete(paquete);
 
-    send(fd_conexion, paquete_serializado->stream, paquete_serializado->size, 0);
+//     send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
 
-    buffer_destroy(paquete_serializado);
-    eliminar_paquete(paquete);
-    close(fd_conexion);
-}
+//     buffer_destroy(paquete_serializado);
+//     eliminar_paquete(paquete);
+//     destruir_datos_finalizacion_proceso(datos);
+
+//     op_code respuesta = recibir_operacion(socket_memoria);
+
+//     close(socket_memoria);
+
+//     return respuesta;
+// }
+
+// static op_code solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid)
+// {
+//     int fd_conexion = crear_conexion_a_memoria();
+
+//     t_datos_finalizacion_hilo* datos_a_enviar = malloc(sizeof(t_datos_finalizacion_hilo));
+//     datos_a_enviar->pid = pid;
+//     datos_a_enviar->tid = tid;
+
+//     t_paquete* paquete = malloc(sizeof(t_paquete));
+//     paquete->codigo_operacion = OPERACION_FINALIZAR_HILO;
+//     paquete->buffer = serializar_datos_finalizacion_hilo(datos_a_enviar);
+
+//     t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+//     send(fd_conexion, paquete_serializado->stream, paquete_serializado->size, 0);
+
+//     buffer_destroy(paquete_serializado);
+//     eliminar_paquete(paquete);
+//     close(fd_conexion);
+// }
 
 static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo)
 {
