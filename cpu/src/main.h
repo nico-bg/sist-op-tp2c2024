@@ -87,4 +87,10 @@ void escuchar_interrupciones();
 
 void actualizar_contexto();
 
+void ejecutar_instruccion_mutex(op_code operacion, char* recurso);
+
+void enviar_operacion_a_kernel(op_code operacion);
+
+void ejecutar_instruccion_hilo(op_code operacion, uint32_t tid);
+
 #endif
