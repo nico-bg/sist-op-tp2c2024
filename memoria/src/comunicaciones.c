@@ -30,7 +30,8 @@ void* leer_buffer_kernel(int cod_op, int socket_cliente){
             break;
 
         case OPERACION_DUMP_MEMORY:
-            //log_info(logger, "Función aún no implementada!")
+            buffer = recibir_buffer(&length, socket_cliente);
+            datos = (t_datos_finalizacion_hilo*)deserializar_datos_finalizacion_hilo(buffer);
             break;
 
         default:
@@ -65,11 +66,13 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente){
             break;
 
         case OPERACION_LEER_MEMORIA:
-            //log_info(logger, "Función aún no implementada!")
+            buffer = recibir_buffer(&length, socket_cliente);
+            datos = (t_datos_leer_memoria*)deserializar_datos_leer_memoria(buffer);
             break;
 
         case OPERACION_ESCRIBIR_MEMORIA:
-            //log_info(logger, "Función aún no implementada!")
+            buffer = recibir_buffer(&length, socket_cliente);
+            datos = (t_datos_escribir_memoria*)deserializar_datos_escribir_memoria(buffer);
             break;
 
         default:
