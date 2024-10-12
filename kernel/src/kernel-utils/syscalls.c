@@ -39,7 +39,7 @@ void syscall_crear_hilo(char* archivo_pseudocodigo, uint32_t prioridad)
 
     // Inicializamos un nuevo hilo con los datos que recibimos y con TID incremental
     t_tcb* nuevo_hilo = malloc(sizeof(t_tcb));
-    nuevo_hilo->nombre_archivo = archivo_pseudocodigo;
+    nuevo_hilo->nombre_archivo = string_duplicate(archivo_pseudocodigo);
     nuevo_hilo->pid_padre = hilo_invocador->pid_padre;
     nuevo_hilo->prioridad = prioridad;
     nuevo_hilo->tid = proceso_invocador->ultimo_tid + 1;
@@ -367,19 +367,17 @@ static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo)
     datos_a_enviar->pid = hilo->pid_padre;
     datos_a_enviar->tid = hilo->tid;
     datos_a_enviar->archivo_pseudocodigo = hilo->nombre_archivo;
-    t_buffer* buffer_datos = serializar_datos_inicializacion_hilo(datos_a_enviar);
 
     // Empaquetamos y serializamos los datos junto con el código de operación
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->codigo_operacion = OPERACION_CREAR_HILO;
-    paquete->buffer = buffer_datos;
+    paquete->buffer = serializar_datos_inicializacion_hilo(datos_a_enviar);;
     t_buffer* paquete_serializado = serializar_paquete(paquete);
 
     send(fd_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
 
     buffer_destroy(paquete_serializado);
     eliminar_paquete(paquete);
-    buffer_destroy(buffer_datos);
     destruir_datos_inicializacion_hilo(datos_a_enviar);
     close(fd_memoria);
 }
