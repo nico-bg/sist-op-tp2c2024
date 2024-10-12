@@ -179,6 +179,7 @@ void ciclo_de_instruccion()
 
                read_mem(estructura_instruccion[1], estructura_instruccion[2]);
 
+               sem_post(&sem_ciclo_de_instruccion);
           }
 
           if (strcmp(estructura_instruccion[0], "WRITE_MEM") == 0)
@@ -187,6 +188,8 @@ void ciclo_de_instruccion()
 
                
                write_mem(estructura_instruccion[1], estructura_instruccion[2]);
+
+               sem_post(&sem_ciclo_de_instruccion);
           }
 
           if (strcmp(estructura_instruccion[0], "JNZ") == 0)
@@ -196,6 +199,8 @@ void ciclo_de_instruccion()
 
 
                jnz_pc(estructura_instruccion[1], estructura_instruccion[2]);
+
+               sem_post(&sem_ciclo_de_instruccion);
           }
 
           if (strcmp(estructura_instruccion[0], "LOG") == 0)
@@ -204,8 +209,9 @@ void ciclo_de_instruccion()
 
                log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
 
-
                log_info(logger, "El valor leido por instruccion LOG es: %d", obtener_registro(estructura_instruccion[1]));
+
+               sem_post(&sem_ciclo_de_instruccion);
           }
 
           if (strcmp(estructura_instruccion[0], "MUTEX_CREATE") == 0)
