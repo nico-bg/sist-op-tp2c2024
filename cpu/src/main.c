@@ -86,9 +86,7 @@ void escuchar_dispatch () {
 
                log_info(logger, "me llego el buffer");
 
-    // pcb estructura global
                 pcb = deserializar_hilo_a_cpu(buffer);
-
         
                 log_info(logger, "me llego el buffer con primer campo:%d", pcb->tid );
 
@@ -97,21 +95,6 @@ void escuchar_dispatch () {
                 t_buffer* contexto_devuelto = pedir_contexto(socket_memoria, buffer);
 
                 contexto = deserializar_datos_contexto(contexto_devuelto);
-
-
-//READ_MEM AX BX
-               //   contexto.PC = 1;
-               //   contexto.AX = 2;
-               //   contexto.BX = 3;
-               //   contexto.CX = 0;
-               //   contexto.DX = 2;
-               //   contexto.EX = 0;
-               //   contexto.FX = 0;
-               //   contexto.GX = 9;
-               //   contexto.Base = 1000;
-               //   contexto.Limite = 2000;
-
-                log_info(logger, "El valor de GX es:%d",contexto.GX);
 
                 sem_post(&sem_ciclo_de_instruccion);
 
@@ -148,10 +131,15 @@ void ciclo_de_instruccion () {
 
     t_buffer* buffer_pedido_instruccion = serializar_datos_solicitar_instruccion(datos);
 
-    char* intruccion = pedir_proxima_instruccion(socket_memoria, buffer_pedido_instruccion);
+    char* instruccion = pedir_proxima_instruccion(socket_memoria, buffer_pedido_instruccion);
 
-   // char* instruccion = "LOG AX";
+    if(strlen(instruccion) == 0){
+     log_error(logger, "La instruccion que vino es de tamaño 0!!");
+     abort();
+    }
 
+    //char* instruccion = "LOG AX";
+    
     log_info(logger, "Fetch finalizado");
 
     //Decode
@@ -160,17 +148,25 @@ void ciclo_de_instruccion () {
 
     if(strcmp(estructura_instruccion[0], "SET") == 0)
     {
+      log_info(logger, "vino un SET");
+
         setear_registro(estructura_instruccion[1], estructura_instruccion[2]);
+
+        sem_post(&sem_ciclo_de_instruccion);
     }
 
     if(strcmp(estructura_instruccion[0], "SUM") == 0)
     {
         sum_registro(estructura_instruccion[1], estructura_instruccion[2]);
+
+        sem_post(&sem_ciclo_de_instruccion);
     }
 
     if(strcmp(estructura_instruccion[0], "SUB") == 0)
     {
         sub_registro(estructura_instruccion[1], estructura_instruccion[2]);
+
+        sem_post(&sem_ciclo_de_instruccion);
     }
 
     if(strcmp(estructura_instruccion[0], "READ_MEM") == 0)
@@ -198,6 +194,7 @@ void ciclo_de_instruccion () {
     if(strcmp(estructura_instruccion[0], "LOG") == 0)
 
     {
+     log_info(logger, "instruccion LOG es");
 
      log_info(logger, "El valor leido por instruccion LOG es:%d", obtener_registro(estructura_instruccion[1]));
     
@@ -208,8 +205,6 @@ void ciclo_de_instruccion () {
      //actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
      //devolver_control();
-
-
     }
 
     if(strcmp(estructura_instruccion[0], "MUTEX_LOCK") == 0)
@@ -257,28 +252,42 @@ void ciclo_de_instruccion () {
 
     if(strcmp(estructura_instruccion[0], "THREAD_CANCEL") == 0)
     {
+    //actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
+     //devolver_control();
     }
 
     if(strcmp(estructura_instruccion[0], "THREAD_JOIN") == 0)
     {
+    //actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
+     //devolver_control();
     }
 
     if(strcmp(estructura_instruccion[0], "THREAD_EXIT") == 0)
     {
+    //actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
+     //devolver_control();
     }
 
     if(strcmp(estructura_instruccion[0], "PROCESS_EXIT") == 0)
     {
+    //actualizacion_contexto(socket_memoria, pid, tid, contexto);
 
+     //devolver_control();
     }
-
-    }
-
 
     log_info(logger, "Decode finalizado");
+    
+    log_info(logger, "Execute finalizado");
+    
+    contexto.PC = contexto.PC + 1;
+
+
+    }
+
+
 
 }
 
@@ -2205,15 +2214,7 @@ if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "BX") == 0))
        int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.BX);
-    }
-if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "CX") == 0))
-    {
-       int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
-
-    //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.CX);
-    }
-if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "DX") == 0))
-    {
+    }$ cn/memoria
       int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.DX);

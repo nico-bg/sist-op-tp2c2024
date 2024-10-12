@@ -110,7 +110,7 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
         case OPERACION_DEVOLVER_INSTRUCCION:
 
             t_datos_devolver_instruccion* instruccion = malloc(sizeof(t_datos_devolver_instruccion));
-            instruccion = (t_datos_devolver_instruccion*)datos;
+            instruccion->instruccion=(char*)datos;
 
             buffer = serializar_datos_devolver_instruccion(instruccion);
 

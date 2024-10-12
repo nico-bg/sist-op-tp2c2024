@@ -123,9 +123,11 @@ void destruir_datos_solicitar_instruccion(t_datos_obtener_instruccion* datos){
 
 t_buffer* serializar_datos_devolver_instruccion(t_datos_devolver_instruccion* datos){
 
-    t_buffer* buffer = buffer_create(sizeof(t_datos_devolver_instruccion));
-    uint32_t length = strlen(datos->instruccion);
+    
+    uint32_t length = strlen(datos->instruccion)+1;
 
+    t_buffer* buffer = buffer_create(length + sizeof(u_int32_t));
+    
     buffer_add_string(buffer, length, datos->instruccion);
 
     return buffer;
