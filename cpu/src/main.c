@@ -147,7 +147,7 @@ void ciclo_de_instruccion()
      
                log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
 
-               setear_registro(estructura_instruccion[1], estructura_instruccion[2]);
+               setear_registro(estructura_instruccion[1], atoi(estructura_instruccion[2]));
 
                sem_post(&sem_ciclo_de_instruccion);
           }
@@ -397,63 +397,63 @@ void terminar_programa()
      close(socket_interrupt);
 }
 
-void setear_registro(char *registro, char *valor)
+void setear_registro(char *registro, uint32_t valor)
 {
      if (strcmp(registro, "PC") == 0)
      {
 
-          contexto.PC = atoi(valor);
+          contexto.PC = valor;
 
      }
 
      if (strcmp(registro, "AX") == 0)
      {
-          contexto.AX = atoi(valor);
+          contexto.AX = valor;
      }
 
      if (strcmp(registro, "BX") == 0)
      {
-          contexto.BX = atoi(valor);
+          contexto.BX = valor;
      }
 
      if (strcmp(registro, "CX") == 0)
      {
-          contexto.CX = atoi(valor);
+          contexto.CX = valor;
      }
 
      if (strcmp(registro, "DX") == 0)
      {
-          contexto.DX = atoi(valor);
+          contexto.DX = valor;
      }
 
      if (strcmp(registro, "EX") == 0)
      {
-          contexto.EX = atoi(valor);
+          contexto.EX = valor;
      }
 
      if (strcmp(registro, "FX") == 0)
      {
-          contexto.FX = atoi(valor);
+          contexto.FX = valor;
      }
 
      if (strcmp(registro, "GX") == 0)
      {
-          contexto.GX = atoi(valor);
+          contexto.GX = valor;
      }
 
      if (strcmp(registro, "HX") == 0)
      {
-          contexto.HX = atoi(valor);
+          contexto.HX = valor;
      }
 
      if (strcmp(registro, "Base") == 0)
      {
-          contexto.Base = atoi(valor);
+          contexto.Base = valor;
      }
 
      if (strcmp(registro, "Limite") == 0)
      {
-          contexto.Limite = atoi(valor);
+          contexto.Limite = valor;
      }
 }
 

@@ -65,7 +65,7 @@ t_buffer* pedir_contexto(int servidor_memoria, t_buffer* buffer_pedido_contexto)
 
 char* pedir_proxima_instruccion(int servidor_memoria, t_buffer* buffer_pedido_devolver_instruccion);
 
-void setear_registro(char * registro, char * valor);
+void setear_registro(char *registro, uint32_t valor);
 
 void sum_registro(char * registro1, char * registro2);
 
