@@ -206,76 +206,110 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "MUTEX_CREATE") == 0)
           {
-               ejecutar_instruccion_mutex(OPERACION_CREAR_MUTEX, estructura_instruccion[1]);
                actualizar_contexto();
+               ejecutar_instruccion_mutex(OPERACION_CREAR_MUTEX, estructura_instruccion[1]);
           }
 
           if (strcmp(estructura_instruccion[0], "MUTEX_LOCK") == 0)
           {
-               ejecutar_instruccion_mutex(OPERACION_BLOQUEAR_MUTEX, estructura_instruccion[1]);
                actualizar_contexto();
+               ejecutar_instruccion_mutex(OPERACION_BLOQUEAR_MUTEX, estructura_instruccion[1]);
           }
 
           if (strcmp(estructura_instruccion[0], "MUTEX_UNLOCK") == 0)
           {
-               ejecutar_instruccion_mutex(OPERACION_DESBLOQUEAR_MUTEX, estructura_instruccion[1]);
                actualizar_contexto();
+               ejecutar_instruccion_mutex(OPERACION_DESBLOQUEAR_MUTEX, estructura_instruccion[1]);
           }
 
           if (strcmp(estructura_instruccion[0], "DUMP_MEMORY") == 0)
           {
-               // actualizacion_contexto(socket_memoria, pid, tid, contexto);
-
-               // devolver_control();
+               actualizar_contexto();
+               enviar_operacion_a_kernel(OPERACION_DUMP_MEMORY);
           }
 
           if (strcmp(estructura_instruccion[0], "IO") == 0)
           {
-               // actualizacion_contexto(socket_memoria, pid, tid, contexto);
+               actualizar_contexto();
 
-               // devolver_control();
+               t_datos_operacion_io* datos = malloc(sizeof(t_datos_operacion_io));
+               datos->tiempo = atoi(estructura_instruccion[1]);
+
+               t_paquete* paquete = malloc(sizeof(t_paquete));
+               paquete->codigo_operacion = OPERACION_IO;
+               paquete->buffer = serializar_datos_operacion_io(datos);
+               t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+               send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
+
+               buffer_destroy(paquete_serializado);
+               eliminar_paquete(paquete);
+               destruir_datos_operacion_io(datos);
           }
 
           if (strcmp(estructura_instruccion[0], "PROCESS_CREATE") == 0)
           {
-               // actualizacion_contexto(socket_memoria, pid, tid, contexto);
+               actualizar_contexto();
 
-               // devolver_control();
+               t_datos_crear_proceso* datos = malloc(sizeof(t_datos_crear_proceso));
+               datos->archivo_pseudocodigo = string_duplicate(estructura_instruccion[1]);
+               datos->tamanio_proceso = atoi(estructura_instruccion[2]);
+               datos->prioridad = atoi(estructura_instruccion[3]);
+
+               t_paquete* paquete = malloc(sizeof(t_paquete));
+               paquete->codigo_operacion = OPERACION_CREAR_PROCESO;
+               paquete->buffer = serializar_datos_crear_proceso(datos);
+               t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+               send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
+
+               buffer_destroy(paquete_serializado);
+               eliminar_paquete(paquete);
+               destruir_datos_crear_proceso(datos);
           }
 
           if (strcmp(estructura_instruccion[0], "THREAD_CREATE") == 0)
           {
-               // actualizacion_contexto(socket_memoria, pid, tid, contexto);
+               actualizar_contexto();
 
-               // devolver_control();
+               t_datos_crear_hilo* datos = malloc(sizeof(t_datos_crear_hilo));
+               datos->archivo_pseudocodigo = string_duplicate(estructura_instruccion[1]);
+               datos->prioridad = atoi(estructura_instruccion[2]);
+
+               t_paquete* paquete = malloc(sizeof(t_paquete));
+               paquete->codigo_operacion = OPERACION_CREAR_HILO;
+               paquete->buffer = serializar_datos_crear_hilo(datos);
+               t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+               send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
+
+               buffer_destroy(paquete_serializado);
+               eliminar_paquete(paquete);
+               destruir_datos_crear_hilo(datos);
           }
 
           if (strcmp(estructura_instruccion[0], "THREAD_CANCEL") == 0)
           {
-               // actualizacion_contexto(socket_memoria, pid, tid, contexto);
-
-               // devolver_control();
+               actualizar_contexto();
+               ejecutar_instruccion_hilo(OPERACION_CANCELAR_HILO, atoi(estructura_instruccion[1]));
           }
 
           if (strcmp(estructura_instruccion[0], "THREAD_JOIN") == 0)
           {
-               // actualizacion_contexto(socket_memoria, pid, tid, contexto);
-
-               // devolver_control();
+               actualizar_contexto();
+               ejecutar_instruccion_hilo(OPERACION_ESPERAR_HILO, atoi(estructura_instruccion[1]));
           }
 
           if (strcmp(estructura_instruccion[0], "THREAD_EXIT") == 0)
           {
-               // actualizacion_contexto(socket_memoria, pid, tid, contexto);
-
-               // devolver_control();
+               actualizar_contexto();
+               enviar_operacion_a_kernel(OPERACION_FINALIZAR_HILO);
           }
 
           if (strcmp(estructura_instruccion[0], "PROCESS_EXIT") == 0)
           {
-               // actualizacion_contexto(socket_memoria, pid, tid, contexto);
-
-               // devolver_control();
+               actualizar_contexto();
+               enviar_operacion_a_kernel(OPERACION_FINALIZAR_PROCESO);
           }
 
           log_info(logger, "Decode finalizado");
@@ -664,5 +698,36 @@ void ejecutar_instruccion_mutex(op_code operacion, char* recurso)
      paquete->buffer = serializar_datos_operacion_mutex(datos);
      t_buffer* paquete_serializado = serializar_paquete(paquete);
 
-     send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+     send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
+
+     buffer_destroy(paquete_serializado);
+     eliminar_paquete(paquete);
+     destruir_datos_operacion_mutex(datos);
+}
+
+void enviar_operacion_a_kernel(op_code operacion)
+{
+     t_buffer* buffer = buffer_create(sizeof(uint32_t));
+     buffer_add_uint32(buffer, operacion);
+
+     send(socket_dispatch, buffer->stream, buffer->size, 0);
+
+     buffer_destroy(buffer);
+}
+
+void ejecutar_instruccion_hilo(op_code operacion, uint32_t tid)
+{
+     t_datos_operacion_hilo* datos = malloc(sizeof(t_datos_operacion_hilo));
+     datos->tid = tid;
+
+     t_paquete* paquete = malloc(sizeof(t_paquete));
+     paquete->codigo_operacion = operacion;
+     paquete->buffer = serializar_datos_operacion_hilo(datos);
+     t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+     send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
+
+     buffer_destroy(paquete_serializado);
+     eliminar_paquete(paquete);
+     destruir_datos_operacion_hilo(datos);
 }
