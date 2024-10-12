@@ -206,23 +206,20 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "MUTEX_CREATE") == 0)
           {
-               // actualizacion_contexto(socket_memoria, pid, tid, contexto);
-
-               // devolver_control();
+               ejecutar_instruccion_mutex(OPERACION_CREAR_MUTEX, estructura_instruccion[1]);
+               actualizar_contexto();
           }
 
           if (strcmp(estructura_instruccion[0], "MUTEX_LOCK") == 0)
           {
-               // actualizacion_contexto(socket_memoria, pid, tid, contexto);
-
-               // devolver_control();
+               ejecutar_instruccion_mutex(OPERACION_BLOQUEAR_MUTEX, estructura_instruccion[1]);
+               actualizar_contexto();
           }
 
           if (strcmp(estructura_instruccion[0], "MUTEX_UNLOCK") == 0)
           {
-               // actualizacion_contexto(socket_memoria, pid, tid, contexto);
-
-               // devolver_control();
+               ejecutar_instruccion_mutex(OPERACION_DESBLOQUEAR_MUTEX, estructura_instruccion[1]);
+               actualizar_contexto();
           }
 
           if (strcmp(estructura_instruccion[0], "DUMP_MEMORY") == 0)
@@ -655,4 +652,17 @@ void escuchar_interrupciones() {
           log_debug(logger, "Operación desconocida en interrupt: %d", operacion);
           break;
      }
+}
+
+void ejecutar_instruccion_mutex(op_code operacion, char* recurso)
+{
+     t_datos_operacion_mutex* datos = malloc(sizeof(t_datos_operacion_mutex));
+     datos->recurso = string_duplicate(recurso);
+
+     t_paquete* paquete = malloc(sizeof(t_paquete));
+     paquete->codigo_operacion = operacion;
+     paquete->buffer = serializar_datos_operacion_mutex(datos);
+     t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+     send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
 }

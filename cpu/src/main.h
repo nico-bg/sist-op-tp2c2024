@@ -87,4 +87,6 @@ void escuchar_interrupciones();
 
 void actualizar_contexto();
 
+void ejecutar_instruccion_mutex(op_code operacion, char* recurso);
+
 #endif
