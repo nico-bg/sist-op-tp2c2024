@@ -262,12 +262,19 @@ void actualizar_contexto_ejecucion(t_contexto* datos){
 
 char* devolver_instruccion(t_datos_obtener_instruccion* datos){
 
-    char* inst = NULL;
+    int i = 0;
 
     nodo_hilo* nodo_hilo = buscar_hilo_por_tid(datos->pid, datos->tid);
-    inst = nodo_hilo->hilo.instrucciones[datos->PC];
 
-    return inst;
+    while(nodo_hilo->hilo.instrucciones[i] != NULL){
+        i++;
+    }
+
+    if(datos->PC >= i){
+        return "PC INVALIDO";
+    }
+
+    return nodo_hilo->hilo.instrucciones[datos->PC];
 }
 
 estructura_hilo* convertir_struct(t_contexto* contexto) {

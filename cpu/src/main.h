@@ -52,6 +52,7 @@ t_contexto contexto;
 
 //sem_t sem_ciclo_de_instruccion;
 
+u_int32_t lectura_memoria(u_int32_t dir_fisica);
 
 void escuchar_dispatch();
 
@@ -82,5 +83,8 @@ void jnz_pc(char* registro, char* valor);
 
 uint32_t obtener_registro(char* registro);
 
+void escuchar_interrupciones();
+
+void actualizar_contexto();
 
 #endif

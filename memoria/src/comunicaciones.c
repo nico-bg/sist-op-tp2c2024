@@ -128,6 +128,12 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
             eliminar_paquete(paquete);
             destruir_datos_devolver_instruccion(instruccion);
             break;
+        case OPERACION_LEER_MEMORIA:
+            buffer = buffer_create(sizeof(uint32_t));
+            buffer_add_uint32(buffer, (uint32_t) datos);
+            send(socket_cliente, buffer->stream, buffer->size, 0);
+            buffer_destroy(buffer);
+            break;
 
         default:
             //codigo
@@ -138,6 +144,13 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
 void confirmar_operacion (int socket_cliente){
 
     uint32_t op = OPERACION_CONFIRMAR;
+
+    send(socket_cliente, &op, sizeof(uint32_t), 0);
+}
+
+void notificar_error(int socket_cliente){
+    
+    uint32_t op = OPERACION_NOTIFICAR_ERROR;
 
     send(socket_cliente, &op, sizeof(uint32_t), 0);
 }

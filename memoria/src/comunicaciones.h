@@ -15,3 +15,5 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente);
 void enviar_buffer(int cod_op, int socket_cliente, void* datos);
 
 void confirmar_operacion(int socket_cliente);
+
+void notificar_error(int socket_cliente);
