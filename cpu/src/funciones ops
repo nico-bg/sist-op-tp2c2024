@@ -1,0 +1,11 @@
+#include <main.h>
+#include <main.c>
+
+funcion_set(){}
+funcion_read_mem(){}
+funcion_write_mem(){}
+funcion_sum(){}
+funcion_sub(){}
+funcion_jnz(){}
+funcion_log(){}
+funcion_set(){}

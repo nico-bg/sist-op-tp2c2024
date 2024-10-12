@@ -42,3 +42,18 @@ t_log* iniciar_logger(t_config* config, char* path, char* name)
 
     return logger;
 }
+
+t_log* iniciar_logger_debug(char* path, char* name)
+{
+    t_log* logger;
+
+    logger = log_create(path, name, true, LOG_LEVEL_DEBUG);
+
+    if(logger == NULL) {
+        perror("Error inicializando el logger");
+        log_destroy(logger);
+        abort();
+    }
+
+    return logger;
+}

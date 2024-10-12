@@ -16,5 +16,11 @@ t_config* iniciar_config(char* path);
 * @param name El nombre a mostrar en los logs
 */
 t_log* iniciar_logger(t_config* config, char* path, char* name);
+/*
+* @brief Instancia un nuevo logger con LOG_LEVEL_DEBUG
+* @param path Ruta hacia el archivo donde se van a generar los logs, tener en cuenta que si se indica dentro de un directorio, el mismo debe existir
+* @param name El nombre a mostrar en los logs
+*/
+t_log* iniciar_logger_debug(char* path, char* name);
 
 #endif
