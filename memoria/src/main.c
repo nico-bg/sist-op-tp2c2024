@@ -175,6 +175,7 @@ void atender_peticion_cpu(int cod_op, int socket)
             t_datos_leer_memoria* datos_leer_memoria = (t_datos_leer_memoria*)leer_buffer_cpu(cod_op, socket);
             log_info(logger, "## Lectura - (PID:TID) - (%d:%d) - Dir. Física: %d - Tamaño: %d", datos_leer_memoria->pid, datos_leer_memoria->tid, datos_leer_memoria->dir_fisica, datos_leer_memoria->tamanio);
             //leer memoria
+            enviar_buffer(cod_op, socket, 222);
             break;
 
         case OPERACION_ESCRIBIR_MEMORIA:
