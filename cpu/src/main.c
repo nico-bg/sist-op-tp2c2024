@@ -202,10 +202,10 @@ void ciclo_de_instruccion()
 
           {
 
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
 
 
-               log_info(logger, "El valor leido por instruccion LOG es:%d", obtener_registro(estructura_instruccion[1]));
+               log_info(logger, "El valor leido por instruccion LOG es: %d", obtener_registro(estructura_instruccion[1]));
           }
 
           if (strcmp(estructura_instruccion[0], "MUTEX_CREATE") == 0)
@@ -681,6 +681,13 @@ void actualizar_contexto()
 
 
      send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+
+     op_code operacion = recibir_operacion(socket_memoria);
+
+     if(operacion != OPERACION_CONFIRMAR) {
+          log_error(logger, "Error al actualizar contexto de ejecución. Cod: %d", operacion);
+          abort();
+     }
 
      buffer_destroy(paquete_serializado);
      eliminar_paquete(paquete);   
