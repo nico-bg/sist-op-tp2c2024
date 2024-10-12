@@ -141,3 +141,10 @@ void confirmar_operacion (int socket_cliente){
 
     send(socket_cliente, &op, sizeof(uint32_t), 0);
 }
+
+void notificar_error(int socket_cliente){
+    
+    uint32_t op = OPERACION_NOTIFICAR_ERROR;
+
+    send(socket_cliente, &op, sizeof(uint32_t), 0);
+}

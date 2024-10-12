@@ -92,7 +92,7 @@ void atender_peticion_kernel(int cod_op, int socket)
                 confirmar_operacion(socket);
             } else {
                 log_info(logger, "No hay suficiente espacio para inicializar proceso");
-                enviar_mensaje("No hay suficiente espacio para inicializar proceso", socket);
+                notificar_error(socket);
             }
             break;
 
