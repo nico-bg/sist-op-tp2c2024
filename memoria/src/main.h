@@ -10,6 +10,11 @@
 
 #include <commons/string.h>
 
+/* Para el manejo de instrucciones y archivos */
+#define MAX_LINE_LENGTH 255
+#define NOMBRE 1
+#define PATH 0
+
 typedef struct nodo_hilo nodo_hilo;
 typedef struct nodo_proceso nodo_proceso;
 
@@ -24,7 +29,8 @@ typedef struct {
     uint32_t FX;
     uint32_t GX;
     uint32_t HX;
-    char** archivo_pseudocodigo;
+    char* archivo_pseudocodigo;
+    char** instrucciones;
 } estructura_hilo;
 
 struct nodo_hilo {
@@ -86,6 +92,8 @@ void liberar_instrucciones(char** instrucciones);
 int contar_lineas(const char* nombre_archivo);
 
 char* obtener_path_completo(char* nombre_archivo);
+
+char* obtener_archivo_pseudocodigo(u_int32_t pid, uint32_t tid, int code);
 
 nodo_proceso* buscar_ultimo_proceso(void);
 

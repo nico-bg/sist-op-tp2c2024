@@ -1,9 +1,5 @@
 #include "main.h"
 
-
-/* Para el manejo de instrucciones */
-#define MAX_LINE_LENGTH 255
-
 static nodo_proceso* nodo_primer_proceso = NULL;
 
 nodo_proceso* buscar_proceso_por_pid(uint32_t pid){
@@ -87,8 +83,9 @@ void iniciar_hilo(t_datos_inicializacion_hilo* datos){
     nuevo_nodo_hilo->hilo.FX = 0;
     nuevo_nodo_hilo->hilo.GX = 0;
     nuevo_nodo_hilo->hilo.HX = 0;
-
-    nuevo_nodo_hilo->hilo.archivo_pseudocodigo = leer_archivo_pseudocodigo(datos->archivo_pseudocodigo);
+    
+    nuevo_nodo_hilo->hilo.archivo_pseudocodigo = datos->archivo_pseudocodigo;
+    nuevo_nodo_hilo->hilo.instrucciones = leer_archivo_pseudocodigo(datos->archivo_pseudocodigo);
 
     nuevo_nodo_hilo->siguiente_nodo_hilo = NULL;
 
@@ -106,7 +103,7 @@ void finalizar_hilo(t_datos_finalizacion_hilo* datos){
 
     nodo_hilo* actual = buscar_hilo_por_tid(datos->pid, datos->tid);
 
-    liberar_instrucciones(actual->hilo.archivo_pseudocodigo);
+    liberar_instrucciones(actual->hilo.instrucciones);
     free(actual);
 
 }
@@ -185,6 +182,17 @@ char* obtener_path_completo(char* nombre_archivo){
     return path_completo;
 }
 
+char* obtener_archivo_pseudocodigo(u_int32_t pid, uint32_t tid, int code){
+
+    nodo_hilo* nodo_hilo = buscar_hilo_por_tid(pid, tid);
+
+    if (code == NOMBRE) {
+        return nodo_hilo->hilo.archivo_pseudocodigo;
+    } else if (code == PATH) {
+        return obtener_path_completo(nodo_hilo->hilo.archivo_pseudocodigo);
+    }
+}
+
 nodo_proceso* buscar_ultimo_proceso(void){
     if(nodo_primer_proceso == NULL){
         return nodo_primer_proceso;
@@ -257,7 +265,7 @@ char* devolver_instruccion(t_datos_obtener_instruccion* datos){
     char* inst = NULL;
 
     nodo_hilo* nodo_hilo = buscar_hilo_por_tid(datos->pid, datos->tid);
-    inst = nodo_hilo->hilo.archivo_pseudocodigo[datos->PC];
+    inst = nodo_hilo->hilo.instrucciones[datos->PC];
 
     return inst;
 }

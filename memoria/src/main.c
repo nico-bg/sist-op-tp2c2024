@@ -170,8 +170,9 @@ void atender_peticion_cpu(int cod_op, int socket)
 
         case OPERACION_DEVOLVER_INSTRUCCION:
             t_datos_obtener_instruccion* datos_devolver_instruccion = (t_datos_obtener_instruccion*)leer_buffer_cpu(cod_op, socket);
+            char* nombre_archivo = obtener_archivo_pseudocodigo(datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, PATH);
             char* inst = devolver_instruccion(datos_devolver_instruccion);
-            log_info(logger, "## Obtener instrucción - (PID:TID) - (%d:%d) - Instrucción: <%s> <Args...>", datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, inst);
+            log_info(logger, "## Obtener instrucción - (PID:TID) - (%d:%d) - Instrucción: <%s> <%s>", datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, inst, nombre_archivo);
             enviar_buffer(cod_op, socket, inst);
             break;
 
