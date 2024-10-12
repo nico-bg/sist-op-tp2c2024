@@ -2209,12 +2209,15 @@ if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "FX") == 0))
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.AX);
       
     }
-if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "BX") == 0))
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "GX") == 0))
     {
        int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.BX);
-    }$ cn/memoria
+    }
+if((strcmp(registro1, "FX") == 0)&& (strcmp(registro2, "BX") == 0))
+
+    {
       int dir_fisica = mmu_dirLog_dirfis(contexto.FX);
 
     //escritura_memoria(socket_memoria, pid, dir_fisica, contexto.DX);
