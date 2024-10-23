@@ -91,7 +91,7 @@ void liberar_instrucciones(char** instrucciones);
 
 int contar_lineas(const char* nombre_archivo);
 
-char* obtener_path_completo(char* nombre_archivo);
+char* obtener_path_completo(const char* nombre_archivo);
 
 char* obtener_archivo_pseudocodigo(u_int32_t pid, uint32_t tid, int code);
 

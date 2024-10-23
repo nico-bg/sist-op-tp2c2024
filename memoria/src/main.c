@@ -100,7 +100,7 @@ void atender_peticion_kernel(int cod_op, int socket)
             t_datos_finalizacion_proceso* datos_finalizar_proceso = (t_datos_finalizacion_proceso*)leer_buffer_kernel(cod_op, socket);
             int tam = finalizar_proceso(datos_finalizar_proceso);
             log_info(logger, "## Proceso Destruido -  PID: %d - Tamaño: %d", datos_finalizar_proceso->pid, tam);
-            confirmar_operacion(socket);
+            //confirmar_operacion(socket);
             break;
 
         case OPERACION_CREAR_HILO:
@@ -160,7 +160,7 @@ void atender_peticion_cpu(int cod_op, int socket)
             t_contexto* datos_actualizar_contexto = (t_contexto*)leer_buffer_cpu(cod_op, socket);
             actualizar_contexto_ejecucion(datos_actualizar_contexto);
             log_info(logger, "## Contexto Actualizado - (PID:TID) - (%d:%d)", datos_actualizar_contexto->pid, datos_actualizar_contexto->tid);
-            confirmar_operacion(socket);
+            //enviar_mensaje("Contexto actualizado con éxito", socket);
             break;
 
         case OPERACION_DEVOLVER_INSTRUCCION:
@@ -189,7 +189,7 @@ void atender_peticion_cpu(int cod_op, int socket)
             break;
     }
 
-    log_info(logger, "Retardo respuesta: %d", espera);
+    //log_info(logger, "Retardo respuesta: %d", espera);
     esperar_ms(espera);
 
 }

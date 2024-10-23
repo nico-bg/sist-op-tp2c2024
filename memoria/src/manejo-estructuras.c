@@ -10,6 +10,10 @@ nodo_proceso* buscar_proceso_por_pid(uint32_t pid){
         actual = actual->siguiente_nodo_proceso;
     }
 
+    if(actual == NULL){
+        //NO SE ENCONTRÓ EL PROCESO
+    }
+
     return actual;
 }
 
@@ -20,6 +24,10 @@ nodo_hilo* buscar_hilo_por_tid(uint32_t pid, uint32_t tid){
 
     while(actual != NULL && actual->hilo.tid != tid){
         actual = actual->siguiente_nodo_hilo;
+    }
+
+    if(actual == NULL){
+        //NO SE ENCONTRÓ EL HILO
     }
 
     return actual;
@@ -71,6 +79,7 @@ uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
 void iniciar_hilo(t_datos_inicializacion_hilo* datos){
 
     nodo_proceso* nodo_proceso = buscar_proceso_por_pid(datos->pid);
+
     nodo_hilo* nuevo_nodo_hilo = (nodo_hilo*)malloc(sizeof(nodo_hilo));
 
     nuevo_nodo_hilo->hilo.tid = datos->tid;
@@ -161,7 +170,7 @@ int contar_lineas(const char* path_archivo){
     return cont;
 }
 
-char* obtener_path_completo(char* nombre_archivo){
+char* obtener_path_completo(const char* nombre_archivo){
 
     t_config* config = iniciar_config("memoria.config");
     
@@ -191,6 +200,7 @@ char* obtener_archivo_pseudocodigo(u_int32_t pid, uint32_t tid, int code){
     } else if (code == PATH) {
         return obtener_path_completo(nodo_hilo->hilo.archivo_pseudocodigo);
     }
+    
 }
 
 nodo_proceso* buscar_ultimo_proceso(void){
@@ -209,6 +219,7 @@ nodo_proceso* buscar_ultimo_proceso(void){
 nodo_hilo* buscar_ultimo_hilo(uint32_t pid){
 
     nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
+
     nodo_hilo* actual = nodo_proceso->proceso.lista_hilos;
 
     while(actual->siguiente_nodo_hilo != NULL){
