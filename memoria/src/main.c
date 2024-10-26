@@ -114,7 +114,7 @@ void atender_peticion_kernel(int cod_op, int socket)
             t_datos_finalizacion_hilo* datos_finalizar_hilo = (t_datos_finalizacion_hilo*)leer_buffer_kernel(cod_op, socket);
             finalizar_hilo(datos_finalizar_hilo);
             log_info(logger, "## Hilo Destruido - (PID:TID) - (%d:%d)", datos_finalizar_hilo->pid, datos_finalizar_hilo->tid);
-            //confirmar_operacion(socket);
+            confirmar_operacion(socket);
             break;
 
         case OPERACION_DUMP_MEMORY: //Los datos de la struct finalizar hilo & mem dump son los mismos, por ende se reutiliza la estructura
