@@ -5,11 +5,15 @@
 
 t_log* logger;
 t_config* config;
+t_list* particiones;
+void* memoria;
 
 int main(int argc, char* argv[]) {
 
     config = iniciar_config("memoria.config");
     logger = iniciar_logger(config, "memoria.log", "MEMORIA");
+
+    inicializar_particiones();
 
     char* ip_filesystem;
     char* puerto_filesystem;
@@ -86,8 +90,10 @@ void atender_peticion_kernel(int cod_op, int socket)
 
         case OPERACION_CREAR_PROCESO:
             t_datos_inicializacion_proceso* datos_crear_proceso = (t_datos_inicializacion_proceso*)leer_buffer_kernel(cod_op, socket);
-            if(hay_espacio_en_memoria(datos_crear_proceso->tamanio)){
-                iniciar_proceso(datos_crear_proceso);
+            t_particion* particion_libre = buscar_particion_libre(datos_crear_proceso->tamanio);
+
+            if(particion_libre != NULL){
+                iniciar_proceso(datos_crear_proceso, particion_libre);
                 log_info(logger, "## Proceso Creado -  PID: %d - Tamaño: %d", datos_crear_proceso->pid, datos_crear_proceso->tamanio);
                 confirmar_operacion(socket);
             } else {
@@ -175,13 +181,16 @@ void atender_peticion_cpu(int cod_op, int socket)
             t_datos_leer_memoria* datos_leer_memoria = (t_datos_leer_memoria*)leer_buffer_cpu(cod_op, socket);
             log_info(logger, "## Lectura - (PID:TID) - (%d:%d) - Dir. Física: %d - Tamaño: %d", datos_leer_memoria->pid, datos_leer_memoria->tid, datos_leer_memoria->dir_fisica, datos_leer_memoria->tamanio);
             //leer memoria
-            enviar_buffer(cod_op, socket, 222);
+            void* dato_leido;
+            memcpy(dato_leido, memoria + datos_leer_memoria->dir_fisica , sizeof(uint32_t));
+            enviar_buffer(cod_op, socket, dato_leido);
             break;
 
         case OPERACION_ESCRIBIR_MEMORIA:
             t_datos_escribir_memoria* datos_escribir_memoria = (t_datos_escribir_memoria*)leer_buffer_cpu(cod_op, socket);
             log_info(logger, "## Escritura - (PID:TID) - (%d:%d) - Dir. Física: %d - Tamaño: %d", datos_escribir_memoria->pid, datos_escribir_memoria->tid, datos_escribir_memoria->dir_fisica, datos_escribir_memoria->tamanio);
             //escribir memoria
+            memcpy(memoria + datos_escribir_memoria->dir_fisica, datos_escribir_memoria->dato_a_escribir, sizeof(uint32_t));
             break;
 
         default:
