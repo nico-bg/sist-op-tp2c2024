@@ -1,6 +1,9 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include <globales.h>
+#include <particiones.h>
+
 #include <utils/configuracion.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
@@ -76,7 +79,7 @@ nodo_proceso* buscar_proceso_por_pid(uint32_t pid);
 
 nodo_hilo* buscar_hilo_por_tid(uint32_t pid, uint32_t tid);
 
-void iniciar_proceso(t_datos_inicializacion_proceso* datos);
+void iniciar_proceso(t_datos_inicializacion_proceso* datos, t_particion* particion);
 
 uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos);
 

@@ -34,7 +34,7 @@ nodo_hilo* buscar_hilo_por_tid(uint32_t pid, uint32_t tid){
 }
 
 
-void iniciar_proceso(t_datos_inicializacion_proceso* datos){
+void iniciar_proceso(t_datos_inicializacion_proceso* datos, t_particion* particion){
     
     nodo_proceso* nuevo_nodo_proceso = (nodo_proceso*)malloc(sizeof(nodo_proceso));
 
@@ -53,6 +53,8 @@ void iniciar_proceso(t_datos_inicializacion_proceso* datos){
          proceso->siguiente_nodo_proceso = nuevo_nodo_proceso;
     }
 
+    asignar_particion(particion, datos->tamanio, datos->pid);
+
     return;
 }
 
@@ -70,6 +72,10 @@ uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
         free(actual);
         actual = siguiente;
     }
+
+    t_particion* particion = buscar_particion_por_pid(datos->pid);
+
+    desasignar_particion(particion);
 
     free(proceso);
 
