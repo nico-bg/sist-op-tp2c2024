@@ -11,14 +11,24 @@ int main(int argc, char* argv[]) {
     puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
 
     int fd_escucha = iniciar_servidor(puerto_escucha);
-    log_info(logger, "FileSystem listo para escuchar a la Memoria");
+    log_info(logger, "FileSystem listo para escuchar a la Memoria"); 
 
     /* Estamos esperando a la Memoria */
-    int socket_memoria = esperar_cliente(fd_escucha);
-    log_info(logger, "Se conectó la Memoria");
+
+
+    //int socket_memoria = esperar_cliente(fd_escucha);
+    //log_info(logger, "Se conectó la Memoria");
 
     /* Escuchamos las peticiones que la Memoria haga hasta que se desconecte */
-    atender_peticiones(logger, config, socket_memoria);
+    //atender_peticiones(logger, config, socket_memoria);
+
+    while(1) {
+        pthread_t thread;
+        int *fd_conexion_ptr = malloc(sizeof(int));
+        *fd_conexion_ptr = accept(fd_escucha, NULL, NULL);
+        pthread_create(&thread, NULL, (void*) atender_peticiones, fd_conexion_ptr);
+        pthread_detach(thread);
+    }
 
     terminar_programa(logger, config);
 
