@@ -3,6 +3,7 @@
 
 #include <globales.h>
 #include <string.h>
+#include <stdlib.h>
 
 typedef struct {
     uint32_t base;
