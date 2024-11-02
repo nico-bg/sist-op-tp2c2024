@@ -76,7 +76,7 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente){
             break;
 
         default:
-            //log_error(logger, "CPU envió un código de operacion desconocido - %d", cod_op);
+            log_error(logger, "CPU envió un código de operacion desconocido - %d", cod_op);
             break;
     }
 
@@ -136,7 +136,7 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
             break;
 
         default:
-            //codigo
+            log_error(logger, "Codigo de operacion desconocido");
             break;
     }
 }

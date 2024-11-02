@@ -1,4 +1,5 @@
 #include "main.h"
+#include "globales.h"
 
 static nodo_proceso* nodo_primer_proceso = NULL;
 
@@ -11,7 +12,7 @@ nodo_proceso* buscar_proceso_por_pid(uint32_t pid){
     }
 
     if(actual == NULL){
-        //NO SE ENCONTRÓ EL PROCESO
+        log_error(logger, "No se encontró el proceso");
     }
 
     return actual;
@@ -27,7 +28,7 @@ nodo_hilo* buscar_hilo_por_tid(uint32_t pid, uint32_t tid){
     }
 
     if(actual == NULL){
-        //NO SE ENCONTRÓ EL HILO
+        log_error(logger, "No se encontró el hilo");
     }
 
     return actual;
@@ -183,10 +184,6 @@ char* obtener_path_completo(const char* nombre_archivo){
     char* path_config = config_get_string_value(config, "PATH_INSTRUCCIONES");
 
     char* path_completo = malloc(strlen(path_config) + strlen(nombre_archivo) + 2); // +1 para '/' y +1 para '\0'
-
-    // string_append(&path_completo, path_config);
-    // string_append(&path_completo, "/");
-    // string_append(&path_completo, nombre_archivo);
 
     strcpy(path_completo, path_config);
     strcat(path_completo, "/");

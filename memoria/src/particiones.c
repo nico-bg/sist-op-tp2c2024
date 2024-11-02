@@ -32,7 +32,22 @@ void inicializar_particiones()
  */
 t_particion* crear_particion_en_indice(uint32_t tamanio, int indice)
 {
+    t_particion* particion_nueva = malloc(sizeof(t_particion));
+    t_particion* particion_original = list_get(particiones, indice);
 
+    particion_nueva->base = particion_original->base;
+    particion_nueva->limite = particion_nueva->base + tamanio;
+    particion_nueva->tamanio = tamanio;
+    particion_nueva->esta_libre = true;
+    particion_nueva->pid = UINT16_MAX;
+
+    particion_original->base = particion_nueva->limite + 1;
+    particion_original->limite = particion_original->limite; //el limite de la particion original queda igual;
+    particion_original->tamanio = particion_original->tamanio - particion_nueva->tamanio;
+
+    list_add_in_index(particiones, indice, particion_nueva);
+
+    return particion_nueva;
 }
 
 /**
@@ -40,6 +55,24 @@ t_particion* crear_particion_en_indice(uint32_t tamanio, int indice)
  */
 t_particion* crear_particion(uint32_t tamanio) {
 
+    t_particion* particion = malloc(sizeof(t_particion));
+    uint32_t base = 0;
+
+    if(!list_is_empty(particiones)){
+        t_particion* ultima_particion = list_get(particiones, list_size(particiones) - 1);
+        base = ultima_particion->limite + 1;
+    }
+
+    particion->base = base;
+    particion->limite = base + tamanio;
+    particion->tamanio = tamanio;
+
+    particion->pid = UINT32_MAX;
+    particion->esta_libre = true;
+
+    list_add(particiones, particion);
+
+    return particion;
 }
 
 /**
@@ -47,7 +80,10 @@ t_particion* crear_particion(uint32_t tamanio) {
  */
 void asignar_particion(t_particion* particion, uint32_t tamanio_proceso, uint32_t pid)
 {
-
+    particion->pid = pid;
+    particion->esta_libre = false;
+    //tamanio_proceso no se usa
+    //se puede crear un nuevo parametro para controlar el tamaño del proceso vs tamaño de la partición?
 }
 
 /**
@@ -100,7 +136,58 @@ void consolidar_particiones_libres()
  */
 t_particion* buscar_particion_libre(uint32_t tamanio)
 {
+    t_particion* particion_seleccionada = NULL;
+    char* algoritmo = config_get_string_value(config, "ALGORITMO_BUSQUEDA");
+    char* esquema =config_get_string_value(config, "ESQUEMA");
 
+    int indice = 0;
+
+    if(strcmp(algoritmo, "FIRST") == 0){
+        for(int i = 0; i < list_size(particiones); i++){
+            t_particion* particion_actual = list_get(particiones, i);
+            if(particion_actual->esta_libre && particion_actual->tamanio >= tamanio){
+                particion_seleccionada = particion_actual;
+                indice = i;
+                break;
+            }
+        }
+    } else if (strcmp(algoritmo, "BEST") == 0) {
+        for(int i = 0; i < list_size(particiones); i++){
+            t_particion* particion_actual = list_get(particiones, i);
+            if(particion_actual->esta_libre && particion_actual->tamanio >= tamanio){
+                if(particion_seleccionada == NULL){
+                    particion_seleccionada = particion_actual;
+                    indice = i;
+                } else {
+                    if(particion_actual->tamanio < particion_seleccionada->tamanio){
+                        particion_seleccionada = particion_actual;
+                        indice = i;
+                    }
+                }
+            }
+        }
+    } else if (strcmp(algoritmo, "WORST") == 0) {
+        for(int i = 0; i < list_size(particiones); i++){
+            t_particion* particion_actual = list_get(particiones, i);
+            if(particion_actual->esta_libre && particion_actual->tamanio >= tamanio){
+                if(particion_seleccionada == NULL){
+                    particion_seleccionada = particion_actual;
+                    indice = i;
+                } else {
+                    if(particion_actual->tamanio > particion_seleccionada->tamanio){
+                        particion_seleccionada = particion_actual;
+                        indice = i;
+                    }
+                }
+            }
+        }
+    }
+
+    if(strcmp(esquema, "DINAMICAS") == 0 && particion_seleccionada != NULL) {
+        particion_seleccionada = crear_particion_en_indice(tamanio, indice);
+    }
+
+    return particion_seleccionada;
 }
 
 uint32_t pid_auxiliar;
@@ -127,10 +214,10 @@ t_particion* buscar_particion_por_pid(uint32_t pid)
  * @brief Itera sobre la lista de particiones y retorna el indice de la partición recibida
  * Devuelve -1 si la partición no se encuentra en la lista
  */
-int buscar_indice_particion(t_particion* particion)
+/*int buscar_indice_particion(t_particion* particion)
 {
 
-}
+}*/
 
 /**
  * @brief Libera la memoria de la partición

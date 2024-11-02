@@ -111,4 +111,9 @@ char* devolver_instruccion(t_datos_obtener_instruccion* datos);
 
 estructura_hilo* convertir_struct(t_contexto* contexto);
 
+
+uint32_t leer_memoria(t_datos_leer_memoria* datos);
+
+void escribir_memoria(t_datos_escribir_memoria* datos);
+
 #endif

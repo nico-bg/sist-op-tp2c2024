@@ -124,7 +124,7 @@ void atender_peticion_kernel(int cod_op, int socket)
             break;
 
         case OPERACION_DUMP_MEMORY: //Los datos de la struct finalizar hilo & mem dump son los mismos, por ende se reutiliza la estructura
-            t_datos_finalizacion_hilo* datos_mem_dump = (t_datos_finalizacion_hilo*)leer_buffer_kernel(cod_op, socket);
+            t_datos_dump_memory* datos_mem_dump = (t_datos_dump_memory*)leer_buffer_kernel(cod_op, socket);
             log_info(logger, "## Memory Dump solicitado - (PID:TID) - (%d:%d)", datos_mem_dump->pid, datos_mem_dump->tid);
             confirmar_operacion(socket);
             break;
@@ -180,17 +180,14 @@ void atender_peticion_cpu(int cod_op, int socket)
         case OPERACION_LEER_MEMORIA:
             t_datos_leer_memoria* datos_leer_memoria = (t_datos_leer_memoria*)leer_buffer_cpu(cod_op, socket);
             log_info(logger, "## Lectura - (PID:TID) - (%d:%d) - Dir. Física: %d - Tamaño: %d", datos_leer_memoria->pid, datos_leer_memoria->tid, datos_leer_memoria->dir_fisica, datos_leer_memoria->tamanio);
-            //leer memoria
-            void* dato_leido;
-            memcpy(dato_leido, memoria + datos_leer_memoria->dir_fisica , sizeof(uint32_t));
+            uint32_t dato_leido = leer_memoria(datos_leer_memoria);
             enviar_buffer(cod_op, socket, dato_leido);
             break;
 
         case OPERACION_ESCRIBIR_MEMORIA:
             t_datos_escribir_memoria* datos_escribir_memoria = (t_datos_escribir_memoria*)leer_buffer_cpu(cod_op, socket);
             log_info(logger, "## Escritura - (PID:TID) - (%d:%d) - Dir. Física: %d - Tamaño: %d", datos_escribir_memoria->pid, datos_escribir_memoria->tid, datos_escribir_memoria->dir_fisica, datos_escribir_memoria->tamanio);
-            //escribir memoria
-            memcpy(memoria + datos_escribir_memoria->dir_fisica, datos_escribir_memoria->dato_a_escribir, sizeof(uint32_t));
+            escribir_memoria(datos_escribir_memoria);
             break;
 
         default:
@@ -198,7 +195,6 @@ void atender_peticion_cpu(int cod_op, int socket)
             break;
     }
 
-    //log_info(logger, "Retardo respuesta: %d", espera);
     esperar_ms(espera);
 
 }
@@ -210,6 +206,14 @@ void terminar_programa(t_config* config, int conexion)
     close(conexion);
 }
 
-bool hay_espacio_en_memoria(uint32_t tamanio){
-    return true; //checkpoint-2
+uint32_t leer_memoria(t_datos_leer_memoria* datos){
+
+    uint32_t dato_leido;
+    memcpy(&dato_leido, memoria + datos->dir_fisica , sizeof(uint32_t));
+
+    return dato_leido;
+}
+
+void escribir_memoria(t_datos_escribir_memoria* datos){
+    memcpy(memoria + datos->dir_fisica, datos->dato_a_escribir, sizeof(uint32_t));
 }
