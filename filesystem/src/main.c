@@ -8,6 +8,23 @@ int main(int argc, char* argv[]) {
     config = iniciar_config("filesystem.config");
     logger = iniciar_logger(config, "filesystem.log", "FILESYSTEM");
 
+    /* Inicialización archivo de bitmaps*/
+    //t_bitmap* bitmap = iniciar_bitmap("bitmap.dat")
+
+    /* Inicialización archivo de bloques*/
+    //t_bloques* bloques = iniciar_bloques("bloques.dat")
+
+    /* Inicializar directorio de montaje*/
+
+    /* Inicializar directorio de montaje*/
+    //struct_fcb fcb = crear_fcb(nombre_archivo);
+    //crear_entrada_directorio(nombre_archivo);
+    //actualizar_tabla_global_archivos_abiertos(fcb);
+    //asignacion_bloques(fcb, tamanio);
+    //escritura_bloques(bloques, fcb);
+    //actualización_atributos(fcb);
+
+
     puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
 
     int fd_escucha = iniciar_servidor(puerto_escucha);
