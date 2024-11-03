@@ -1,6 +1,7 @@
 #include <main.h>
 
 t_bitarray* bitmap;
+
 t_log* logger;
 t_config* config;
 
@@ -13,17 +14,6 @@ int main(int argc, char* argv[]) {
 
     inicializar_filesystem(config);
 
-    /* Inicializar directorio de montaje*/
-
-    /* Inicializar directorio de montaje*/
-    //struct_fcb fcb = crear_fcb(nombre_archivo);
-    //crear_entrada_directorio(nombre_archivo);
-    //actualizar_tabla_global_archivos_abiertos(fcb);
-    //asignacion_bloques(fcb, tamanio);
-    //escritura_bloques(bloques, fcb);
-    //actualización_atributos(fcb);
-
-
     puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
 
     int fd_escucha = iniciar_servidor(puerto_escucha);
@@ -31,13 +21,10 @@ int main(int argc, char* argv[]) {
 
     /* Estamos esperando a la Memoria */
 
+    int socket_memoria = esperar_cliente(fd_escucha);
+    log_info(logger, "Se conectó la Memoria");
 
-    //int socket_memoria = esperar_cliente(fd_escucha);
-    //log_info(logger, "Se conectó la Memoria");
-
-    /* Escuchamos las peticiones que la Memoria haga hasta que se desconecte */
-    //atender_peticiones(logger, config, socket_memoria);
-
+    /* Escuchamos las peticiones que la Memoria*/
     while(1) {
         pthread_t thread;
         int *fd_conexion_ptr = malloc(sizeof(int));
@@ -51,12 +38,12 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
-void inicializar_filesystem(void){
+void inicializar_filesystem(){
 
 inicializar_bitmap();
 
-}
 
+}
 
 void inicializar_bitmap(){
 

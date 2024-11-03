@@ -88,6 +88,11 @@ int atender_peticion(t_log* logger, t_config* config, int socket_cliente)
 		case OPERACION_MENSAJE:
 			recibir_mensaje(socket_cliente, logger);
 			break;
+		case OPERACION_DUMP_MEMORY:
+			//recibir_creacion_archivo(socket_cliente, logger);
+			log_debug(logger, "Creando un archivo");
+			break;
+			
 		case -1:
 			log_error(logger, "El cliente se desconectó");
 			return -1;
