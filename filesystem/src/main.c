@@ -1,18 +1,17 @@
 #include <main.h>
 
+t_bitarray* bitmap;
+t_log* logger;
+t_config* config;
+
 int main(int argc, char* argv[]) {
     char* puerto_escucha;
-    t_config* config;
-    t_log* logger;
 
+ 
     config = iniciar_config("filesystem.config");
     logger = iniciar_logger(config, "filesystem.log", "FILESYSTEM");
 
-    /* Inicialización archivo de bitmaps*/
-    //t_bitmap* bitmap = iniciar_bitmap("bitmap.dat")
-
-    /* Inicialización archivo de bloques*/
-    //t_bloques* bloques = iniciar_bloques("bloques.dat")
+    inicializar_filesystem(config);
 
     /* Inicializar directorio de montaje*/
 
@@ -52,8 +51,46 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
+void inicializar_filesystem(void){
+
+inicializar_bitmap();
+
+}
+
+
+void inicializar_bitmap(){
+
+log_debug(logger,"Inicialización del bitmap" );
+
+FILE* bitmap_f = fopen("/home/utnso/tp20242c/tp-2024-2c-Grupo-777/filesystem/MOUNT_DIR/bitmap.dat", "r");
+
+int size;
+char* buffer;
+fseek(bitmap_f, 0, SEEK_END);
+size = ftell(bitmap_f);
+
+log_debug(logger,"El tamaño del bitmap es:%d", size );
+
+fseek(bitmap_f, 0, SEEK_SET);
+
+fread(buffer, size, 0, bitmap_f);
+
+//buffer = string_substring_until(buffer, size);
+
+int cantidad_de_bloques = config_get_int_value(config, "BLOCK_COUNT");
+
+bitmap = bitarray_create_with_mode(buffer, cantidad_de_bloques/8, LSB_FIRST);
+
+fclose(bitmap_f);
+
+log_debug(logger,"Inicialización del bitmap finalizada" );
+
+}
+
 void terminar_programa(t_log* logger, t_config* config)
 {
     log_destroy(logger);
     config_destroy(config);
 }
+
+
