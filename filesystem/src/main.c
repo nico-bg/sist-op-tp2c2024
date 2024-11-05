@@ -42,6 +42,9 @@ void inicializar_filesystem(){
 
 inicializar_bitmap();
 
+//inicializar_bloques();
+
+
 
 }
 
@@ -67,6 +70,16 @@ fread(buffer, size, 0, bitmap_f);
 int cantidad_de_bloques = config_get_int_value(config, "BLOCK_COUNT");
 
 bitmap = bitarray_create_with_mode(buffer, cantidad_de_bloques/8, LSB_FIRST);
+
+log_debug(logger,"bitmap creado" );
+
+if (size == 0){
+    //Inicializar el bitmap en 0 si el archivo está vacio
+    for (int i = 0; i < cantidad_de_bloques; i++){
+      //  bitmap[i] = 0;
+         bitarray_set_bit(bitmap, i);
+    }
+}
 
 fclose(bitmap_f);
 
