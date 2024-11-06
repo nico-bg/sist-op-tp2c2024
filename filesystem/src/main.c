@@ -65,7 +65,11 @@ void inicializar_bitmap(){
 
 log_debug(logger,"Inicialización del bitmap" );
 
-FILE* bitmap_f = fopen("/home/utnso/tp20242c/tp-2024-2c-Grupo-777/filesystem/MOUNT_DIR/bitmap.dat", "r");
+FILE* bitmap_f = fopen("/home/utnso/Desktop/tp-2024-2c-Grupo-777/filesystem/MOUNT_DIR/", "r");
+if (bitmap_f == NULL) {
+    log_error(logger, "No se pudo abrir el archivo bitmap.dat");
+    return;
+}
 
 int size;
 char* buffer;
