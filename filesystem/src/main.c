@@ -40,13 +40,26 @@ int main(int argc, char* argv[]) {
 
 void inicializar_filesystem(){
 
+//verifica_existencia_path();
+
 inicializar_bitmap();
 
 //inicializar_bloques();
 
 
+}
+
+/*
+void verifica_existencia_path(){
 
 }
+*/
+
+/*
+void inicializar_bloques(){
+
+}
+*/
 
 void inicializar_bitmap(){
 
@@ -77,7 +90,7 @@ if (size == 0){
     //Inicializar el bitmap en 0 si el archivo está vacio
     for (int i = 0; i < cantidad_de_bloques; i++){
       //  bitmap[i] = 0;
-         bitarray_set_bit(bitmap, i);
+         bitarray_set_bit(bitmap, i);  //Da segmentation fault --- VER!!!
     }
 }
 
