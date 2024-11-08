@@ -23,7 +23,8 @@ t_hilo_a_cpu* deserializar_hilo_a_cpu(t_buffer* buffer)
 t_buffer* serializar_datos_crear_hilo(t_datos_crear_hilo* datos)
 {
     int archivo_pseudocodigo_length = strlen(datos->archivo_pseudocodigo) + 1;
-    int tamanio_buffer = sizeof(uint32_t) + archivo_pseudocodigo_length;
+    // Son 2 uint32_t, uno para la longitud del nombre del archivo y el otro para la prioridad
+    int tamanio_buffer = 2 * sizeof(uint32_t) + archivo_pseudocodigo_length;
     t_buffer* buffer = buffer_create(tamanio_buffer);
 
     buffer_add_string(buffer, archivo_pseudocodigo_length, datos->archivo_pseudocodigo);
