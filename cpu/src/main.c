@@ -292,7 +292,7 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "THREAD_CREATE") == 0)
           {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d  ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]));
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
                contexto.PC = contexto.PC + 1;
                actualizar_contexto();
 
@@ -392,7 +392,7 @@ t_buffer *pedir_contexto(int servidor_memoria, t_buffer *buffer_pedido_contexto)
      paquete->buffer = buffer_pedido_contexto;
      t_buffer *paquete_serializado = serializar_paquete(paquete);
 
-     log_info(logger, "#TID: %d  - Solicito Contexto Ejecución", contexto.tid);
+     log_info(logger, "#TID: %d  - Solicito Contexto Ejecución", pcb->tid);
 
      send(servidor_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
 
@@ -764,7 +764,7 @@ void ejecutar_instruccion_hilo(op_code operacion, uint32_t tid)
 
      t_paquete* paquete = malloc(sizeof(t_paquete));
      paquete->codigo_operacion = operacion;
-     paquete->buffer = serializar_datos_operacion_hilo(datos);
+     paquete->buffer = serializar_datos_operacion_hilo(datos->tid);
      t_buffer* paquete_serializado = serializar_paquete(paquete);
 
      send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);

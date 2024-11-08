@@ -118,9 +118,10 @@ static void finalizar_proceso(t_tcb* hilo_principal)
     while(!list_is_empty(proceso->tids)) {
         int indice_ultimo_tid = list_size(proceso->tids) - 1;
         uint32_t* tid_a_liberar = (uint32_t*) list_get(proceso->tids, indice_ultimo_tid);
-        list_remove_element(proceso->tids, tid_a_liberar);
 
         t_tcb* hilo_a_liberar = buscar_hilo_en_proceso(proceso, *tid_a_liberar);
+
+        list_remove_element(proceso->tids, tid_a_liberar);
 
         // Paso a READY todos los hilos que esperaban a que `hilo_a_liberar` finalice
         while(!list_is_empty(hilo_a_liberar->hilos_bloqueados)) {
@@ -155,6 +156,10 @@ static void finalizar_hilo(t_tcb* hilo)
         log_debug(logger_debug, "Respuesta desconocida al finalizar hilo. Cod: %d, PID: %d, TID: %d", respuesta, hilo->pid_padre, hilo->tid);
         abort();
     }
+
+    // Desvinculo el hilo de la lista de tids del proceso
+    tid_auxiliar = hilo->tid;
+    list_remove_by_condition(proceso->tids, existe_tid_en_lista);
 
     // Busco los mutex que tiene asignados el hilo a finalizar
     tid_auxiliar = hilo->tid;
@@ -191,8 +196,6 @@ static void finalizar_hilo(t_tcb* hilo)
     }
 
     log_info(logger, "## (%d:%d) Finaliza el hilo", hilo->pid_padre, hilo->tid);
-    destruir_tcb(hilo);
-
 }
 
 /**
@@ -212,7 +215,7 @@ static op_code pedir_inicializacion_hilo_a_memoria(t_tcb* hilo)
     t_datos_inicializacion_hilo* datos_inicializacion = malloc(sizeof(t_datos_inicializacion_hilo));
     datos_inicializacion->pid = hilo->pid_padre;
     datos_inicializacion->tid = hilo->tid;
-    datos_inicializacion->archivo_pseudocodigo = hilo->nombre_archivo;
+    datos_inicializacion->archivo_pseudocodigo = string_duplicate(hilo->nombre_archivo);
     t_buffer* buffer_inicializacion = serializar_datos_inicializacion_hilo(datos_inicializacion);
 
     // Empaquetamos y serializamos los datos junto con el código de operación
