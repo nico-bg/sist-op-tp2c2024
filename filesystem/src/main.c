@@ -43,35 +43,34 @@ void verifica_existencia_path(char* mount_dir) {
     
     // Verifica si el directorio existe
     if (stat(mount_dir, &st) == -1) {
-        log_info(logger, "Creando directorio de montaje: %s", mount_dir);
+        log_info(logger, "Creando mount dir: %s", mount_dir);
         if (mkdir(mount_dir, 0700) == -1) {
-            log_error(logger, "Error creando directorio de montaje: %s", strerror(errno));
+            log_error(logger, "Error creando mount dir");
             exit(EXIT_FAILURE);
         }
     }
     
-    // Crear subdirectorio /files si no existe
-    char files_path[256];
-    snprintf(files_path, sizeof(files_path), "%s/files", mount_dir);
-    if (stat(files_path, &st) == -1) {
-        log_info(logger, "Creando directorio files: %s", files_path);
-        if (mkdir(files_path, 0700) == -1) {
-            log_error(logger, "Error creando directorio files: %s", strerror(errno));
+   char* ruta_files = string_from_format("%s/files", mount_dir);
+    if (stat(ruta_files, &st) == -1) {
+        log_info(logger, "Creando directorio de files: %s", ruta_files);
+        if (mkdir(ruta_files, 0700) == -1) {
+            log_error(logger, "Error al crear directorio de files");
+            free(ruta_files);
             exit(EXIT_FAILURE);
         }
     }
+    free(ruta_files);
 }
-
 void inicializar_bloques(char* mount_dir, int block_size, int block_count) {
-    char bloques_path[256];
-    snprintf(bloques_path, sizeof(bloques_path), "%s/bloques.dat", mount_dir);
+     char* bloques_path = string_from_format("%s/bloques.dat", mount_dir);
+     FILE* bloques_f = fopen(bloques_path, "r");
     
-    FILE* bloques_f = fopen(bloques_path, "r");
     if (bloques_f == NULL) {
         log_info(logger, "Creando archivo de bloques: %s", bloques_path);
         bloques_f = fopen(bloques_path, "w+");
         if (bloques_f == NULL) {
-            log_error(logger, "Error creando archivo de bloques: %s", strerror(errno));
+            log_error(logger, "Error creando archivo de bloques");
+            free(bloques_path);
             exit(EXIT_FAILURE);
         }
         
@@ -79,8 +78,9 @@ void inicializar_bloques(char* mount_dir, int block_size, int block_count) {
         char* buffer = calloc(block_size, 1);
         for (int i = 0; i < block_count; i++) {
             if (fwrite(buffer, block_size, 1, bloques_f) != 1) {
-                log_error(logger, "Error escribiendo bloque %d: %s", i, strerror(errno));
+                log_error(logger, "Error escribiendo bloque");
                 free(buffer);
+                free(bloques_path);
                 fclose(bloques_f);
                 exit(EXIT_FAILURE);
             }
@@ -94,8 +94,8 @@ void inicializar_bitmap(char* mount_dir, int block_count) {
     char bitmap_path[256];
     snprintf(bitmap_path, sizeof(bitmap_path), "%s/bitmap.dat", mount_dir);
     
-    // Calcular tamaño del bitmap en bytes (redondeado hacia arriba)
-    int bitmap_size = (block_count + 7) / 8;
+    // Calcular tamaño del bitmap en bytes 
+    int bitmap_size = block_count / 8;
     
     FILE* bitmap_f = fopen(bitmap_path, "r+");
     if (bitmap_f == NULL) {
