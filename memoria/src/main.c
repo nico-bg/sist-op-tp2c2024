@@ -7,6 +7,7 @@ t_log* logger;
 t_config* config;
 t_list* particiones;
 void* memoria;
+int socket_filesystem;
 
 int main(int argc, char* argv[]) {
 
@@ -27,7 +28,7 @@ int main(int argc, char* argv[]) {
 
 
     /* Conexión con el Filesystem */
-    int socket_filesystem = conectar_a_socket(ip_filesystem, puerto_filesystem);
+    socket_filesystem = conectar_a_socket(ip_filesystem, puerto_filesystem);
     log_info(logger, "Conectado al Filesystem");
     enviar_mensaje("Hola, soy la Memoria", socket_filesystem);
 
@@ -126,7 +127,14 @@ void atender_peticion_kernel(int cod_op, int socket)
         case OPERACION_DUMP_MEMORY: //Los datos de la struct finalizar hilo & mem dump son los mismos, por ende se reutiliza la estructura
             t_datos_dump_memory* datos_mem_dump = (t_datos_dump_memory*)leer_buffer_kernel(cod_op, socket);
             log_info(logger, "## Memory Dump solicitado - (PID:TID) - (%d:%d)", datos_mem_dump->pid, datos_mem_dump->tid);
-            confirmar_operacion(socket);
+
+            op_code codigo_operacion = enviar_dump_memory(socket_filesystem, datos_mem_dump);
+
+            if(codigo_operacion == OPERACION_CONFIRMAR){
+                confirmar_operacion(socket);
+            } else {
+                notificar_error(socket);
+            }
             break;
 
         default:

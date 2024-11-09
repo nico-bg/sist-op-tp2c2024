@@ -154,3 +154,33 @@ void notificar_error(int socket_cliente){
 
     send(socket_cliente, &op, sizeof(uint32_t), 0);
 }
+
+op_code enviar_dump_memory(int socket_filesystem, t_datos_dump_memory* datos_kernel)
+{
+    char* nombre_archivo;
+
+    string_append_with_format(&nombre_archivo, "%d-%d-%s.dmp", datos_kernel->pid, datos_kernel->tid, obtener_timestamp());
+
+    nodo_proceso* nodo = buscar_proceso_por_pid(datos_kernel->pid);
+
+    t_datos_dump_memory_fs* datos_a_enviar = malloc(sizeof(t_datos_dump_memory_fs));
+    datos_a_enviar->nombre_archivo = nombre_archivo;
+    datos_a_enviar->tamanio = nodo->proceso.tamanio;
+    datos_a_enviar->contenido = memoria + nodo->proceso.base;
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = OPERACION_DUMP_MEMORY;
+    paquete->buffer = serializar_datos_dump_memory_fs(datos_a_enviar);
+
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+    send(socket_filesystem, paquete_serializado->stream, paquete_serializado->size, 0);
+
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
+    destruir_datos_dump_memory_fs(datos_a_enviar);
+
+    op_code codigo_operacion = recibir_operacion(socket_filesystem);
+
+    return codigo_operacion;
+}
