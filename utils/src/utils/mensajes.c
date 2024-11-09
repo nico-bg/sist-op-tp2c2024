@@ -1,5 +1,14 @@
 #include <utils/mensajes.h>
 
+
+void confirmar_oper (int socket_cliente){
+
+    uint32_t op = OPERACION_CONFIRMAR;
+
+    send(socket_cliente, &op, sizeof(uint32_t), 0);
+}
+
+
 /* Serializa el paquete como stream del buffer a retornar */
 t_buffer* serializar_paquete(t_paquete* paquete)
 {
@@ -81,7 +90,7 @@ void atender_peticiones(t_log* logger, t_config* config, int socket_cliente)
 
 int atender_peticion(t_log* logger, t_config* config, int socket_cliente)
 {
-	log_info(logger, "Esperando código de operación");
+	log_debug(logger, "Esperando código de operación");
 	int codigo_operacion = recibir_operacion(socket_cliente);
 
 	switch(codigo_operacion) {
@@ -90,7 +99,9 @@ int atender_peticion(t_log* logger, t_config* config, int socket_cliente)
 			break;
 		case OPERACION_DUMP_MEMORY:
 			//recibir_creacion_archivo(socket_cliente, logger);
-			log_debug(logger, "Creando un archivo");
+			log_debug(logger, "## Archivo creado: OK - Tamaño: OK");
+            confirmar_oper(socket_cliente);
+
 			break;
 			
 		case -1:

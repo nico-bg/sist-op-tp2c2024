@@ -12,4 +12,7 @@ void inicializar_filesystem();
 
 void terminar_programa(t_log* logger, t_config* config);
 
+
+
+
 #endif

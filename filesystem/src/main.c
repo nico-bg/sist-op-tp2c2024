@@ -17,12 +17,12 @@ int main(int argc, char* argv[]) {
     puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
 
     int fd_escucha = iniciar_servidor(puerto_escucha);
-    log_info(logger, "FileSystem listo para escuchar a la Memoria"); 
+    log_debug(logger, "FileSystem listo para escuchar a la Memoria"); 
 
     /* Estamos esperando a la Memoria */
 
     int socket_memoria = esperar_cliente(fd_escucha);
-    log_info(logger, "Se conectó la Memoria");
+    log_debug(logger, "Se conectó la Memoria");
 
     /* Escuchamos las peticiones que la Memoria*/
     while(1) {
@@ -38,12 +38,13 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
+
 void verifica_existencia_path(char* mount_dir) {
     struct stat st = {0};
     
     // Verifica si el directorio existe
     if (stat(mount_dir, &st) == -1) {
-        log_info(logger, "Creando mount dir: %s", mount_dir);
+        log_debug(logger, "Creando mount dir: %s", mount_dir);
         if (mkdir(mount_dir, 0700) == -1) {
             log_error(logger, "Error creando mount dir");
             exit(EXIT_FAILURE);
@@ -52,7 +53,7 @@ void verifica_existencia_path(char* mount_dir) {
     
    char* ruta_files = string_from_format("%s/files", mount_dir);
     if (stat(ruta_files, &st) == -1) {
-        log_info(logger, "Creando directorio de files: %s", ruta_files);
+        log_debug(logger, "Creando directorio de files: %s", ruta_files);
         if (mkdir(ruta_files, 0700) == -1) {
             log_error(logger, "Error al crear directorio de files");
             free(ruta_files);
@@ -66,7 +67,7 @@ void inicializar_bloques(char* ruta_files, int block_size, int block_count) {
      FILE* bloques_f = fopen(bloques_path, "r");
     
     if (bloques_f == NULL) {
-        log_info(logger, "Creando archivo de bloques: %s", bloques_path);
+        log_debug(logger, "Creando archivo de bloques: %s", bloques_path);
         bloques_f = fopen(bloques_path, "w+");
         if (bloques_f == NULL) {
             log_error(logger, "Error creando archivo de bloques");
@@ -99,7 +100,7 @@ void inicializar_bitmap(char* ruta_files, int block_count) {
     
     FILE* bitmap_f = fopen(bitmap_path, "r+");
     if (bitmap_f == NULL) {
-        log_info(logger, "Creando archivo bitmap: %s", bitmap_path);
+        log_debug(logger, "Creando archivo bitmap: %s", bitmap_path);
         bitmap_f = fopen(bitmap_path, "w+");
         if (bitmap_f == NULL) {
             log_error(logger, "Error creando archivo bitmap");
@@ -144,7 +145,7 @@ void inicializar_filesystem(t_config* config) {
     inicializar_bloques(ruta_files, block_size, block_count);
     inicializar_bitmap(ruta_files, block_count);
     
-    log_info(logger, "Filesystem inicializado correctamente");
+    log_debug(logger, "Filesystem inicializado correctamente");
 }
 
 void terminar_programa(t_log* logger, t_config* config)

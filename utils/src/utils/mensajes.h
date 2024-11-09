@@ -43,6 +43,7 @@ typedef struct
 	t_buffer* buffer;
 } t_paquete;
 
+void confirmar_oper (int socket_cliente);
 t_buffer* serializar_paquete(t_paquete* paquete);
 void eliminar_paquete(t_paquete* paquete);
 void enviar_mensaje(char* mensaje, int socket_cliente);
