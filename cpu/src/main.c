@@ -12,6 +12,7 @@ bool hay_interrupcion;
 sem_t sem_ciclo_de_instruccion;
 
 pthread_mutex_t mutex_interrupciones;
+pthread_mutex_t mutex_socket_memoria;
 
 
 int main(int argc, char *argv[])
@@ -91,7 +92,9 @@ void escuchar_dispatch()
 
                pcb = deserializar_hilo_a_cpu(buffer);
 
+               pthread_mutex_lock(&mutex_socket_memoria);
                t_buffer *contexto_devuelto = pedir_contexto(socket_memoria, buffer);
+               pthread_mutex_unlock(&mutex_socket_memoria);
 
                contexto = deserializar_datos_contexto(contexto_devuelto);
 
@@ -269,7 +272,7 @@ void ciclo_de_instruccion()
 
           if (strcmp(estructura_instruccion[0], "PROCESS_CREATE") == 0)
           {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d %d ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]),atoi(estructura_instruccion[2]));
+               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]), atoi(estructura_instruccion[3]));
                contexto.PC = contexto.PC + 1;
                actualizar_contexto();
 
@@ -345,7 +348,9 @@ void ciclo_de_instruccion()
           }
 
 
-     contexto.PC = contexto.PC + 1;
+     if(strcmp(estructura_instruccion[0], "JNZ") != 0) {
+          contexto.PC = contexto.PC + 1;
+     }
 
      // CHECK INTERRUPT
      pthread_mutex_lock(&mutex_interrupciones);
@@ -696,10 +701,11 @@ void actualizar_contexto()
 
      log_info(logger, "#TID: %d  - Actualizo Contexto Ejecución", contexto.tid);
 
-
+     pthread_mutex_lock(&mutex_socket_memoria);
      send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
 
      op_code operacion = recibir_operacion(socket_memoria);
+     pthread_mutex_unlock(&mutex_socket_memoria);
 
      if(operacion != OPERACION_CONFIRMAR) {
           log_error(logger, "Error al actualizar contexto de ejecución. Cod: %d", operacion);
@@ -715,18 +721,20 @@ void actualizar_contexto()
 
 
 void escuchar_interrupciones() {
-     op_code operacion = recibir_operacion(socket_interrupt);
+     while(1) {
+          op_code operacion = recibir_operacion(socket_interrupt);
 
-     switch (operacion)
-     {
-     case OPERACION_DESALOJAR_HILO:
-          pthread_mutex_lock(&mutex_interrupciones);
-          hay_interrupcion = true;
-          pthread_mutex_unlock(&mutex_interrupciones);
-          break;
-     default:
-          log_debug(logger, "Operación desconocida en interrupt: %d", operacion);
-          break;
+          switch (operacion)
+          {
+          case OPERACION_DESALOJAR_HILO:
+               pthread_mutex_lock(&mutex_interrupciones);
+               hay_interrupcion = true;
+               pthread_mutex_unlock(&mutex_interrupciones);
+               break;
+          default:
+               log_debug(logger, "Operación desconocida en interrupt: %d", operacion);
+               break;
+          }
      }
 }
 

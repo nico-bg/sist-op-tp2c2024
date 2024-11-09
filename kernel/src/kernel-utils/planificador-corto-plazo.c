@@ -43,6 +43,13 @@ void* planificador_corto_plazo()
 static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
 {
     enviar_hilo_a_cpu(hilo_en_ejecucion);
+    char* algoritmo_planificacion = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
+
+    if(strcmp(algoritmo_planificacion, "CMN") == 0) {
+        pthread_t hilo_desalojo_por_quantum;
+        pthread_create(&hilo_desalojo_por_quantum, NULL, temporizador_desalojo_por_quantum, hilo_en_ejecucion);
+        pthread_detach(hilo_desalojo_por_quantum);
+    }
 
     // Esperamos la respuesta de la CPU para procesar una syscall, un desalojo, un bloqueo, etc
     op_code operacion = recibir_operacion(socket_cpu_dispatch);
@@ -158,7 +165,23 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
         syscall_dump_memory();
         break;
     case OPERACION_DESALOJAR_HILO:
+        t_tcb* siguiente = NULL;
+
+        // Guardamos el siguiente hilo a ejecutar antes de pasar el de EXEC a READY
+        // ...porque si estamos ejecutando el TID 0 al replanificar vuelve a elegir el mismo
+        // ...porque es el de mayor prioridad
+        pthread_mutex_lock(&mutex_estado_ready);
+        if(list_size(estado_ready) > 0) {
+            siguiente = obtener_siguiente_a_exec();
+        }
+        pthread_mutex_unlock(&mutex_estado_ready);
+
         transicion_exec_a_ready(hilo_en_ejecucion);
+
+        if(siguiente != NULL) {
+            transicion_ready_a_exec(siguiente);
+            procesar_instrucciones_cpu(siguiente);
+        }
         break;
     default:
         log_debug(logger_debug, "Motivo de devolución desconocido");
@@ -245,9 +268,10 @@ static t_tcb* obtener_siguiente_a_exec_colas_multinivel()
 {
     t_tcb* siguiente_a_exec = obtener_siguiente_a_exec_prioridades();
 
-    pthread_t hilo_desalojo_por_quantum;
-    pthread_create(&hilo_desalojo_por_quantum, NULL, temporizador_desalojo_por_quantum, siguiente_a_exec);
-    pthread_detach(hilo_desalojo_por_quantum);
+    // Se movio este manejo a cuando se envia el hilo a la CPU
+    // pthread_t hilo_desalojo_por_quantum;
+    // pthread_create(&hilo_desalojo_por_quantum, NULL, temporizador_desalojo_por_quantum, siguiente_a_exec);
+    // pthread_detach(hilo_desalojo_por_quantum);
 
     return siguiente_a_exec;
 }
