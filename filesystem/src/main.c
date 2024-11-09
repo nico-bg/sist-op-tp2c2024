@@ -61,8 +61,8 @@ void verifica_existencia_path(char* mount_dir) {
     }
     free(ruta_files);
 }
-void inicializar_bloques(char* mount_dir, int block_size, int block_count) {
-     char* bloques_path = string_from_format("%s/bloques.dat", mount_dir);
+void inicializar_bloques(char* ruta_files, int block_size, int block_count) {
+     char* bloques_path = string_from_format("%s/bloques.dat", ruta_files);
      FILE* bloques_f = fopen(bloques_path, "r");
     
     if (bloques_f == NULL) {
@@ -90,9 +90,9 @@ void inicializar_bloques(char* mount_dir, int block_size, int block_count) {
     fclose(bloques_f);
 }
 
-void inicializar_bitmap(char* mount_dir, int block_count) {
+void inicializar_bitmap(char* ruta_files, int block_count) {
     char bitmap_path[256];
-    snprintf(bitmap_path, sizeof(bitmap_path), "%s/bitmap.dat", mount_dir);
+    snprintf(bitmap_path, sizeof(bitmap_path), "%s/bitmap.dat", ruta_files);
     
     // Calcular tamaño del bitmap en bytes 
     int bitmap_size = block_count / 8;
@@ -134,13 +134,15 @@ void inicializar_bitmap(char* mount_dir, int block_count) {
 }
 
 void inicializar_filesystem(t_config* config) {
+    char* mount_dir = config_get_string_value(config, "MOUNT_DIR");
+    char* ruta_files = string_from_format("%s/files", mount_dir);
     int block_size = config_get_int_value(config, "BLOCK_SIZE");
     int block_count = config_get_int_value(config, "BLOCK_COUNT");
 
     
-    verifica_existencia_path("/home/utnso/Desktop/tp-2024-2c-Grupo-777/filesystem/MOUNT_DIR/");
-    inicializar_bloques("/home/utnso/Desktop/tp-2024-2c-Grupo-777/filesystem/MOUNT_DIR/", block_size, block_count);
-    inicializar_bitmap("/home/utnso/Desktop/tp-2024-2c-Grupo-777/filesystem/MOUNT_DIR/", block_count);
+    verifica_existencia_path(mount_dir);
+    inicializar_bloques(ruta_files, block_size, block_count);
+    inicializar_bitmap(ruta_files, block_count);
     
     log_info(logger, "Filesystem inicializado correctamente");
 }
