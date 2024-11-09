@@ -38,70 +38,111 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
-void inicializar_filesystem(){
-
-//verifica_existencia_path();
-
-inicializar_bitmap();
-
-//inicializar_bloques();
-
-
-}
-
-/*
-void verifica_existencia_path(){
-
-}
-*/
-
-/*
-void inicializar_bloques(){
-
-}
-*/
-
-void inicializar_bitmap(){
-
-log_debug(logger,"Inicialización del bitmap" );
-
-FILE* bitmap_f = fopen("/home/utnso/Desktop/tp-2024-2c-Grupo-777/filesystem/MOUNT_DIR/", "r");
-if (bitmap_f == NULL) {
-    log_error(logger, "No se pudo abrir el archivo bitmap.dat");
-    return;
-}
-
-int size;
-char* buffer;
-fseek(bitmap_f, 0, SEEK_END);
-size = ftell(bitmap_f);
-
-log_debug(logger,"El tamaño del bitmap es:%d", size );
-
-fseek(bitmap_f, 0, SEEK_SET);
-
-fread(buffer, size, 0, bitmap_f);
-
-//buffer = string_substring_until(buffer, size);
-
-int cantidad_de_bloques = config_get_int_value(config, "BLOCK_COUNT");
-
-bitmap = bitarray_create_with_mode(buffer, cantidad_de_bloques/8, LSB_FIRST);
-
-log_debug(logger,"bitmap creado" );
-
-if (size == 0){
-    //Inicializar el bitmap en 0 si el archivo está vacio
-    for (int i = 0; i < cantidad_de_bloques; i++){
-      //  bitmap[i] = 0;
-         bitarray_set_bit(bitmap, i);  //Da segmentation fault --- VER!!!
+void verifica_existencia_path(char* mount_dir) {
+    struct stat st = {0};
+    
+    // Verifica si el directorio existe
+    if (stat(mount_dir, &st) == -1) {
+        log_info(logger, "Creando directorio de montaje: %s", mount_dir);
+        if (mkdir(mount_dir, 0700) == -1) {
+            log_error(logger, "Error creando directorio de montaje: %s", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+    }
+    
+    // Crear subdirectorio /files si no existe
+    char files_path[256];
+    snprintf(files_path, sizeof(files_path), "%s/files", mount_dir);
+    if (stat(files_path, &st) == -1) {
+        log_info(logger, "Creando directorio files: %s", files_path);
+        if (mkdir(files_path, 0700) == -1) {
+            log_error(logger, "Error creando directorio files: %s", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
-fclose(bitmap_f);
+void inicializar_bloques(char* mount_dir, int block_size, int block_count) {
+    char bloques_path[256];
+    snprintf(bloques_path, sizeof(bloques_path), "%s/bloques.dat", mount_dir);
+    
+    FILE* bloques_f = fopen(bloques_path, "r");
+    if (bloques_f == NULL) {
+        log_info(logger, "Creando archivo de bloques: %s", bloques_path);
+        bloques_f = fopen(bloques_path, "w+");
+        if (bloques_f == NULL) {
+            log_error(logger, "Error creando archivo de bloques: %s", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        
+        // Inicializar el archivo con ceros hasta alcanzar el tamaño deseado
+        char* buffer = calloc(block_size, 1);
+        for (int i = 0; i < block_count; i++) {
+            if (fwrite(buffer, block_size, 1, bloques_f) != 1) {
+                log_error(logger, "Error escribiendo bloque %d: %s", i, strerror(errno));
+                free(buffer);
+                fclose(bloques_f);
+                exit(EXIT_FAILURE);
+            }
+        }
+        free(buffer);
+    }
+    fclose(bloques_f);
+}
 
-log_debug(logger,"Inicialización del bitmap finalizada" );
+void inicializar_bitmap(char* mount_dir, int block_count) {
+    char bitmap_path[256];
+    snprintf(bitmap_path, sizeof(bitmap_path), "%s/bitmap.dat", mount_dir);
+    
+    // Calcular tamaño del bitmap en bytes (redondeado hacia arriba)
+    int bitmap_size = (block_count + 7) / 8;
+    
+    FILE* bitmap_f = fopen(bitmap_path, "r+");
+    if (bitmap_f == NULL) {
+        log_info(logger, "Creando archivo bitmap: %s", bitmap_path);
+        bitmap_f = fopen(bitmap_path, "w+");
+        if (bitmap_f == NULL) {
+            log_error(logger, "Error creando archivo bitmap");
+            exit(EXIT_FAILURE);
+        }
+        
+        // Inicializar el archivo con ceros
+        char* buffer = calloc(bitmap_size, 1);
+        if (fwrite(buffer, bitmap_size, 1, bitmap_f) != 1) {
+            log_error(logger, "Error escribiendo bitmap inicial");
+            free(buffer);
+            fclose(bitmap_f);
+            exit(EXIT_FAILURE);
+        }
+        free(buffer);
+    }
+    
+    // Cargar el bitmap en memoria
+    char* buffer = malloc(bitmap_size);
+    fseek(bitmap_f, 0, SEEK_SET);
+    if (fread(buffer, bitmap_size, 1, bitmap_f) != 1) {
+        log_error(logger, "Error leyendo bitmap");
+        free(buffer);
+        fclose(bitmap_f);
+        exit(EXIT_FAILURE);
+    }
+    
+    bitmap = bitarray_create_with_mode(buffer, bitmap_size, LSB_FIRST);
+    log_debug(logger, "Bitmap inicializado correctamente");
+    
+    fclose(bitmap_f);
+}
 
+void inicializar_filesystem(t_config* config) {
+    int block_size = config_get_int_value(config, "BLOCK_SIZE");
+    int block_count = config_get_int_value(config, "BLOCK_COUNT");
+
+    
+    verifica_existencia_path("/home/utnso/Desktop/tp-2024-2c-Grupo-777/filesystem/MOUNT_DIR/");
+    inicializar_bloques("/home/utnso/Desktop/tp-2024-2c-Grupo-777/filesystem/MOUNT_DIR/", block_size, block_count);
+    inicializar_bitmap("/home/utnso/Desktop/tp-2024-2c-Grupo-777/filesystem/MOUNT_DIR/", block_count);
+    
+    log_info(logger, "Filesystem inicializado correctamente");
 }
 
 void terminar_programa(t_log* logger, t_config* config)

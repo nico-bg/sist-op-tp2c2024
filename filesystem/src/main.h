@@ -5,6 +5,9 @@
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
 #include <commons/bitarray.h>
+#include <pthread.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 void inicializar_filesystem();
 
