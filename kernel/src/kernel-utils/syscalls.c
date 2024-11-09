@@ -50,12 +50,18 @@ void syscall_crear_hilo(char* archivo_pseudocodigo, uint32_t prioridad)
 
     // Actualizamos los datos del proceso asociado
     proceso_invocador->ultimo_tid += 1;
-    list_add(proceso_invocador->tids, &nuevo_hilo->tid);
+
+    uint32_t* tid_nuevo_hilo = malloc(sizeof(uint32_t)); // Creamos una copia dinámica para poder guardarlo en la lista
+    *tid_nuevo_hilo = nuevo_hilo->tid;
+
+    list_add(proceso_invocador->tids, tid_nuevo_hilo);
 
     // Agregamos el nuevo hilo al estado READY para que pueda ser planificado
     pthread_mutex_lock(&mutex_estado_ready);
     list_add(estado_ready, nuevo_hilo);
     pthread_mutex_unlock(&mutex_estado_ready);
+
+    sem_post(&semaforo_estado_ready);
 
     log_info(logger, "## (%d:%d) Se crea el Hilo - Estado: READY", nuevo_hilo->pid_padre, nuevo_hilo->tid);
 
@@ -366,7 +372,7 @@ static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo)
     t_datos_inicializacion_hilo* datos_a_enviar = malloc(sizeof(t_datos_inicializacion_hilo));
     datos_a_enviar->pid = hilo->pid_padre;
     datos_a_enviar->tid = hilo->tid;
-    datos_a_enviar->archivo_pseudocodigo = hilo->nombre_archivo;
+    datos_a_enviar->archivo_pseudocodigo = string_duplicate(hilo->nombre_archivo);
 
     // Empaquetamos y serializamos los datos junto con el código de operación
     t_paquete* paquete = malloc(sizeof(t_paquete));
