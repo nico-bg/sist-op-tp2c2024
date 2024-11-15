@@ -43,13 +43,6 @@ void* planificador_corto_plazo()
 static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
 {
     enviar_hilo_a_cpu(hilo_en_ejecucion);
-    char* algoritmo_planificacion = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
-
-    if(strcmp(algoritmo_planificacion, "CMN") == 0) {
-        pthread_t hilo_desalojo_por_quantum;
-        pthread_create(&hilo_desalojo_por_quantum, NULL, temporizador_desalojo_por_quantum, hilo_en_ejecucion);
-        pthread_detach(hilo_desalojo_por_quantum);
-    }
 
     // Esperamos la respuesta de la CPU para procesar una syscall, un desalojo, un bloqueo, etc
     op_code operacion = recibir_operacion(socket_cpu_dispatch);
@@ -268,10 +261,9 @@ static t_tcb* obtener_siguiente_a_exec_colas_multinivel()
 {
     t_tcb* siguiente_a_exec = obtener_siguiente_a_exec_prioridades();
 
-    // Se movio este manejo a cuando se envia el hilo a la CPU
-    // pthread_t hilo_desalojo_por_quantum;
-    // pthread_create(&hilo_desalojo_por_quantum, NULL, temporizador_desalojo_por_quantum, siguiente_a_exec);
-    // pthread_detach(hilo_desalojo_por_quantum);
+    pthread_t hilo_desalojo_por_quantum;
+    pthread_create(&hilo_desalojo_por_quantum, NULL, temporizador_desalojo_por_quantum, siguiente_a_exec);
+    pthread_detach(hilo_desalojo_por_quantum);
 
     return siguiente_a_exec;
 }
