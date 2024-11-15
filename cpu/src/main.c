@@ -10,10 +10,10 @@ int socket_interrupt;
 bool hay_interrupcion;
 
 sem_t sem_ciclo_de_instruccion;
+sem_t sem_fin_ciclo_de_instruccion;
 
 pthread_mutex_t mutex_interrupciones;
 pthread_mutex_t mutex_socket_memoria;
-
 
 int main(int argc, char *argv[])
 {
@@ -36,18 +36,15 @@ int main(int argc, char *argv[])
      socket_memoria = conectar_a_socket(ip_memoria, puerto_memoria);
 
      log_info(logger, "Conectado a Memoria");
-     // enviar_mensaje("Hola, soy el CPU", socket_memoria);
 
      int fd_dispatch = iniciar_servidor(puerto_escucha_dispatch);
      int fd_interrupt = iniciar_servidor(puerto_escucha_interrupt);
+
      /* Esperamos a que se conecte el Kernel por el puerto dispatch */
      socket_dispatch = esperar_cliente(fd_dispatch);
-     log_info(logger, "Hola, el kernel se conecto por puerto dispatch");
 
      /* Esperamos a que se conecte el Kernel por el puerto interrupt */
      socket_interrupt = esperar_cliente(fd_interrupt);
-
-     log_info(logger, "Hola, el kernel se conecto por puerto interrupt");
 
      pthread_t thread_dispatch;
      pthread_t thread_ciclo_de_instruccion;
@@ -69,6 +66,7 @@ int main(int argc, char *argv[])
 
 void iniciar_semaforos (){
     sem_init(&sem_ciclo_de_instruccion, 0, 0);
+    sem_init(&sem_fin_ciclo_de_instruccion, 0, 1);
     pthread_mutex_init(&mutex_interrupciones, NULL);
 }
 
@@ -86,8 +84,7 @@ void escuchar_dispatch()
           switch (cod_op)
           {
           case OPERACION_EJECUTAR_HILO:
-
-
+               sem_wait(&sem_fin_ciclo_de_instruccion);
                buffer = recibir_buffer(&size, socket_dispatch);
 
                pcb = deserializar_hilo_a_cpu(buffer);
@@ -381,11 +378,7 @@ void ciclo_de_instruccion()
           sem_trywait(&sem_ciclo_de_instruccion);
      }
 
-
-
-
-
-
+          sem_post(&sem_fin_ciclo_de_instruccion);
      }
 }
 
