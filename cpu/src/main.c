@@ -85,6 +85,9 @@ void escuchar_dispatch()
           {
           case OPERACION_EJECUTAR_HILO:
                sem_wait(&sem_fin_ciclo_de_instruccion);
+               int valor;
+               sem_getvalue(&sem_fin_ciclo_de_instruccion, &valor);
+               log_debug(logger, "SEMAFORO FIN CICLO INSTRUCCION: %d", valor);
                buffer = recibir_buffer(&size, socket_dispatch);
 
                pcb = deserializar_hilo_a_cpu(buffer);
@@ -94,6 +97,7 @@ void escuchar_dispatch()
                pthread_mutex_unlock(&mutex_socket_memoria);
 
                contexto = deserializar_datos_contexto(contexto_devuelto);
+               log_debug(logger, "Contexto a seteado: %d:%d", contexto.pid, contexto.tid);
 
                sem_post(&sem_ciclo_de_instruccion);
 
@@ -380,9 +384,9 @@ void ciclo_de_instruccion()
           // Si el semáforo se iba a bloquear al inicio del while (semáforo con valor 0), no hace nada
           // ...continúa ejecutando para que se bloquee como estaba previsto
           sem_trywait(&sem_ciclo_de_instruccion);
+          sem_post(&sem_fin_ciclo_de_instruccion);
      }
 
-          sem_post(&sem_fin_ciclo_de_instruccion);
      }
 }
 
