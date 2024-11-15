@@ -93,4 +93,6 @@ void enviar_operacion_a_kernel(op_code operacion);
 
 void ejecutar_instruccion_hilo(op_code operacion, uint32_t tid);
 
+void incrementar_pc();
+
 #endif
