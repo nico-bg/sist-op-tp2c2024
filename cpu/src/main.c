@@ -321,6 +321,8 @@ void ciclo_de_instruccion()
                buffer_destroy(paquete_serializado);
                eliminar_paquete(paquete);
                destruir_datos_crear_hilo(datos);
+
+               sem_post(&sem_ciclo_de_instruccion);
           }
 
           if (strcmp(estructura_instruccion[0], "THREAD_CANCEL") == 0)
@@ -339,6 +341,7 @@ void ciclo_de_instruccion()
                incrementar_pc();
                actualizar_contexto();
                ejecutar_instruccion_hilo(OPERACION_ESPERAR_HILO, atoi(estructura_instruccion[1]));
+               sem_post(&sem_fin_ciclo_de_instruccion);
           }
 
           if (strcmp(estructura_instruccion[0], "THREAD_EXIT") == 0)
@@ -346,8 +349,8 @@ void ciclo_de_instruccion()
                log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros:  ", contexto.tid, estructura_instruccion[0]);
 
                incrementar_pc();
-               actualizar_contexto();
                enviar_operacion_a_kernel(OPERACION_FINALIZAR_HILO);
+               sem_post(&sem_fin_ciclo_de_instruccion);
           }
 
           if (strcmp(estructura_instruccion[0], "PROCESS_EXIT") == 0)
@@ -355,7 +358,6 @@ void ciclo_de_instruccion()
                log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros:  ", contexto.tid, estructura_instruccion[0]);
 
                incrementar_pc();
-               actualizar_contexto();
                enviar_operacion_a_kernel(OPERACION_FINALIZAR_PROCESO);
           }
 
@@ -369,7 +371,9 @@ void ciclo_de_instruccion()
         
           log_info(logger, "## Llega interrupción al puerto Interrupt");
 
-          actualizar_contexto();
+          if(strcmp(estructura_instruccion[0], "PROCESS_EXIT") != 0 && strcmp(estructura_instruccion[0], "THREAD_EXIT") != 0) {
+               actualizar_contexto();
+          }
 
           // Notificamos al Kernel que ya desalojamos el hilo
           t_buffer* buffer_interrupcion = buffer_create(sizeof(uint32_t));
@@ -734,6 +738,9 @@ void escuchar_interrupciones() {
                hay_interrupcion = true;
                pthread_mutex_unlock(&mutex_interrupciones);
                break;
+          case -1:
+               log_error(logger, "cliente desconectado");
+               return EXIT_FAILURE;
           default:
                log_debug(logger, "Operación desconocida en interrupt: %d", operacion);
                break;
