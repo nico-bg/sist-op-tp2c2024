@@ -67,10 +67,14 @@ uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
 
     nodo_hilo* actual = proceso->proceso.lista_hilos;
     nodo_hilo* siguiente;
+    t_datos_finalizacion_hilo* datos_fin_hilo;
+    datos_fin_hilo->pid = datos->pid;
 
     while(actual != NULL){ //Eliminamos todos los hilos del programa
         siguiente = actual->siguiente_nodo_hilo;
-        free(actual);
+        datos_fin_hilo->tid = actual->hilo.tid;
+        finalizar_hilo(datos_fin_hilo);
+        //free(actual);
         actual = siguiente;
     }
 
