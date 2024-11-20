@@ -20,6 +20,7 @@ static void enviar_hilo_a_cpu(t_tcb* hilo);
 static void procesar_instrucciones_cpu(t_tcb* hilo, bool enviar_a_cpu);
 static bool esta_en_blocked(t_tcb* hilo);
 static bool existe_tcb_en_lista(void* elemento);
+static void enviar_confirmacion();
 
 void* planificador_corto_plazo()
 {
@@ -27,6 +28,9 @@ void* planificador_corto_plazo()
         // Si ya no hay hilos en READY, esperamos hasta que se agreguen (hacer un sem_post)
         // ...al crear un proceso, hilo, al desalojar un proceso por quantum, etc
         sem_wait(&semaforo_estado_ready);
+        int valor;
+        sem_getvalue(&semaforo_estado_ready, &valor);
+        log_debug(logger, "SEMAFORO READY: %d", valor);
 
         pthread_mutex_lock(&mutex_estado_ready);
         t_tcb* siguiente_a_exec = obtener_siguiente_a_exec();
@@ -84,12 +88,15 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
         syscall_crear_hilo(datos_crear_hilo->archivo_pseudocodigo, datos_crear_hilo->prioridad);
         destruir_datos_crear_hilo(datos_crear_hilo);
 
+        enviar_confirmacion();
+
         // Continuamos ejecutando el hilo que solicitó la syscall
         procesar_instrucciones_cpu(hilo_en_ejecucion, false);
         break;
     case OPERACION_FINALIZAR_HILO:
         log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_EXIT", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
         syscall_finalizar_hilo();
+        enviar_confirmacion();
         break;
     case OPERACION_ESPERAR_HILO:
         log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_JOIN", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
@@ -101,10 +108,13 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
         bool hilo_bloqueado = syscall_esperar_hilo(datos_esperar_hilo->tid);
         destruir_datos_operacion_hilo(datos_esperar_hilo);
 
+        enviar_confirmacion();
+
         // Continuamos ejecutando el hilo que solicitó la syscall solo si el hilo no fue bloqueado por la syscall
         if(!hilo_bloqueado) {
             procesar_instrucciones_cpu(hilo_en_ejecucion, false);
         }
+
         break;
     case OPERACION_CREAR_MUTEX:
         log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_CREATE", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
@@ -182,6 +192,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
         }
 
         if(siguiente != NULL) {
+            sem_wait(&semaforo_estado_ready);
             transicion_ready_a_exec(siguiente);
             procesar_instrucciones_cpu(siguiente, true);
         }
@@ -384,4 +395,10 @@ static bool esta_en_blocked(t_tcb* hilo)
     pthread_mutex_unlock(&mutex_estado_blocked);
 
     return esta_bloqueado;
+}
+
+static void enviar_confirmacion() {
+    uint32_t op = OPERACION_CONFIRMAR;
+
+    send(socket_cpu_dispatch, &op, sizeof(uint32_t), 0);
 }

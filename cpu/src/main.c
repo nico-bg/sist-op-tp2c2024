@@ -2,15 +2,14 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+void ciclo_instruccion();
+
 t_config *config;
 t_log *logger;
 int socket_memoria;
 int socket_dispatch;
 int socket_interrupt;
 bool hay_interrupcion;
-
-sem_t sem_ciclo_de_instruccion;
-sem_t sem_fin_ciclo_de_instruccion;
 
 pthread_mutex_t mutex_interrupciones;
 pthread_mutex_t mutex_socket_memoria;
@@ -51,11 +50,9 @@ int main(int argc, char *argv[])
      pthread_t thread_interrupt;
 
      pthread_create(&thread_dispatch, NULL, escuchar_dispatch, NULL);
-     pthread_create(&thread_ciclo_de_instruccion, NULL, ciclo_de_instruccion, NULL);
      pthread_create(&thread_interrupt, NULL, escuchar_interrupciones, NULL);
 
      pthread_join(thread_dispatch, NULL);
-     pthread_join(thread_ciclo_de_instruccion, NULL);
      pthread_join(thread_interrupt, NULL);
 
 
@@ -65,8 +62,6 @@ int main(int argc, char *argv[])
 }
 
 void iniciar_semaforos (){
-    sem_init(&sem_ciclo_de_instruccion, 0, 0);
-    sem_init(&sem_fin_ciclo_de_instruccion, 0, 1);
     pthread_mutex_init(&mutex_interrupciones, NULL);
 }
 
@@ -84,10 +79,6 @@ void escuchar_dispatch()
           switch (cod_op)
           {
           case OPERACION_EJECUTAR_HILO:
-               sem_wait(&sem_fin_ciclo_de_instruccion);
-               int valor;
-               sem_getvalue(&sem_fin_ciclo_de_instruccion, &valor);
-               log_debug(logger, "SEMAFORO FIN CICLO INSTRUCCION: %d", valor);
                buffer = recibir_buffer(&size, socket_dispatch);
 
                pcb = deserializar_hilo_a_cpu(buffer);
@@ -99,7 +90,7 @@ void escuchar_dispatch()
                contexto = deserializar_datos_contexto(contexto_devuelto);
                log_debug(logger, "Contexto a seteado: %d:%d", contexto.pid, contexto.tid);
 
-               sem_post(&sem_ciclo_de_instruccion);
+               ciclo_de_instruccion();
 
                break;
           case -1:
@@ -115,251 +106,260 @@ void escuchar_dispatch()
 
 void ciclo_de_instruccion()
 {
+     // Fetch     
+     log_info(logger, " ## TID: %d  - FETCH - Program Counter: %d", contexto.tid, contexto.PC);
 
-     while (true)
+     bool siguiente_ciclo = false;
+     bool omitir_interrupcion = false;
+     bool debe_actualizar_contexto = false;
+
+     t_datos_obtener_instruccion *datos = malloc(sizeof(t_datos_obtener_instruccion));
+
+     datos->PC = contexto.PC;
+     datos->pid = contexto.pid;
+     datos->tid = contexto.tid;
+
+     t_buffer *buffer_pedido_instruccion = serializar_datos_solicitar_instruccion(datos);
+
+     char *instruccion = pedir_proxima_instruccion(socket_memoria, buffer_pedido_instruccion);
+
+     // Decode
+
+     char **estructura_instruccion = string_split(instruccion, " ");
+
+     if (strcmp(estructura_instruccion[0], "SET") == 0)
+     {     
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
+
+          setear_registro(estructura_instruccion[1], atoi(estructura_instruccion[2]));
+          incrementar_pc();
+
+          siguiente_ciclo = true;
+     }
+
+     if (strcmp(estructura_instruccion[0], "SUM") == 0)
      {
-          sem_wait(&sem_ciclo_de_instruccion);
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
 
-          // Fetch
+          sum_registro(estructura_instruccion[1], estructura_instruccion[2]);
+          incrementar_pc();
+
+          siguiente_ciclo = true;
+     }
+
+     if (strcmp(estructura_instruccion[0], "SUB") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
           
-          log_info(logger, " ## TID: %d  - FETCH - Program Counter: %d", contexto.tid, contexto.PC);
-    
+          sub_registro(estructura_instruccion[1], estructura_instruccion[2]);
+          incrementar_pc();
 
-          t_datos_obtener_instruccion *datos = malloc(sizeof(t_datos_obtener_instruccion));
+          siguiente_ciclo = true;
+     }
 
-          datos->PC = contexto.PC;
-          datos->pid = contexto.pid;
-          datos->tid = contexto.tid;
+     if (strcmp(estructura_instruccion[0], "READ_MEM") == 0)
+     {
+     
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
 
-          t_buffer *buffer_pedido_instruccion = serializar_datos_solicitar_instruccion(datos);
+          read_mem(estructura_instruccion[1], estructura_instruccion[2]);
+          incrementar_pc();
 
-          char *instruccion = pedir_proxima_instruccion(socket_memoria, buffer_pedido_instruccion);
+          siguiente_ciclo = true;
+     }
 
-          if (strlen(instruccion) == 0)
-          {
-               abort();
-          }
+     if (strcmp(estructura_instruccion[0], "WRITE_MEM") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
+          
+          write_mem(estructura_instruccion[1], estructura_instruccion[2]);
+          incrementar_pc();
 
+          siguiente_ciclo = true;
+     }
 
-          // Decode
+     if (strcmp(estructura_instruccion[0], "JNZ") == 0)
+     {
 
-          char **estructura_instruccion = string_split(instruccion, " ");
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
 
-          if (strcmp(estructura_instruccion[0], "SET") == 0)
-          {     
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
+          jnz_pc(estructura_instruccion[1], estructura_instruccion[2]);
 
-               setear_registro(estructura_instruccion[1], atoi(estructura_instruccion[2]));
-               incrementar_pc();
+          siguiente_ciclo = true;
+     }
 
-               sem_post(&sem_ciclo_de_instruccion);
-          }
+     if (strcmp(estructura_instruccion[0], "LOG") == 0)
 
-          if (strcmp(estructura_instruccion[0], "SUM") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
+     {
 
-               sum_registro(estructura_instruccion[1], estructura_instruccion[2]);
-               incrementar_pc();
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
 
-               sem_post(&sem_ciclo_de_instruccion);
-          }
+          log_info(logger, "El valor leido por instruccion LOG es: %d", obtener_registro(estructura_instruccion[1]));
+          incrementar_pc();
 
-          if (strcmp(estructura_instruccion[0], "SUB") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
-               
-               sub_registro(estructura_instruccion[1], estructura_instruccion[2]);
-               incrementar_pc();
+          siguiente_ciclo = true;
+     }
 
-               sem_post(&sem_ciclo_de_instruccion);
-          }
+     if (strcmp(estructura_instruccion[0], "MUTEX_CREATE") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
 
-          if (strcmp(estructura_instruccion[0], "READ_MEM") == 0)
-          {
-        
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
+          incrementar_pc();
 
-               read_mem(estructura_instruccion[1], estructura_instruccion[2]);
-               incrementar_pc();
+          ejecutar_instruccion_mutex(OPERACION_CREAR_MUTEX, estructura_instruccion[1]);
 
-               sem_post(&sem_ciclo_de_instruccion);
-          }
+          siguiente_ciclo = true;
+     }
 
-          if (strcmp(estructura_instruccion[0], "WRITE_MEM") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], estructura_instruccion[2]);
-               
-               write_mem(estructura_instruccion[1], estructura_instruccion[2]);
-               incrementar_pc();
+     if (strcmp(estructura_instruccion[0], "MUTEX_LOCK") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
 
-               sem_post(&sem_ciclo_de_instruccion);
-          }
+          incrementar_pc();
 
-          if (strcmp(estructura_instruccion[0], "JNZ") == 0)
-          {
+          ejecutar_instruccion_mutex(OPERACION_BLOQUEAR_MUTEX, estructura_instruccion[1]);
+     }
 
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
+     if (strcmp(estructura_instruccion[0], "MUTEX_UNLOCK") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
 
-               jnz_pc(estructura_instruccion[1], estructura_instruccion[2]);
+          incrementar_pc();
 
-               sem_post(&sem_ciclo_de_instruccion);
-          }
+          ejecutar_instruccion_mutex(OPERACION_DESBLOQUEAR_MUTEX, estructura_instruccion[1]);
 
-          if (strcmp(estructura_instruccion[0], "LOG") == 0)
+          siguiente_ciclo = true;
+     }
 
-          {
+     if (strcmp(estructura_instruccion[0], "DUMP_MEMORY") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros:  ", contexto.tid, estructura_instruccion[0]);
 
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
+          incrementar_pc();
 
-               log_info(logger, "El valor leido por instruccion LOG es: %d", obtener_registro(estructura_instruccion[1]));
-               incrementar_pc();
+          enviar_operacion_a_kernel(OPERACION_DUMP_MEMORY);
 
-               sem_post(&sem_ciclo_de_instruccion);
-          }
+          siguiente_ciclo = true;
+     }
 
-          if (strcmp(estructura_instruccion[0], "MUTEX_CREATE") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
+     if (strcmp(estructura_instruccion[0], "IO") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %d ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]));
 
-               incrementar_pc();
-               actualizar_contexto();
-               ejecutar_instruccion_mutex(OPERACION_CREAR_MUTEX, estructura_instruccion[1]);
-          }
+          incrementar_pc();
 
-          if (strcmp(estructura_instruccion[0], "MUTEX_LOCK") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
+          debe_actualizar_contexto = true;
 
-               incrementar_pc();
-               actualizar_contexto();
-               ejecutar_instruccion_mutex(OPERACION_BLOQUEAR_MUTEX, estructura_instruccion[1]);
-          }
-
-          if (strcmp(estructura_instruccion[0], "MUTEX_UNLOCK") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1]);
-
-               incrementar_pc();
-               actualizar_contexto();
-               ejecutar_instruccion_mutex(OPERACION_DESBLOQUEAR_MUTEX, estructura_instruccion[1]);
-          }
-
-          if (strcmp(estructura_instruccion[0], "DUMP_MEMORY") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros:  ", contexto.tid, estructura_instruccion[0]);
-
-               incrementar_pc();
-               actualizar_contexto();
-               enviar_operacion_a_kernel(OPERACION_DUMP_MEMORY);
-          }
-
-          if (strcmp(estructura_instruccion[0], "IO") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %d ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]));
-
-               incrementar_pc();
-               actualizar_contexto();
-
-               t_datos_operacion_io* datos = malloc(sizeof(t_datos_operacion_io));
-               datos->tiempo = atoi(estructura_instruccion[1]);
-
-               t_paquete* paquete = malloc(sizeof(t_paquete));
-               paquete->codigo_operacion = OPERACION_IO;
-               paquete->buffer = serializar_datos_operacion_io(datos);
-               t_buffer* paquete_serializado = serializar_paquete(paquete);
-
-               send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
-
-               buffer_destroy(paquete_serializado);
-               eliminar_paquete(paquete);
-               destruir_datos_operacion_io(datos);
-          }
-
-          if (strcmp(estructura_instruccion[0], "PROCESS_CREATE") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]), atoi(estructura_instruccion[3]));
-
-               incrementar_pc();
-               actualizar_contexto();
-
-               t_datos_crear_proceso* datos = malloc(sizeof(t_datos_crear_proceso));
-               datos->archivo_pseudocodigo = string_duplicate(estructura_instruccion[1]);
-               datos->tamanio_proceso = atoi(estructura_instruccion[2]);
-               datos->prioridad = atoi(estructura_instruccion[3]);
-
-               t_paquete* paquete = malloc(sizeof(t_paquete));
-               paquete->codigo_operacion = OPERACION_CREAR_PROCESO;
-               paquete->buffer = serializar_datos_crear_proceso(datos);
-               t_buffer* paquete_serializado = serializar_paquete(paquete);
-
-               send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
-
-               buffer_destroy(paquete_serializado);
-               eliminar_paquete(paquete);
-               destruir_datos_crear_proceso(datos);
-          }
-
-          if (strcmp(estructura_instruccion[0], "THREAD_CREATE") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
-
-               incrementar_pc();
-               actualizar_contexto();
-
-               t_datos_crear_hilo* datos = malloc(sizeof(t_datos_crear_hilo));
-               datos->archivo_pseudocodigo = string_duplicate(estructura_instruccion[1]);
-               datos->prioridad = atoi(estructura_instruccion[2]);
-
-               t_paquete* paquete = malloc(sizeof(t_paquete));
-               paquete->codigo_operacion = OPERACION_CREAR_HILO;
-               paquete->buffer = serializar_datos_crear_hilo(datos);
-               t_buffer* paquete_serializado = serializar_paquete(paquete);
-
-               send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
-
-               buffer_destroy(paquete_serializado);
-               eliminar_paquete(paquete);
-               destruir_datos_crear_hilo(datos);
-
-               sem_post(&sem_ciclo_de_instruccion);
-          }
-
-          if (strcmp(estructura_instruccion[0], "THREAD_CANCEL") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %d  ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]));
-
-               incrementar_pc();
-               actualizar_contexto();
-               ejecutar_instruccion_hilo(OPERACION_CANCELAR_HILO, atoi(estructura_instruccion[1]));
-          }
-
-          if (strcmp(estructura_instruccion[0], "THREAD_JOIN") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %d  ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]));
-
-               incrementar_pc();
-               actualizar_contexto();
-               ejecutar_instruccion_hilo(OPERACION_ESPERAR_HILO, atoi(estructura_instruccion[1]));
-               sem_post(&sem_fin_ciclo_de_instruccion);
-          }
-
-          if (strcmp(estructura_instruccion[0], "THREAD_EXIT") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros:  ", contexto.tid, estructura_instruccion[0]);
-
-               incrementar_pc();
-               enviar_operacion_a_kernel(OPERACION_FINALIZAR_HILO);
-               sem_post(&sem_fin_ciclo_de_instruccion);
-          }
-
-          if (strcmp(estructura_instruccion[0], "PROCESS_EXIT") == 0)
-          {
-               log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros:  ", contexto.tid, estructura_instruccion[0]);
-
-               incrementar_pc();
-               enviar_operacion_a_kernel(OPERACION_FINALIZAR_PROCESO);
-          }
+          t_datos_operacion_io* datos = malloc(sizeof(t_datos_operacion_io));
+          datos->tiempo = atoi(estructura_instruccion[1]);
+
+          t_paquete* paquete = malloc(sizeof(t_paquete));
+          paquete->codigo_operacion = OPERACION_IO;
+          paquete->buffer = serializar_datos_operacion_io(datos);
+          t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+          send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
+
+          buffer_destroy(paquete_serializado);
+          eliminar_paquete(paquete);
+          destruir_datos_operacion_io(datos);
+     }
+
+     if (strcmp(estructura_instruccion[0], "PROCESS_CREATE") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d %d ", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]), atoi(estructura_instruccion[3]));
+
+          incrementar_pc();
+
+          siguiente_ciclo = true;
+
+          t_datos_crear_proceso* datos = malloc(sizeof(t_datos_crear_proceso));
+          datos->archivo_pseudocodigo = string_duplicate(estructura_instruccion[1]);
+          datos->tamanio_proceso = atoi(estructura_instruccion[2]);
+          datos->prioridad = atoi(estructura_instruccion[3]);
+
+          t_paquete* paquete = malloc(sizeof(t_paquete));
+          paquete->codigo_operacion = OPERACION_CREAR_PROCESO;
+          paquete->buffer = serializar_datos_crear_proceso(datos);
+          t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+          send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
+
+          buffer_destroy(paquete_serializado);
+          eliminar_paquete(paquete);
+          destruir_datos_crear_proceso(datos);
+     }
+
+     if (strcmp(estructura_instruccion[0], "THREAD_CREATE") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %s %d", contexto.tid, estructura_instruccion[0], estructura_instruccion[1], atoi(estructura_instruccion[2]));
+
+          incrementar_pc();
+
+          siguiente_ciclo = true;
+
+          t_datos_crear_hilo* datos = malloc(sizeof(t_datos_crear_hilo));
+          datos->archivo_pseudocodigo = string_duplicate(estructura_instruccion[1]);
+          datos->prioridad = atoi(estructura_instruccion[2]);
+
+          t_paquete* paquete = malloc(sizeof(t_paquete));
+          paquete->codigo_operacion = OPERACION_CREAR_HILO;
+          paquete->buffer = serializar_datos_crear_hilo(datos);
+          t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+          send(socket_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
+
+          buffer_destroy(paquete_serializado);
+          eliminar_paquete(paquete);
+          destruir_datos_crear_hilo(datos);
+
+          esperar_confirmacion();
+     }
+
+     if (strcmp(estructura_instruccion[0], "THREAD_CANCEL") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %d  ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]));
+
+          incrementar_pc();
+
+          ejecutar_instruccion_hilo(OPERACION_CANCELAR_HILO, atoi(estructura_instruccion[1]));
+
+          siguiente_ciclo = true;
+     }
+
+     if (strcmp(estructura_instruccion[0], "THREAD_JOIN") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros: %d  ", contexto.tid, estructura_instruccion[0], atoi(estructura_instruccion[1]));
+
+          incrementar_pc();
+
+          ejecutar_instruccion_hilo(OPERACION_ESPERAR_HILO, atoi(estructura_instruccion[1]));
+          esperar_confirmacion();
+
+          omitir_interrupcion = true;
+          debe_actualizar_contexto = true;
+     }
+
+     if (strcmp(estructura_instruccion[0], "THREAD_EXIT") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros:  ", contexto.tid, estructura_instruccion[0]);
+
+          incrementar_pc();
+          enviar_operacion_a_kernel(OPERACION_FINALIZAR_HILO);
+          esperar_confirmacion();
+
+          omitir_interrupcion = true;
+     }
+
+     if (strcmp(estructura_instruccion[0], "PROCESS_EXIT") == 0)
+     {
+          log_info(logger, " ## TID: %d  - Ejecutando: %s - Parametros:  ", contexto.tid, estructura_instruccion[0]);
+
+          incrementar_pc();
+          enviar_operacion_a_kernel(OPERACION_FINALIZAR_PROCESO);
+
+          omitir_interrupcion = true;
+     }
 
      // CHECK INTERRUPT
      pthread_mutex_lock(&mutex_interrupciones);
@@ -367,13 +367,15 @@ void ciclo_de_instruccion()
      hay_interrupcion = false;
      pthread_mutex_unlock(&mutex_interrupciones);
 
-     if(es_necesario_interrupir) {
+     if((!es_necesario_interrupir || omitir_interrupcion) && debe_actualizar_contexto) {
+          actualizar_contexto();
+     }
+
+     if(es_necesario_interrupir && !omitir_interrupcion) {
         
           log_info(logger, "## Llega interrupción al puerto Interrupt");
 
-          if(strcmp(estructura_instruccion[0], "PROCESS_EXIT") != 0 && strcmp(estructura_instruccion[0], "THREAD_EXIT") != 0) {
-               actualizar_contexto();
-          }
+          actualizar_contexto();
 
           // Notificamos al Kernel que ya desalojamos el hilo
           t_buffer* buffer_interrupcion = buffer_create(sizeof(uint32_t));
@@ -382,15 +384,8 @@ void ciclo_de_instruccion()
           send(socket_dispatch, buffer_interrupcion->stream, buffer_interrupcion->size, 0);
 
           buffer_destroy(buffer_interrupcion);
-
-          // Si se supone que se debe seguir ejecutando la siguiente instrucción (semáforo con valor 1)
-          // ...decrementamos el semáforo para que se bloquee al inicio del while
-          // Si el semáforo se iba a bloquear al inicio del while (semáforo con valor 0), no hace nada
-          // ...continúa ejecutando para que se bloquee como estaba previsto
-          sem_trywait(&sem_ciclo_de_instruccion);
-          sem_post(&sem_fin_ciclo_de_instruccion);
-     }
-
+     } else if(siguiente_ciclo) {
+          ciclo_de_instruccion();
      }
 }
 
@@ -795,4 +790,13 @@ void ejecutar_instruccion_hilo(op_code operacion, uint32_t tid)
 void incrementar_pc()
 {
      contexto.PC += 1;
+}
+
+void esperar_confirmacion() {
+     op_code codigo_operacion = recibir_operacion(socket_dispatch);
+
+     if(codigo_operacion != OPERACION_CONFIRMAR) {
+          log_error(logger, "No se pudo confirmar la operacion");
+          abort();
+     }
 }
