@@ -5,7 +5,10 @@ t_log* logger_debug;
 t_config* config;
 int socket_cpu_dispatch;
 int socket_cpu_interrupt;
-int ULTIMO_PID = 0;
+
+// Inicializamos en -1 para que cuando se cree un nuevo proceso, el pid se asigne como ULTIMO_PID + 1
+// y no tener que agregar condicionales
+int ULTIMO_PID = -1;
 
 int main(int argc, char* argv[]) {
     char* ip_cpu;

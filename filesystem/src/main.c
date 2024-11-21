@@ -6,37 +6,70 @@ t_log* logger;
 t_config* config;
 
 int main(int argc, char* argv[]) {
-    char* puerto_escucha;
 
- 
+    pthread_t thread_memoria;
+
     config = iniciar_config("filesystem.config");
     logger = iniciar_logger(config, "filesystem.log", "FILESYSTEM");
-
-    inicializar_filesystem(config);
+    char* puerto_escucha;
 
     puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
 
+    inicializar_filesystem(config);
+
+    /* Conexión con la memoria */
     int fd_escucha = iniciar_servidor(puerto_escucha);
     log_debug(logger, "FileSystem listo para escuchar a la Memoria"); 
 
-    /* Estamos esperando a la Memoria */
-
-    int socket_memoria = esperar_cliente(fd_escucha);
-    log_debug(logger, "Se conectó la Memoria");
-
-    /* Escuchamos las peticiones que la Memoria*/
+    /* Escuchamos las peticiones de la memoria */
     while(1) {
-        pthread_t thread;
-        int *fd_conexion_ptr = malloc(sizeof(int));
-        *fd_conexion_ptr = accept(fd_escucha, NULL, NULL);
-        pthread_create(&thread, NULL, (void*) atender_peticiones, fd_conexion_ptr);
-        pthread_detach(thread);
+        pthread_t thread_memoria;
+        int *socket_memoria = malloc(sizeof(int));
+        *socket_memoria = accept(fd_escucha, NULL, NULL);
+        log_debug(logger, "Memoria conectada");
+        pthread_create(&thread_memoria, NULL, (void*) atender_memoria, socket_memoria);
+        pthread_detach(thread_memoria);
     }
 
     terminar_programa(logger, config);
 
     return EXIT_SUCCESS;
 }
+
+void atender_memoria(void* socket_cliente)
+{
+    int socket = *(int*)socket_cliente;
+    free(socket_cliente);
+
+    int cod_op = recibir_operacion(socket);
+
+    switch (cod_op) {
+        case -1:
+        log_error(logger, "La memoria se desconectó");
+        break;
+        default:
+        atender_peticion_filesystem_memoria(cod_op, socket);
+        break;
+    }
+}
+
+void atender_peticion_filesystem_memoria(int cod_op, int socket)
+{
+    switch(cod_op) {
+        case OPERACION_MENSAJE:
+        recibir_mensaje(socket,logger);
+        break;
+
+        case OPERACION_DUMP_MEMORY:
+        log_info(logger, "## Memory Dump solicitado ");
+        break;
+
+        default:
+        log_error(logger, "Memoria envió un código de operación desconocido: %d", cod_op);
+        break;
+    }
+}
+
 
 
 void verifica_existencia_path(char* mount_dir) {

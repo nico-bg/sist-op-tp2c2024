@@ -10,6 +10,9 @@
 
 void inicializar_filesystem();
 
+void atender_memoria(void*);
+void atender_peticion_filesystem_memoria(int cod_op, int socket);
+
 void terminar_programa(t_log* logger, t_config* config);
 
 

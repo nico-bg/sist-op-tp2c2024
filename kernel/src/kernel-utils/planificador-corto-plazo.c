@@ -1,7 +1,8 @@
 #include <kernel-utils/planificador-corto-plazo.h>
 
 // Necesaria para poder filtrar por prioridad en `obtener_lista_mayor_prioridad`
-int mayor_prioridad_en_ready;
+static int mayor_prioridad_en_ready;
+static int tid_auxiliar;
 
 static void transicion_exec_a_ready(t_tcb* hilo);
 static void transicion_ready_a_exec(t_tcb* hilo);
@@ -16,7 +17,10 @@ static void solicitar_desalojo_hilo_a_cpu(t_tcb* hilo);
 static void* temporizador_desalojo_por_quantum(void* arg);
 static t_tcb* obtener_siguiente_a_exec_colas_multinivel();
 static void enviar_hilo_a_cpu(t_tcb* hilo);
-static void procesar_instrucciones_cpu(t_tcb* hilo);
+static void procesar_instrucciones_cpu(t_tcb* hilo, bool enviar_a_cpu);
+static bool esta_en_blocked(t_tcb* hilo);
+static bool existe_tcb_en_lista(void* elemento);
+static void enviar_confirmacion();
 
 void* planificador_corto_plazo()
 {
@@ -24,13 +28,16 @@ void* planificador_corto_plazo()
         // Si ya no hay hilos en READY, esperamos hasta que se agreguen (hacer un sem_post)
         // ...al crear un proceso, hilo, al desalojar un proceso por quantum, etc
         sem_wait(&semaforo_estado_ready);
+        int valor;
+        sem_getvalue(&semaforo_estado_ready, &valor);
+        log_debug(logger, "SEMAFORO READY: %d", valor);
 
         pthread_mutex_lock(&mutex_estado_ready);
         t_tcb* siguiente_a_exec = obtener_siguiente_a_exec();
         transicion_ready_a_exec(siguiente_a_exec);
         pthread_mutex_unlock(&mutex_estado_ready);
 
-        procesar_instrucciones_cpu(siguiente_a_exec);
+        procesar_instrucciones_cpu(siguiente_a_exec, true);
     }
 
     return NULL;
@@ -40,15 +47,10 @@ void* planificador_corto_plazo()
  * @brief Envía el hilo a que sea procesado por la CPU y espera la llamada de alguna syscall u operación de desalojo
  * @brief Podemos utilizarla de manera recursiva para no replanificar si la operación no lo requiere
  */
-static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
+static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_cpu)
 {
-    enviar_hilo_a_cpu(hilo_en_ejecucion);
-    char* algoritmo_planificacion = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
-
-    if(strcmp(algoritmo_planificacion, "CMN") == 0) {
-        pthread_t hilo_desalojo_por_quantum;
-        pthread_create(&hilo_desalojo_por_quantum, NULL, temporizador_desalojo_por_quantum, hilo_en_ejecucion);
-        pthread_detach(hilo_desalojo_por_quantum);
+    if(enviar_a_cpu) {
+        enviar_hilo_a_cpu(hilo_en_ejecucion);
     }
 
     // Esperamos la respuesta de la CPU para procesar una syscall, un desalojo, un bloqueo, etc
@@ -69,7 +71,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
         destruir_datos_crear_proceso(datos_crear_proceso);
 
         // Continuamos ejecutando el hilo que solicitó la syscall
-        procesar_instrucciones_cpu(hilo_en_ejecucion);
+        procesar_instrucciones_cpu(hilo_en_ejecucion, false);
         break;
     case OPERACION_FINALIZAR_PROCESO:
         log_info(logger, "## (%d:%d) - Solicitó syscall: PROCESS_EXIT", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
@@ -86,12 +88,15 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
         syscall_crear_hilo(datos_crear_hilo->archivo_pseudocodigo, datos_crear_hilo->prioridad);
         destruir_datos_crear_hilo(datos_crear_hilo);
 
+        enviar_confirmacion();
+
         // Continuamos ejecutando el hilo que solicitó la syscall
-        procesar_instrucciones_cpu(hilo_en_ejecucion);
+        procesar_instrucciones_cpu(hilo_en_ejecucion, false);
         break;
     case OPERACION_FINALIZAR_HILO:
         log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_EXIT", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
         syscall_finalizar_hilo();
+        enviar_confirmacion();
         break;
     case OPERACION_ESPERAR_HILO:
         log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_JOIN", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
@@ -103,10 +108,13 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
         bool hilo_bloqueado = syscall_esperar_hilo(datos_esperar_hilo->tid);
         destruir_datos_operacion_hilo(datos_esperar_hilo);
 
+        enviar_confirmacion();
+
         // Continuamos ejecutando el hilo que solicitó la syscall solo si el hilo no fue bloqueado por la syscall
         if(!hilo_bloqueado) {
-            procesar_instrucciones_cpu(hilo_en_ejecucion);
+            procesar_instrucciones_cpu(hilo_en_ejecucion, false);
         }
+
         break;
     case OPERACION_CREAR_MUTEX:
         log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_CREATE", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
@@ -119,7 +127,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
         destruir_datos_operacion_mutex(datos_crear_mutex);
 
         // Continuamos ejecutando el hilo que solicitó la syscall
-        procesar_instrucciones_cpu(hilo_en_ejecucion);
+        procesar_instrucciones_cpu(hilo_en_ejecucion, false);
         break;
     case OPERACION_BLOQUEAR_MUTEX:
         log_info(logger, "## (%d:%d) - Solicitó syscall: MUTEX_LOCK", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
@@ -133,7 +141,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
 
         // Continuamos ejecutando el hilo que solicitó la syscall solo si el mutex fue asignado al hilo
         if(mutex_asignado) {
-            procesar_instrucciones_cpu(hilo_en_ejecucion);
+            procesar_instrucciones_cpu(hilo_en_ejecucion, false);
         }
         break;
     case OPERACION_DESBLOQUEAR_MUTEX:
@@ -147,7 +155,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
         destruir_datos_operacion_mutex(datos_desbloquear_mutex);
 
         // Continuamos ejecutando el hilo que solicitó la syscall
-        procesar_instrucciones_cpu(hilo_en_ejecucion);
+        procesar_instrucciones_cpu(hilo_en_ejecucion, false);
         break;
     case OPERACION_IO:
         log_info(logger, "## (%d:%d) - Solicitó syscall: IO", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
@@ -173,14 +181,20 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion)
         pthread_mutex_lock(&mutex_estado_ready);
         if(list_size(estado_ready) > 0) {
             siguiente = obtener_siguiente_a_exec();
+            log_debug(logger, "OPERACION DESALOJO. SIGUIENTE: %d:%d", siguiente->pid_padre, siguiente->tid);
         }
         pthread_mutex_unlock(&mutex_estado_ready);
 
-        transicion_exec_a_ready(hilo_en_ejecucion);
+        log_debug(logger, "MANDANDO A READY. Actual: %d:%d", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
+
+        if(!esta_en_blocked(hilo_en_ejecucion)) {
+            transicion_exec_a_ready(hilo_en_ejecucion);
+        }
 
         if(siguiente != NULL) {
+            sem_wait(&semaforo_estado_ready);
             transicion_ready_a_exec(siguiente);
-            procesar_instrucciones_cpu(siguiente);
+            procesar_instrucciones_cpu(siguiente, true);
         }
         break;
     default:
@@ -268,10 +282,9 @@ static t_tcb* obtener_siguiente_a_exec_colas_multinivel()
 {
     t_tcb* siguiente_a_exec = obtener_siguiente_a_exec_prioridades();
 
-    // Se movio este manejo a cuando se envia el hilo a la CPU
-    // pthread_t hilo_desalojo_por_quantum;
-    // pthread_create(&hilo_desalojo_por_quantum, NULL, temporizador_desalojo_por_quantum, siguiente_a_exec);
-    // pthread_detach(hilo_desalojo_por_quantum);
+    pthread_t hilo_desalojo_por_quantum;
+    pthread_create(&hilo_desalojo_por_quantum, NULL, temporizador_desalojo_por_quantum, siguiente_a_exec);
+    pthread_detach(hilo_desalojo_por_quantum);
 
     return siguiente_a_exec;
 }
@@ -359,9 +372,33 @@ static void enviar_hilo_a_cpu(t_tcb* hilo)
     /* Serializamos el paquete y enviamos los datos a la CPU */
     t_buffer* paquete_serializado = serializar_paquete(paquete);
     send(socket_cpu_dispatch, paquete_serializado->stream, paquete_serializado->size, 0);
+    log_debug(logger, "ENVIAMOS A LA CPU: %d:%d", hilo->pid_padre, hilo->tid);
 
     /* Liberamos la memoria correspondiente */
     free(datos_a_enviar);
     buffer_destroy(paquete_serializado);
     eliminar_paquete(paquete);
+}
+
+static bool existe_tcb_en_lista(void* elemento)
+{
+    t_tcb* hilo = (t_tcb*) elemento;
+
+    return hilo->tid == tid_auxiliar;
+}
+
+static bool esta_en_blocked(t_tcb* hilo)
+{
+    tid_auxiliar = hilo->tid;
+    pthread_mutex_lock(&mutex_estado_blocked);
+    bool esta_bloqueado = list_any_satisfy(estado_blocked, existe_tcb_en_lista);
+    pthread_mutex_unlock(&mutex_estado_blocked);
+
+    return esta_bloqueado;
+}
+
+static void enviar_confirmacion() {
+    uint32_t op = OPERACION_CONFIRMAR;
+
+    send(socket_cpu_dispatch, &op, sizeof(uint32_t), 0);
 }
