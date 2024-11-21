@@ -61,28 +61,41 @@ void iniciar_proceso(t_datos_inicializacion_proceso* datos, t_particion* partici
 
 uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
 
-    nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);
+    nodo_proceso* actual_proceso = nodo_primer_proceso;
+    nodo_proceso* previo_proceso = NULL;
 
-    int tamanio = proceso->proceso.tamanio;
+    //nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);
 
-    nodo_hilo* actual = proceso->proceso.lista_hilos;
-    nodo_hilo* siguiente;
+    while(actual_proceso != NULL && actual_proceso->proceso.pid != datos->pid){
+        previo_proceso = actual_proceso;
+        actual_proceso = actual_proceso->siguiente_nodo_proceso;
+    }
+
+    int tamanio = actual_proceso->proceso.tamanio;
+
+    nodo_hilo* actual_hilo = actual_proceso->proceso.lista_hilos;
+    nodo_hilo* siguiente_hilo;
     t_datos_finalizacion_hilo* datos_fin_hilo;
     datos_fin_hilo->pid = datos->pid;
 
-    while(actual != NULL){ //Eliminamos todos los hilos del programa
-        siguiente = actual->siguiente_nodo_hilo;
-        datos_fin_hilo->tid = actual->hilo.tid;
+    while(actual_hilo != NULL){ //Eliminamos todos los hilos del programa
+        siguiente_hilo = actual_hilo->siguiente_nodo_hilo;
+        datos_fin_hilo->tid = actual_hilo->hilo.tid;
         finalizar_hilo(datos_fin_hilo);
-        //free(actual);
-        actual = siguiente;
+        actual_hilo = siguiente_hilo;
     }
 
     t_particion* particion = buscar_particion_por_pid(datos->pid);
 
     desasignar_particion(particion);
 
-    free(proceso);
+    if(previo_proceso == NULL){
+        nodo_primer_proceso = actual_proceso->siguiente_nodo_proceso;
+    } else {
+        previo_proceso->siguiente_nodo_proceso = actual_proceso->siguiente_nodo_proceso;
+    }
+
+    free(actual_proceso);
 
     return tamanio;
 }
@@ -121,7 +134,25 @@ void iniciar_hilo(t_datos_inicializacion_hilo* datos){
 
 void finalizar_hilo(t_datos_finalizacion_hilo* datos){
 
-    nodo_hilo* actual = buscar_hilo_por_tid(datos->pid, datos->tid);
+    nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);
+
+    nodo_hilo* actual = proceso->proceso.lista_hilos;
+    nodo_hilo* previo = NULL;
+
+    while(actual != NULL && actual->hilo.tid != datos->tid){
+        previo = actual;
+        actual = actual->siguiente_nodo_hilo;
+    }
+
+    if(actual == NULL){
+        log_error(logger, "ERROR AL ELIMINAR HILO: HILO NO ENCONTRADO");
+    }
+
+    if(previo == NULL){
+        proceso->proceso.lista_hilos = actual->siguiente_nodo_hilo;
+    } else {
+        previo->siguiente_nodo_hilo = actual->siguiente_nodo_hilo;
+    }
 
     liberar_instrucciones(actual->hilo.instrucciones);
     free(actual);
