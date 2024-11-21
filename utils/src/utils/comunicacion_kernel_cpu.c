@@ -53,7 +53,7 @@ void destruir_datos_crear_hilo(t_datos_crear_hilo* datos)
 t_buffer* serializar_datos_crear_proceso(t_datos_crear_proceso* datos)
 {
     int archivo_pseudocodigo_length = strlen(datos->archivo_pseudocodigo) + 1;
-    int tamanio_buffer = 2 * sizeof(uint32_t) + archivo_pseudocodigo_length;
+    int tamanio_buffer = 3 * sizeof(uint32_t) + archivo_pseudocodigo_length;
     t_buffer* buffer = buffer_create(tamanio_buffer);
 
     buffer_add_string(buffer, archivo_pseudocodigo_length, datos->archivo_pseudocodigo);
@@ -84,7 +84,7 @@ void destruir_datos_crear_proceso(t_datos_crear_proceso* datos)
 t_buffer* serializar_datos_operacion_mutex(t_datos_operacion_mutex* datos)
 {
     int recurso_length = strlen(datos->recurso) + 1;
-    t_buffer* buffer = buffer_create(recurso_length);
+    t_buffer* buffer = buffer_create(recurso_length + sizeof(uint32_t));
 
     buffer_add_string(buffer, recurso_length, datos->recurso);
 

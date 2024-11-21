@@ -68,6 +68,9 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente){
         case OPERACION_LEER_MEMORIA:
             buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_leer_memoria*)deserializar_datos_leer_memoria(buffer);
+
+            uint32_t dato_leido = leer_memoria(datos);
+            send(socket_cliente, &dato_leido, sizeof(uint32_t), 0);
             break;
 
         case OPERACION_ESCRIBIR_MEMORIA:

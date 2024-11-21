@@ -88,6 +88,7 @@ void escuchar_dispatch()
                pthread_mutex_unlock(&mutex_socket_memoria);
 
                contexto = deserializar_datos_contexto(contexto_devuelto);
+
                log_debug(logger, "Contexto a seteado: %d:%d", contexto.pid, contexto.tid);
 
                ciclo_de_instruccion();
@@ -498,7 +499,6 @@ void sub_registro(char *registro1, char *registro2)
 
 void read_mem(char *registro1, char *registro2)
 {
-     int dir_logica = 300;
      // READ_MEM AX OtroRegistro
      uint32_t valor_registro2 = obtener_registro(registro2);
 
@@ -547,10 +547,29 @@ void write_mem(char *registro1, char *registro2)
      uint32_t valor_registro1 = obtener_registro(registro1);
      int dir_fisica = mmu_dirLog_dirfis(valor_registro1);
 
+     t_datos_escribir_memoria* datos = malloc(sizeof(t_datos_escribir_memoria));
+     datos->pid = contexto.pid;
+     datos->tid = contexto.tid;
+     datos->dir_fisica = dir_fisica;
+     datos->tamanio = sizeof(uint32_t);
+     datos->dato_a_escribir = obtener_registro(registro2);
+
+     t_paquete* paquete = malloc(sizeof(t_paquete));
+     paquete->codigo_operacion = OPERACION_ESCRIBIR_MEMORIA;
+     paquete->buffer = serializar_datos_escribir_memoria(datos);
+
+     t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+     send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+
+     op_code codigo_operacion = recibir_operacion(socket_memoria);
+
+     if(codigo_operacion != OPERACION_CONFIRMAR) {
+          log_error(logger, "No se pudo confirmar la operación de WRITE_MEM. Cod: %d", codigo_operacion);
+          abort();
+     }
 
      log_info(logger, " ## TID: %d - Accion: ESCRITURA - Dirección Fisica: %d", contexto.tid, dir_fisica);
-
-     //////escritura_memoria(socket_memoria, pid, dir_fisica, contexto.AX);
 }
 
 int mmu_dirLog_dirfis(int dir_logica)
@@ -642,34 +661,27 @@ char *pedir_proxima_instruccion(int servidor_memoria, t_buffer *buffer_pedido_de
 u_int32_t lectura_memoria(u_int32_t dir_fisica)
 {
      // Empaquetamos y serializamos los datos junto con el código de operación
-     t_paquete *paquete = malloc(sizeof(t_paquete));
-
      t_datos_leer_memoria *datos = malloc(sizeof(t_datos_leer_memoria));
-     
+     datos->dir_fisica = dir_fisica;
      datos->pid = contexto.pid;
      datos->tid = contexto.tid;
-     datos->dir_fisica = dir_fisica;
-     datos->tamanio = sizeof(u_int32_t);
+     datos->tamanio = sizeof(uint32_t);
 
-     t_buffer *buffer_pedido_leer_memoria = serializar_datos_solicitar_instruccion(datos);
+     t_paquete *paquete = malloc(sizeof(t_paquete));
+     paquete->codigo_operacion = OPERACION_LEER_MEMORIA;
+     paquete->buffer = serializar_datos_leer_memoria(datos);
 
-     paquete->buffer = buffer_pedido_leer_memoria;
      t_buffer *paquete_serializado = serializar_paquete(paquete);
-
 
      log_info(logger, " ## TID: %d - Accion: LEER - Dirección Fisica: %d", contexto.tid, dir_fisica);
 
-
-      send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
-
-     buffer_destroy(paquete_serializado);
-     eliminar_paquete(paquete);send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+     send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
 
      buffer_destroy(paquete_serializado);
      eliminar_paquete(paquete);
-     
+     destruir_datos_leer_memoria(datos);
 
-     u_int32_t valor;
+     uint32_t valor;
 
      recv(socket_memoria, &valor, sizeof(u_int32_t), MSG_WAITALL);
 
