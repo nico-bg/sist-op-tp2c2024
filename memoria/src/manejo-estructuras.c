@@ -273,7 +273,7 @@ nodo_hilo* buscar_ultimo_hilo(uint32_t pid){
 
 
 t_contexto* devolver_contexto_ejecucion(t_cpu_solicitar_contexto* datos){
-    if(datos->pid == 1 && datos->tid == 1) {
+    if(datos->pid == 1 && datos->tid == 3) {
         log_debug(logger, "pid 1, tid 1");
     }
     nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);

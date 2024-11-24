@@ -160,6 +160,8 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
         syscall_desbloquear_mutex(datos_desbloquear_mutex->recurso);
         destruir_datos_operacion_mutex(datos_desbloquear_mutex);
 
+        enviar_operacion(OPERACION_CONFIRMAR);
+
         // Continuamos ejecutando el hilo que solicitó la syscall
         procesar_instrucciones_cpu(hilo_en_ejecucion, false);
         break;

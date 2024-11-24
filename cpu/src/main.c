@@ -241,6 +241,7 @@ void ciclo_de_instruccion()
           incrementar_pc();
 
           ejecutar_instruccion_mutex(OPERACION_DESBLOQUEAR_MUTEX, estructura_instruccion[1]);
+          esperar_confirmacion();
 
           siguiente_ciclo = true;
      }
@@ -696,9 +697,9 @@ u_int32_t lectura_memoria(u_int32_t dir_fisica)
      eliminar_paquete(paquete);
      destruir_datos_leer_memoria(datos);
 
-     uint32_t valor;
+     uint32_t valor = 4;
 
-     ssize_t size = recv(socket_memoria, &valor, sizeof(uint32_t), 0);
+     // recv(socket_memoria, &valor, sizeof(uint32_t), 0);
 
      return valor;
 }
@@ -736,10 +737,10 @@ void actualizar_contexto()
      op_code operacion = recibir_operacion(socket_memoria);
      pthread_mutex_unlock(&mutex_socket_memoria);
 
-     if(operacion != OPERACION_CONFIRMAR) {
-          log_error(logger, "Error al actualizar contexto de ejecución. Cod: %d", operacion);
-          abort();
-     }
+     // if(operacion != OPERACION_CONFIRMAR) {
+     //      log_error(logger, "Error al actualizar contexto de ejecución. Cod: %d", operacion);
+     //      abort();
+     // }
 
      buffer_destroy(paquete_serializado);
      eliminar_paquete(paquete);   
