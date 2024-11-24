@@ -20,7 +20,7 @@ static void enviar_hilo_a_cpu(t_tcb* hilo);
 static void procesar_instrucciones_cpu(t_tcb* hilo, bool enviar_a_cpu);
 static bool esta_en_blocked(t_tcb* hilo);
 static bool existe_tcb_en_lista(void* elemento);
-static void enviar_confirmacion();
+static void enviar_operacion(op_code operacion);
 
 void* planificador_corto_plazo()
 {
@@ -88,7 +88,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
         syscall_crear_hilo(datos_crear_hilo->archivo_pseudocodigo, datos_crear_hilo->prioridad);
         destruir_datos_crear_hilo(datos_crear_hilo);
 
-        enviar_confirmacion();
+        enviar_operacion(OPERACION_CONFIRMAR);
 
         // Continuamos ejecutando el hilo que solicitó la syscall
         procesar_instrucciones_cpu(hilo_en_ejecucion, false);
@@ -96,7 +96,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
     case OPERACION_FINALIZAR_HILO:
         log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_EXIT", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
         syscall_finalizar_hilo();
-        enviar_confirmacion();
+        enviar_operacion(OPERACION_CONFIRMAR);
         break;
     case OPERACION_ESPERAR_HILO:
         log_info(logger, "## (%d:%d) - Solicitó syscall: THREAD_JOIN", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
@@ -108,7 +108,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
         bool hilo_bloqueado = syscall_esperar_hilo(datos_esperar_hilo->tid);
         destruir_datos_operacion_hilo(datos_esperar_hilo);
 
-        enviar_confirmacion();
+        enviar_operacion(OPERACION_CONFIRMAR);
 
         // Continuamos ejecutando el hilo que solicitó la syscall solo si el hilo no fue bloqueado por la syscall
         if(!hilo_bloqueado) {
@@ -126,6 +126,8 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
         syscall_crear_mutex(datos_crear_mutex->recurso);
         destruir_datos_operacion_mutex(datos_crear_mutex);
 
+        enviar_operacion(OPERACION_CONFIRMAR);
+
         // Continuamos ejecutando el hilo que solicitó la syscall
         procesar_instrucciones_cpu(hilo_en_ejecucion, false);
         break;
@@ -141,7 +143,11 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
 
         // Continuamos ejecutando el hilo que solicitó la syscall solo si el mutex fue asignado al hilo
         if(mutex_asignado) {
+            enviar_operacion(OPERACION_CONFIRMAR);
             procesar_instrucciones_cpu(hilo_en_ejecucion, false);
+        } else {
+            // Indicamos que el hilo fue bloqueado porque otro hilo ya tiene asignado el mutex
+            enviar_operacion(OPERACION_NOTIFICAR_ERROR);
         }
         break;
     case OPERACION_DESBLOQUEAR_MUTEX:
@@ -397,8 +403,6 @@ static bool esta_en_blocked(t_tcb* hilo)
     return esta_bloqueado;
 }
 
-static void enviar_confirmacion() {
-    uint32_t op = OPERACION_CONFIRMAR;
-
-    send(socket_cpu_dispatch, &op, sizeof(uint32_t), 0);
+static void enviar_operacion(op_code operacion) {
+    send(socket_cpu_dispatch, &operacion, sizeof(uint32_t), 0);
 }

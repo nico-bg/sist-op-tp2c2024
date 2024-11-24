@@ -191,7 +191,8 @@ void atender_peticion_cpu(int cod_op, int socket)
             t_datos_leer_memoria* datos_leer_memoria = (t_datos_leer_memoria*)leer_buffer_cpu(cod_op, socket);
             log_info(logger, "## Lectura - (PID:TID) - (%d:%d) - Dir. Física: %d - Tamaño: %d", datos_leer_memoria->pid, datos_leer_memoria->tid, datos_leer_memoria->dir_fisica, datos_leer_memoria->tamanio);
             uint32_t dato_leido = leer_memoria(datos_leer_memoria);
-            enviar_buffer(cod_op, socket, dato_leido);
+            send(socket, &dato_leido, sizeof(uint32_t), 0);
+            // enviar_buffer(cod_op, socket, dato_leido);
             break;
 
         case OPERACION_ESCRIBIR_MEMORIA:

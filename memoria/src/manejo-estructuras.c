@@ -122,10 +122,14 @@ void iniciar_hilo(t_datos_inicializacion_hilo* datos){
 
     nuevo_nodo_hilo->siguiente_nodo_hilo = NULL;
 
+    if(datos->pid == 1) {
+        log_debug(logger, "pid 1");
+    }
+
     if(nodo_proceso->proceso.lista_hilos == NULL){   // Aun no se inicializó ningún hilo en el proceso
         nodo_proceso->proceso.lista_hilos = nuevo_nodo_hilo;
     } else {                                // El proceso ya tenía al menos un hilo
-        nodo_hilo* ultimo_hilo = buscar_ultimo_hilo(nodo_proceso->proceso.lista_hilos->hilo.tid);
+        nodo_hilo* ultimo_hilo = buscar_ultimo_hilo(nodo_proceso->proceso.pid);
         ultimo_hilo->siguiente_nodo_hilo = nuevo_nodo_hilo;
     }
 
@@ -269,7 +273,9 @@ nodo_hilo* buscar_ultimo_hilo(uint32_t pid){
 
 
 t_contexto* devolver_contexto_ejecucion(t_cpu_solicitar_contexto* datos){
-
+    if(datos->pid == 1 && datos->tid == 1) {
+        log_debug(logger, "pid 1, tid 1");
+    }
     nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);
     nodo_hilo* hilo = buscar_hilo_por_tid(datos->pid, datos->tid);
 
