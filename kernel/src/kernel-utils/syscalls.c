@@ -202,6 +202,7 @@ void syscall_finalizar_proceso()
     }
 
     log_info(logger, "## Finaliza el proceso %d", proceso->pid);
+    sem_post(&semaforo_memoria_suficiente);
     destruir_pcb(proceso);
 }
 

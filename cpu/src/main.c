@@ -264,6 +264,7 @@ void ciclo_de_instruccion()
           incrementar_pc();
 
           debe_actualizar_contexto = true;
+          omitir_interrupcion = true;
 
           t_datos_operacion_io* datos = malloc(sizeof(t_datos_operacion_io));
           datos->tiempo = atoi(estructura_instruccion[1]);
