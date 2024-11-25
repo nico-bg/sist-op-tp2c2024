@@ -202,6 +202,7 @@ void syscall_finalizar_proceso()
     }
 
     log_info(logger, "## Finaliza el proceso %d", proceso->pid);
+    sem_post(&semaforo_memoria_suficiente);
     destruir_pcb(proceso);
 }
 
@@ -246,7 +247,7 @@ bool syscall_bloquear_mutex(char* recurso)
         return true;
     } else {
         transicion_exec_a_blocked();
-        queue_push(mutex->hilos_bloqueados, estado_exec);
+        queue_push(mutex->hilos_bloqueados, hilo_en_ejecucion);
 
         log_info(logger, "## (%d:%d) - Bloqueado por: MUTEX", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
 
@@ -443,6 +444,7 @@ static bool encontrar_proceso_por_pid_auxiliar(void* elemento)
  */
 static t_pcb* buscar_proceso(uint32_t pid)
 {
+    pid_auxiliar = pid;
     pthread_mutex_lock(&mutex_lista_procesos);
     t_pcb* proceso_encontrado = list_find(lista_procesos, encontrar_proceso_por_pid_auxiliar);
     pthread_mutex_unlock(&mutex_lista_procesos);

@@ -209,6 +209,8 @@ void ciclo_de_instruccion()
 
           ejecutar_instruccion_mutex(OPERACION_CREAR_MUTEX, estructura_instruccion[1]);
 
+          esperar_confirmacion();
+
           siguiente_ciclo = true;
      }
 
@@ -219,6 +221,17 @@ void ciclo_de_instruccion()
           incrementar_pc();
 
           ejecutar_instruccion_mutex(OPERACION_BLOQUEAR_MUTEX, estructura_instruccion[1]);
+
+          op_code codigo_operacion = recibir_operacion(socket_dispatch);
+
+          // Si el mutex fue asignado al hilo actual, continuamos ejecutando
+          // Caso contrario, fue bloqueado por el mutex
+          if(codigo_operacion == OPERACION_CONFIRMAR) {
+               siguiente_ciclo = true;
+          } else if (codigo_operacion == OPERACION_NOTIFICAR_ERROR) {
+               omitir_interrupcion = true;
+               debe_actualizar_contexto = true;
+          }
      }
 
      if (strcmp(estructura_instruccion[0], "MUTEX_UNLOCK") == 0)
@@ -228,6 +241,7 @@ void ciclo_de_instruccion()
           incrementar_pc();
 
           ejecutar_instruccion_mutex(OPERACION_DESBLOQUEAR_MUTEX, estructura_instruccion[1]);
+          esperar_confirmacion();
 
           siguiente_ciclo = true;
      }
@@ -250,6 +264,7 @@ void ciclo_de_instruccion()
           incrementar_pc();
 
           debe_actualizar_contexto = true;
+          omitir_interrupcion = true;
 
           t_datos_operacion_io* datos = malloc(sizeof(t_datos_operacion_io));
           datos->tiempo = atoi(estructura_instruccion[1]);
@@ -505,7 +520,9 @@ void read_mem(char *registro1, char *registro2)
      if(mmu(valor_registro2) == 1) {
           int dir_fisica = mmu_dirLog_dirfis(valor_registro2);
 
+          pthread_mutex_lock(&mutex_socket_memoria);
           uint32_t valor_leido = lectura_memoria(dir_fisica);
+          pthread_mutex_unlock(&mutex_socket_memoria);
 
           setear_registro(registro1, valor_leido);
      }
@@ -681,11 +698,13 @@ u_int32_t lectura_memoria(u_int32_t dir_fisica)
      eliminar_paquete(paquete);
      destruir_datos_leer_memoria(datos);
 
-     uint32_t valor;
+     // Recibimos el dato que fue leido en memoria
+     recibir_operacion(socket_memoria);
+     int size;
+     t_buffer* buffer = recibir_buffer(&size, socket_memoria);
+     uint32_t dato_leido = buffer_read_uint32(buffer);
 
-     recv(socket_memoria, &valor, sizeof(u_int32_t), MSG_WAITALL);
-
-     return valor;
+     return dato_leido;
 }
 
 void actualizar_contexto()
@@ -721,10 +740,10 @@ void actualizar_contexto()
      op_code operacion = recibir_operacion(socket_memoria);
      pthread_mutex_unlock(&mutex_socket_memoria);
 
-     if(operacion != OPERACION_CONFIRMAR) {
-          log_error(logger, "Error al actualizar contexto de ejecución. Cod: %d", operacion);
-          abort();
-     }
+     // if(operacion != OPERACION_CONFIRMAR) {
+     //      log_error(logger, "Error al actualizar contexto de ejecución. Cod: %d", operacion);
+     //      abort();
+     // }
 
      buffer_destroy(paquete_serializado);
      eliminar_paquete(paquete);   
@@ -808,7 +827,7 @@ void esperar_confirmacion() {
      op_code codigo_operacion = recibir_operacion(socket_dispatch);
 
      if(codigo_operacion != OPERACION_CONFIRMAR) {
-          log_error(logger, "No se pudo confirmar la operacion");
+          log_error(logger, "No se pudo confirmar la operacion. Cod: %d", codigo_operacion);
           abort();
      }
 }
