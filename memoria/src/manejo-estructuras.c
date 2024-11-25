@@ -64,8 +64,6 @@ uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
     nodo_proceso* actual_proceso = nodo_primer_proceso;
     nodo_proceso* previo_proceso = NULL;
 
-    //nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);
-
     while(actual_proceso != NULL && actual_proceso->proceso.pid != datos->pid){
         previo_proceso = actual_proceso;
         actual_proceso = actual_proceso->siguiente_nodo_proceso;
