@@ -246,7 +246,7 @@ bool syscall_bloquear_mutex(char* recurso)
         return true;
     } else {
         transicion_exec_a_blocked();
-        queue_push(mutex->hilos_bloqueados, estado_exec);
+        queue_push(mutex->hilos_bloqueados, hilo_en_ejecucion);
 
         log_info(logger, "## (%d:%d) - Bloqueado por: MUTEX", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
 

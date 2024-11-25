@@ -68,9 +68,6 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente){
         case OPERACION_LEER_MEMORIA:
             buffer = recibir_buffer(&length, socket_cliente);
             datos = (t_datos_leer_memoria*)deserializar_datos_leer_memoria(buffer);
-
-            uint32_t dato_leido = leer_memoria(datos);
-            send(socket_cliente, &dato_leido, sizeof(uint32_t), 0);
             break;
 
         case OPERACION_ESCRIBIR_MEMORIA:
@@ -133,9 +130,15 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
             break;
         case OPERACION_LEER_MEMORIA:
             buffer = buffer_create(sizeof(uint32_t));
-            buffer_add_uint32(buffer, (uint32_t) datos);
-            send(socket_cliente, buffer->stream, buffer->size, 0);
-            buffer_destroy(buffer);
+            uint32_t dato_leido = (uint32_t)datos;
+            buffer_add_uint32(buffer, dato_leido);
+
+            paquete = malloc(sizeof(t_paquete));
+            paquete->codigo_operacion = OPERACION_LEER_MEMORIA;
+            paquete->buffer = buffer;
+            paquete_serializado = serializar_paquete(paquete);
+
+            send(socket_cliente, paquete_serializado->stream, paquete_serializado->size, 0);
             break;
 
         default:

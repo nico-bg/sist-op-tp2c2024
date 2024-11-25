@@ -30,7 +30,6 @@ void* planificador_corto_plazo()
         sem_wait(&semaforo_estado_ready);
         int valor;
         sem_getvalue(&semaforo_estado_ready, &valor);
-        log_debug(logger, "SEMAFORO READY: %d", valor);
 
         pthread_mutex_lock(&mutex_estado_ready);
         t_tcb* siguiente_a_exec = obtener_siguiente_a_exec();
@@ -192,8 +191,6 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
             log_debug(logger, "OPERACION DESALOJO. SIGUIENTE: %d:%d", siguiente->pid_padre, siguiente->tid);
         }
         pthread_mutex_unlock(&mutex_estado_ready);
-
-        log_debug(logger, "MANDANDO A READY. Actual: %d:%d", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
 
         if(!esta_en_blocked(hilo_en_ejecucion)) {
             transicion_exec_a_ready(hilo_en_ejecucion);
