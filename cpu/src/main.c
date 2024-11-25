@@ -827,7 +827,7 @@ void esperar_confirmacion() {
      op_code codigo_operacion = recibir_operacion(socket_dispatch);
 
      if(codigo_operacion != OPERACION_CONFIRMAR) {
-          log_error(logger, "No se pudo confirmar la operacion");
+          log_error(logger, "No se pudo confirmar la operacion. Cod: %d", codigo_operacion);
           abort();
      }
 }

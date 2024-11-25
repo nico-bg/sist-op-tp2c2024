@@ -203,7 +203,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
         }
         break;
     default:
-        log_debug(logger_debug, "Motivo de devolución desconocido");
+        log_debug(logger_debug, "Motivo de devolución desconocido. Cod: %d", operacion);
         break;
     }
 }
