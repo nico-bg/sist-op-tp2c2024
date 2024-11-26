@@ -46,7 +46,6 @@ void* planificador_largo_plazo()
         if(resultado == OPERACION_CONFIRMAR) {
             transicion_new_a_ready(proceso_a_inicializar, hilo_principal);
             log_info(logger, "## (%d:%d) Se crea el Hilo - Estado: READY", hilo_principal->pid_padre, hilo_principal->tid);
-            log_debug(logger, "LISTA ESTADO READY: %d", list_size(estado_ready));
         }
     }
 }
