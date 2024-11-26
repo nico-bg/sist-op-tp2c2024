@@ -29,13 +29,6 @@ void* planificador_corto_plazo()
         // ...al crear un proceso, hilo, al desalojar un proceso por quantum, etc
         sem_wait(&semaforo_estado_ready);
 
-        int valor;
-
-        sem_getvalue(&semaforo_estado_ready, &valor);
-        log_debug(logger, "ESTADO READY: %d", valor);
-        log_debug(logger, "LISTA READY: %d", list_size(estado_ready));
-        log_debug(logger, "ESTADO BLOCKED: %d", list_size(estado_blocked));
-
         pthread_mutex_lock(&mutex_estado_ready);
         t_tcb* siguiente_a_exec = obtener_siguiente_a_exec();
         transicion_ready_a_exec(siguiente_a_exec);
