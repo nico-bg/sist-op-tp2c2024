@@ -1,5 +1,6 @@
 #include <utils/comunicacion_memoria_filesystem.h>
 
+
 t_buffer* serializar_datos_dump_memory_fs(t_datos_dump_memory_fs* datos)
 {
     int tamanio_nombre_archivo =  strlen(datos->nombre_archivo) + 1;
@@ -25,6 +26,11 @@ t_datos_dump_memory_fs* deserializar_datos_dump_memory_fs(t_buffer* buffer)
     buffer_read(buffer, datos->contenido, datos->tamanio);
 
     return datos;
+}
+
+void enviar_respuesta_operacion(int socket, bool resultado) {
+    uint32_t respuesta = resultado ? 1 : 0;
+    send(socket, &respuesta, sizeof(uint32_t), 0);
 }
 
 void destruir_datos_dump_memory_fs(t_datos_dump_memory_fs* datos)

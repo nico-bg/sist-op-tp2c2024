@@ -39,4 +39,6 @@ void buffer_add_string(t_buffer *buffer, uint32_t length, char *string);
 // Lee un string y su longitud del buffer y avanza el offset
 char *buffer_read_string(t_buffer *buffer, uint32_t *length);
 
+
+t_buffer* buffer_recibir(int socket);
 #endif

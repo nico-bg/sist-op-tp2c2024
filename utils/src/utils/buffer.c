@@ -52,3 +52,22 @@ char *buffer_read_string(t_buffer *buffer, uint32_t *length) {
     buffer_read(buffer, string, *length);
     return string;
 }
+
+t_buffer *buffer_recibir(int socket) {
+    // Leer el tamaño del buffer desde el socket
+    uint32_t size;
+    if (recv(socket, &size, sizeof(uint32_t), MSG_WAITALL) <= 0) {
+        return NULL; // Error o desconexión
+    }
+
+    // Crear el buffer
+    t_buffer *buffer = buffer_create(size);
+
+    // Leer el contenido del buffer
+    if (recv(socket, buffer->stream, size, MSG_WAITALL) <= 0) {
+        buffer_destroy(buffer);
+        return NULL; // Error o desconexión
+    }
+
+    return buffer;
+}
