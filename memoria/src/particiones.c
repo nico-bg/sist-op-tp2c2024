@@ -82,6 +82,7 @@ void asignar_particion(t_particion* particion, uint32_t tamanio_proceso, uint32_
 {
     particion->pid = pid;
     particion->esta_libre = false;
+    log_debug(logger, "Se asigna particion con tamaño %d a proceso con PID <%d> y tamaño %d", particion->tamanio, pid, tamanio_proceso);
     //tamanio_proceso no se usa
     //se puede crear un nuevo parametro para controlar el tamaño del proceso vs tamaño de la partición?
 }
@@ -94,6 +95,7 @@ void desasignar_particion(t_particion* particion)
 {
     char* esquema = config_get_string_value(config, "ESQUEMA");
 
+    log_debug(logger, "Se desasigna particion con tamaño %d a proceso con PID <%d>", particion->tamanio, particion->pid);
     particion->esta_libre = true;
     particion->pid = UINT32_MAX; // Simulamos un valor nulo usando el maximo de UINT32
 

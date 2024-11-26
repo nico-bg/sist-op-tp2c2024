@@ -29,16 +29,16 @@ int main(int argc, char* argv[]) {
 
     /* Conexión con el Filesystem */
     socket_filesystem = conectar_a_socket(ip_filesystem, puerto_filesystem);
-    log_info(logger, "Conectado al Filesystem");
-    enviar_mensaje("Hola, soy la Memoria", socket_filesystem);
+    log_debug(logger, "Conectado al Filesystem");
+    //enviar_mensaje("Hola, soy la Memoria", socket_filesystem);
 
 
     /* Conexión con la CPU */
     int fd_escucha = iniciar_servidor(puerto_escucha);
-    log_info(logger, "Memoria lista para escuchar al CPU y Kernel");
+    log_debug(logger, "Memoria lista para escuchar al CPU y Kernel");
     
     int socket_cpu = esperar_cliente(fd_escucha);   //  No se está haciendo un check para asegurar que
-    log_info(logger, "Se conectó el CPU");          //  es la CPU quien se está conectando - definir
+    log_debug(logger, "Se conectó el CPU");          //  es la CPU quien se está conectando - definir
 
     /* Se crea un hilo para escuchar al kernel */
     pthread_create(&thread_kernel, NULL, hilo_kernel, fd_escucha);
@@ -76,7 +76,7 @@ void atender_kernel(void* socket_cliente)
 
     switch (cod_op) {
         case -1:
-            log_error(logger, "El KERNEL se desconectó");
+            log_debug(logger, "El KERNEL se desconectó");
             break;
         default:
             atender_peticion_kernel(cod_op, socket);
@@ -98,7 +98,7 @@ void atender_peticion_kernel(int cod_op, int socket)
                 log_info(logger, "## Proceso Creado -  PID: %d - Tamaño: %d", datos_crear_proceso->pid, datos_crear_proceso->tamanio);
                 confirmar_operacion(socket);
             } else {
-                log_info(logger, "No hay suficiente espacio para inicializar proceso");
+                log_debug(logger, "No hay suficiente espacio para inicializar proceso con PID %d y tamaño %d", datos_crear_proceso->pid, datos_crear_proceso->tamanio);
                 notificar_error(socket);
             }
             break;
@@ -181,17 +181,17 @@ void atender_peticion_cpu(int cod_op, int socket)
 
         case OPERACION_DEVOLVER_INSTRUCCION:
             t_datos_obtener_instruccion* datos_devolver_instruccion = (t_datos_obtener_instruccion*)leer_buffer_cpu(cod_op, socket);
-            char* nombre_archivo = obtener_archivo_pseudocodigo(datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, PATH);
+            char* nombre_archivo = obtener_archivo_pseudocodigo(datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, NOMBRE);
             char* inst = devolver_instruccion(datos_devolver_instruccion);
             log_info(logger, "## Obtener instrucción - (PID:TID) - (%d:%d) - Instrucción: <%s> <%s>", datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, inst, nombre_archivo);
             enviar_buffer(cod_op, socket, inst);
+            free(nombre_archivo);
             break;
 
         case OPERACION_LEER_MEMORIA:
             t_datos_leer_memoria* datos_leer_memoria = (t_datos_leer_memoria*)leer_buffer_cpu(cod_op, socket);
             log_info(logger, "## Lectura - (PID:TID) - (%d:%d) - Dir. Física: %d - Tamaño: %d", datos_leer_memoria->pid, datos_leer_memoria->tid, datos_leer_memoria->dir_fisica, datos_leer_memoria->tamanio);
             uint32_t dato_leido = leer_memoria(datos_leer_memoria);
-
             enviar_buffer(cod_op, socket, &dato_leido);
             break;
 

@@ -128,6 +128,7 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
             eliminar_paquete(paquete);
             destruir_datos_devolver_instruccion(instruccion);
             break;
+            
         case OPERACION_LEER_MEMORIA:
             buffer = buffer_create(sizeof(uint32_t));
             uint32_t dato_leido = (uint32_t)datos;

@@ -583,7 +583,7 @@ static void remover_hilo_de_ready_o_blocked(t_tcb* hilo)
 
     // Si estaba en READY, reduzco el contador porque eliminamos un elemento
     if(estaba_en_ready) {
-        sem_wait(&semaforo_estado_ready);
+        //sem_wait(&semaforo_estado_ready);
     }
 
     // Remuevo el hilo de BLOCKED si es que se encuentra en este estado
