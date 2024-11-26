@@ -28,8 +28,6 @@ void* planificador_corto_plazo()
         // Si ya no hay hilos en READY, esperamos hasta que se agreguen (hacer un sem_post)
         // ...al crear un proceso, hilo, al desalojar un proceso por quantum, etc
         sem_wait(&semaforo_estado_ready);
-        int valor;
-        sem_getvalue(&semaforo_estado_ready, &valor);
 
         pthread_mutex_lock(&mutex_estado_ready);
         t_tcb* siguiente_a_exec = obtener_siguiente_a_exec();
@@ -180,27 +178,9 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
         syscall_dump_memory();
         break;
     case OPERACION_DESALOJAR_HILO:
-        t_tcb* siguiente = NULL;
 
-        // Guardamos el siguiente hilo a ejecutar antes de pasar el de EXEC a READY
-        // ...porque si estamos ejecutando el TID 0 al replanificar vuelve a elegir el mismo
-        // ...porque es el de mayor prioridad
-        pthread_mutex_lock(&mutex_estado_ready);
-        if(list_size(estado_ready) > 0) {
-            siguiente = obtener_siguiente_a_exec();
-            log_debug(logger, "OPERACION DESALOJO. SIGUIENTE: %d:%d", siguiente->pid_padre, siguiente->tid);
-        }
-        pthread_mutex_unlock(&mutex_estado_ready);
+        transicion_exec_a_ready(hilo_en_ejecucion);
 
-        if(!esta_en_blocked(hilo_en_ejecucion)) {
-            transicion_exec_a_ready(hilo_en_ejecucion);
-        }
-
-        if(siguiente != NULL) {
-            sem_wait(&semaforo_estado_ready);
-            transicion_ready_a_exec(siguiente);
-            procesar_instrucciones_cpu(siguiente, true);
-        }
         break;
     default:
         log_debug(logger_debug, "Motivo de devolución desconocido. Cod: %d", operacion);

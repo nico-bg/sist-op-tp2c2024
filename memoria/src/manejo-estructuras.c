@@ -182,6 +182,7 @@ char** leer_archivo_pseudocodigo(const char* nombre_archivo_codigo){
     instrucciones[cont] = NULL; //La ultima linea del array será NULL, indica que terminan las instrucciones
 
     fclose(archivo);
+    free(path_archivo);
     return instrucciones;
 
 }

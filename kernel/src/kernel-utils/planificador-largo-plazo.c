@@ -28,6 +28,7 @@ void* planificador_largo_plazo()
 
         // Si no hubo memoria suficiente pasamos a la siguiente iteración donde se va a bloquear por el `semaforo_memoria_suficiente`
         if(resultado_proceso == OPERACION_NOTIFICAR_ERROR) {
+            sem_post(&semaforo_estado_new);
             continue;
         }
 
