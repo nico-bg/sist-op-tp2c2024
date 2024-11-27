@@ -117,7 +117,7 @@ void consolidar_particiones_libres()
     t_particion* particion_actual;
     t_particion* particion_siguiente;
 
-    for(int i = 0; i < list_size(particiones); i++) {
+    for(int i = 0; i < list_size(particiones) - 1; i++) {
         particion_actual = list_get(particiones, i);
         particion_siguiente = list_get(particiones, i + 1);
 
