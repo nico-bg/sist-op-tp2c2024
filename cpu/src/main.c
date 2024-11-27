@@ -699,10 +699,8 @@ u_int32_t lectura_memoria(u_int32_t dir_fisica)
      destruir_datos_leer_memoria(datos);
 
      // Recibimos el dato que fue leido en memoria
-     recibir_operacion(socket_memoria);
-     int size;
-     t_buffer* buffer = recibir_buffer(&size, socket_memoria);
-     uint32_t dato_leido = buffer_read_uint32(buffer);
+     uint32_t dato_leido;
+     recv(socket_memoria, &dato_leido, sizeof(uint32_t), 0);
 
      return dato_leido;
 }

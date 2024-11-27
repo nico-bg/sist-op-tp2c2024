@@ -128,20 +128,6 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
             eliminar_paquete(paquete);
             destruir_datos_devolver_instruccion(instruccion);
             break;
-            
-        case OPERACION_LEER_MEMORIA:
-            buffer = buffer_create(sizeof(uint32_t));
-            uint32_t dato_leido = (uint32_t)datos;
-            buffer_add_uint32(buffer, dato_leido);
-
-            paquete = malloc(sizeof(t_paquete));
-            paquete->codigo_operacion = OPERACION_LEER_MEMORIA;
-            paquete->buffer = buffer;
-            paquete_serializado = serializar_paquete(paquete);
-
-            send(socket_cliente, paquete_serializado->stream, paquete_serializado->size, 0);
-            break;
-
         default:
             log_error(logger, "Codigo de operacion desconocido");
             break;

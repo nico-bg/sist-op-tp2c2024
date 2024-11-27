@@ -6,7 +6,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-      "args": ["MEM_FIJA_BASE", "12"],
+      "args": ["RECURSOS_MUTEX_PROC", "32"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
