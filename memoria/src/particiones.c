@@ -101,7 +101,10 @@ void desasignar_particion(t_particion* particion)
 
     if(strcmp(esquema, "DINAMICAS") == 0) {
         consolidar_particiones_libres();
-        consolidar_particiones_libres();
+
+        if(list_size(particiones) > 1) {
+            consolidar_particiones_libres();
+        }
     }
 }
 

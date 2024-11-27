@@ -8,6 +8,7 @@ static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo);
 static t_pcb* buscar_proceso(uint32_t pid);
 static bool encontrar_proceso_por_pid_auxiliar(void* elemento);
 static bool existe_tid_en_lista(void* elemento);
+static bool existe_tid_y_pid_en_lista(void* elemento);
 static t_tcb* buscar_hilo_en_proceso(t_pcb* proceso, uint32_t tid);
 static bool encontrar_mutex_proceso_en_ejecucion(void* elemento);
 static void esperar_respuesta_dump_memory(void* args);
@@ -271,8 +272,6 @@ void syscall_desbloquear_mutex(char* recurso)
     bool hay_mas_hilos_bloqueados = !queue_is_empty(mutex->hilos_bloqueados);
 
     if(correctamente_asignado && hay_mas_hilos_bloqueados) {
-        // TODO: Evaluar si es necesario bloquear con mutex
-        // ...porque se puede producir una RC con la liberación de hilos en EXIT
         t_tcb* hilo_a_desbloquear = queue_pop(mutex->hilos_bloqueados);
 
         mutex->hilo_asignado = hilo_a_desbloquear;
@@ -464,9 +463,17 @@ static bool existe_tid_en_lista(void* elemento)
     return *tid == tid_auxiliar;
 }
 
+static bool existe_tid_y_pid_en_lista(void* elemento)
+{
+    t_tcb* hilo = (t_tcb*) elemento;
+
+    return hilo->tid == tid_auxiliar && hilo->pid_padre == pid_auxiliar;
+}
+
 static t_tcb* buscar_hilo_en_proceso(t_pcb* proceso, uint32_t tid)
 {
     tid_auxiliar = tid;
+    pid_auxiliar = proceso->pid;
     bool tid_existente = list_any_satisfy(proceso->tids, existe_tid_en_lista);
 
     if(tid_existente) {
@@ -474,13 +481,13 @@ static t_tcb* buscar_hilo_en_proceso(t_pcb* proceso, uint32_t tid)
 
         // Buscamos el TID en la lista de estado READY
         pthread_mutex_lock(&mutex_estado_ready);
-        hilo_encontrado = list_find(estado_ready, existe_tid_en_lista);
+        hilo_encontrado = list_find(estado_ready, existe_tid_y_pid_en_lista);
         pthread_mutex_unlock(&mutex_estado_ready);
 
         // Si no se encuentra el hilo en READY, lo buscamos en BLOCKED
         if(hilo_encontrado == NULL) {
             pthread_mutex_lock(&mutex_estado_blocked);
-            hilo_encontrado = list_find(estado_blocked, existe_tid_en_lista);
+            hilo_encontrado = list_find(estado_blocked, existe_tid_y_pid_en_lista);
             pthread_mutex_unlock(&mutex_estado_blocked);
         }
 
@@ -519,7 +526,7 @@ static bool esta_mutex_asignado_a_tid(void* elemento)
 {
     t_mutex* mutex = (t_mutex*) elemento;
 
-    return mutex->hilo_asignado->tid == tid_auxiliar;
+    return mutex->hilo_asignado != NULL && mutex->hilo_asignado->tid == tid_auxiliar;
 }
 
 static op_code pedir_finalizacion_hilo_a_memoria(t_tcb* hilo)
@@ -579,7 +586,7 @@ static void remover_hilo_de_ready_o_blocked(t_tcb* hilo)
     // Remuevo el hilo de READY si es que se encuentra en este estado
     pthread_mutex_lock(&mutex_estado_ready);
     bool estaba_en_ready = list_remove_element(estado_ready, hilo);
-    pthread_mutex_lock(&mutex_estado_ready);
+    pthread_mutex_unlock(&mutex_estado_ready);
 
     // Si estaba en READY, reduzco el contador porque eliminamos un elemento
     if(estaba_en_ready) {
@@ -589,5 +596,5 @@ static void remover_hilo_de_ready_o_blocked(t_tcb* hilo)
     // Remuevo el hilo de BLOCKED si es que se encuentra en este estado
     pthread_mutex_lock(&mutex_estado_blocked);
     list_remove_element(estado_blocked, hilo);
-    pthread_mutex_lock(&mutex_estado_blocked);
+    pthread_mutex_unlock(&mutex_estado_blocked);
 }
