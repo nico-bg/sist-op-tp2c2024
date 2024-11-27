@@ -7,8 +7,6 @@ t_config* config;
 
 int main(int argc, char* argv[]) {
 
-    pthread_t thread_memoria;
-
     config = iniciar_config("filesystem.config");
     logger = iniciar_logger(config, "filesystem.log", "FILESYSTEM");
     char* puerto_escucha;
@@ -36,8 +34,8 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
-void atender_memoria(void* socket_cliente)
-{
+// Funciones de Comunicación
+void atender_memoria(void* socket_cliente) {
     int socket = *(int*)socket_cliente;
     free(socket_cliente);
 
@@ -45,13 +43,14 @@ void atender_memoria(void* socket_cliente)
 
     switch (cod_op) {
         case -1:
-        log_error(logger, "La memoria se desconectó");
-        break;
+            log_error(logger, "La memoria se desconectó");
+            break;
         default:
-        atender_peticion_filesystem_memoria(cod_op, socket);
-        break;
+            atender_peticion_filesystem_memoria(cod_op, socket);
+            break;
     }
 }
+
 
 void atender_peticion_filesystem_memoria(int cod_op, int socket)
 {
@@ -62,10 +61,34 @@ void atender_peticion_filesystem_memoria(int cod_op, int socket)
 
         case OPERACION_DUMP_MEMORY:
         log_info(logger, "## Memory Dump solicitado ");
+         // Recibir datos del dump usando la deserialización
+            t_datos_dump_memory_fs* datos_dump = deserializar_datos_dump_memory_fs(
+                buffer_recibir(socket)
+            );
+
+            if(datos_dump == NULL) {
+                log_error(logger, "Error al recibir información del dump");
+                enviar_respuesta_operacion(socket, false);
         break;
+
+        // Crear el archivo usando la información recibida
+            bool resultado = crear_archivo_dump(
+                datos_dump->nombre_archivo,
+                datos_dump->contenido, 
+                datos_dump->tamanio
+            );
+            
+            // Enviar resultado a memoria
+            enviar_respuesta_operacion(socket, resultado);
+            
+            // Liberar recursos
+            destruir_datos_dump_memory_fs(datos_dump);
+            break;
+        }
 
         default:
         log_error(logger, "Memoria envió un código de operación desconocido: %d", cod_op);
+        enviar_respuesta_operacion(socket, false);
         break;
     }
 }
@@ -148,7 +171,7 @@ void inicializar_bitmap(char* ruta_files, int block_count) {
             fclose(bitmap_f);
             exit(EXIT_FAILURE);
         }
-        free(buffer);
+        free(buffer);     
     }
     
     // Cargar el bitmap en memoria
@@ -180,6 +203,135 @@ void inicializar_filesystem(t_config* config) {
     
     log_debug(logger, "Filesystem inicializado correctamente");
 }
+// Funciones de Manejo de Bloques
+int* encontrar_bloques_libres(int cantidad_bloques, int* bloques_encontrados) {
+    int block_count = config_get_int_value(config, "BLOCK_COUNT");
+    int* bloques = malloc(sizeof(int) * cantidad_bloques);
+    *bloques_encontrados = 0;
+    
+    for(int i = 0; i < block_count && *bloques_encontrados < cantidad_bloques; i++) {
+        if(!bitarray_test_bit(bitmap, i)) {
+            bloques[*bloques_encontrados] = i;
+            (*bloques_encontrados)++;
+        }
+    }
+    
+    if(*bloques_encontrados < cantidad_bloques) {
+        free(bloques);
+        return NULL;
+    }
+    
+    return bloques;
+}
+
+void escribir_bloque(int nro_bloque, void* datos, size_t size) {
+    char* mount_dir = config_get_string_value(config, "MOUNT_DIR");
+    char* path_bloques = string_from_format("%s/bloques.dat", mount_dir);
+    int block_size = config_get_int_value(config, "BLOCK_SIZE");
+    int retardo = config_get_int_value(config, "RETARDO_ACCESO_BLOQUE");
+    
+    FILE* archivo = fopen(path_bloques, "r+");
+    if(archivo == NULL) {
+        log_error(logger, "Error al abrir archivo de bloques");
+        free(path_bloques);
+        free(mount_dir);
+        return;
+    }
+    
+    fseek(archivo, nro_bloque * block_size, SEEK_SET);
+    fwrite(datos, size, 1, archivo);
+    
+    fclose(archivo);
+    free(path_bloques);
+    free(mount_dir);
+    
+    usleep(retardo * 1000);
+}
+
+int calcular_bloques_necesarios(size_t tamanio) {
+    int block_size = config_get_int_value(config, "BLOCK_SIZE");
+    return (tamanio + block_size - 1) / block_size;
+}
+
+int contar_bloques_libres(void) {
+    int block_count = config_get_int_value(config, "BLOCK_COUNT");
+    int count = 0;
+    
+    for(int i = 0; i < block_count; i++) {
+        if(!bitarray_test_bit(bitmap, i)) {
+            count++;
+        }
+    }
+    
+    return count;
+}
+
+// Funciones de Manejo de Archivos
+void crear_archivo_metadata(const char* nombre_archivo, t_file_metadata* metadata) {
+    char* mount_dir = config_get_string_value(config, "MOUNT_DIR");
+    char* path_metadata = string_from_format("%s/files/%s", mount_dir, nombre_archivo);
+    
+    FILE* archivo = fopen(path_metadata, "w");
+    if(archivo == NULL) {
+        log_error(logger, "Error al crear archivo de metadata");
+        free(path_metadata);
+        free(mount_dir);
+        return;
+    }
+    
+    fprintf(archivo, "SIZE=%zu\nINDEX_BLOCK=%u\n", metadata->size, metadata->index_block);
+    
+    fclose(archivo);
+    free(path_metadata);
+    free(mount_dir);
+}
+
+bool crear_archivo_dump(const char* nombre_archivo, void* contenido, size_t tamanio) {
+    log_info(logger, "## Archivo Creado: %s - Tamaño: %zu", nombre_archivo, tamanio);
+    
+    int bloques_datos = calcular_bloques_necesarios(tamanio);
+    int bloques_encontrados;
+    
+    int* bloques = encontrar_bloques_libres(bloques_datos + 1, &bloques_encontrados);
+    if(bloques == NULL) {
+        log_error(logger, "No hay suficientes bloques disponibles");
+        return false;
+    }
+    
+    int bloque_indice = bloques[0];
+    for(int i = 0; i < bloques_encontrados; i++) {
+        bitarray_set_bit(bitmap, bloques[i]);
+        log_info(logger, "## Bloque asignado: %d - Archivo: %s - Bloques Libres: %d",
+                bloques[i], nombre_archivo, contar_bloques_libres());
+    }
+    
+    t_file_metadata metadata = {
+        .size = tamanio,
+        .index_block = bloque_indice
+    };
+    crear_archivo_metadata(nombre_archivo, &metadata);
+    
+    log_info(logger, "## Acceso Bloque - Archivo: %s - Tipo Bloque: ÍNDICE - Bloque File System %d",
+             nombre_archivo, bloque_indice);
+    escribir_bloque(bloque_indice, &bloques[1], bloques_datos * sizeof(int));
+    
+    int block_size = config_get_int_value(config, "BLOCK_SIZE");
+    for(int i = 0; i < bloques_datos; i++) {
+        size_t offset = i * block_size;
+        size_t size_to_write = (offset + block_size > tamanio) ? (tamanio - offset) : block_size;
+        
+        log_info(logger, "## Acceso Bloque - Archivo: %s - Tipo Bloque: DATOS - Bloque File System %d",
+                 nombre_archivo, bloques[i + 1]);
+        escribir_bloque(bloques[i + 1], contenido + offset, size_to_write);
+    }
+    
+    log_info(logger, "## Fin de solicitud - Archivo: %s", nombre_archivo);
+    
+    free(bloques);
+    return true;
+}
+
+
 
 void terminar_programa(t_log* logger, t_config* config)
 {
