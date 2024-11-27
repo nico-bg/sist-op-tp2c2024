@@ -41,8 +41,8 @@ void iniciar_proceso(t_datos_inicializacion_proceso* datos, t_particion* partici
 
     nuevo_nodo_proceso->proceso.pid = datos->pid;
     nuevo_nodo_proceso->proceso.tamanio = datos->tamanio;
-    nuevo_nodo_proceso->proceso.base = 0;
-    nuevo_nodo_proceso->proceso.limite = nuevo_nodo_proceso->proceso.base + datos->tamanio;
+    nuevo_nodo_proceso->proceso.base = particion->base;
+    nuevo_nodo_proceso->proceso.limite = nuevo_nodo_proceso->proceso.base + particion->tamanio;
     nuevo_nodo_proceso->proceso.lista_hilos = NULL; //No inicializamos ningún hilo todavía
 
     nuevo_nodo_proceso->siguiente_nodo_proceso = NULL; //Inicializamos el puntero al siguiente elemento de la lista (vacío)
