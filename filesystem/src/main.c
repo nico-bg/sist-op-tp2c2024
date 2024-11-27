@@ -155,6 +155,8 @@ void inicializar_bitmap(char* ruta_files, int block_count) {
     int bitmap_size = block_count / 8;
     
     FILE* bitmap_f = fopen(bitmap_path, "r+");
+
+    //Si el archivo no existe, lo crea
     if (bitmap_f == NULL) {
         log_debug(logger, "Creando archivo bitmap: %s", bitmap_path);
         bitmap_f = fopen(bitmap_path, "w+");
@@ -177,6 +179,11 @@ void inicializar_bitmap(char* ruta_files, int block_count) {
     // Cargar el bitmap en memoria
     char* buffer = malloc(bitmap_size);
     fseek(bitmap_f, 0, SEEK_SET);
+
+    //se lee el tamaño del archivo bitmap
+    //si es igual o menor se deja asi
+    //si es mas grande se trunca el archivo bitmap a la cantidad de bloques / 8
+
     if (fread(buffer, bitmap_size, 1, bitmap_f) != 1) {
         log_error(logger, "Error leyendo bitmap");
         free(buffer);
