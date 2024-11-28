@@ -124,16 +124,16 @@ void atender_peticion_kernel(int cod_op, int socket)
             confirmar_operacion(socket);
             break;
 
-        case OPERACION_DUMP_MEMORY: //Los datos de la struct finalizar hilo & mem dump son los mismos, por ende se reutiliza la estructura
+        case OPERACION_DUMP_MEMORY:
             t_datos_dump_memory* datos_mem_dump = (t_datos_dump_memory*)leer_buffer_kernel(cod_op, socket);
             log_info(logger, "## Memory Dump solicitado - (PID:TID) - (%d:%d)", datos_mem_dump->pid, datos_mem_dump->tid);
-
             op_code codigo_operacion = enviar_dump_memory(socket_filesystem, datos_mem_dump);
-
             if(codigo_operacion == OPERACION_CONFIRMAR){
                 confirmar_operacion(socket);
+                log_debug(logger, "Dump memory realizado correctamente");
             } else {
                 notificar_error(socket);
+                log_debug(logger, "Error en el dump memory");
             }
             break;
 

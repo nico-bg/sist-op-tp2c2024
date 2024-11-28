@@ -32,14 +32,27 @@ void inicializar_particiones()
  */
 t_particion* crear_particion_en_indice(uint32_t tamanio, int indice)
 {
+
+    int tam_memoria = config_get_int_value(config, "TAM_MEMORIA");
+
     t_particion* particion_nueva = malloc(sizeof(t_particion));
     t_particion* particion_original = list_get(particiones, indice);
 
     particion_nueva->base = particion_original->base;
-    particion_nueva->limite = (particion_nueva->base + tamanio) - 1;
+    if(tamanio > 0){
+        particion_nueva->limite = (particion_nueva->base + tamanio) - 1;
+    } else {
+        particion_nueva->limite = particion_nueva->base;
+    }
     particion_nueva->tamanio = tamanio;
     particion_nueva->esta_libre = true;
     particion_nueva->pid = UINT16_MAX;
+
+    if(particion_nueva->limite > tam_memoria){
+        log_debug(logger, "PARTICION SUPERA LIMITE");
+        log_debug(logger, "indice: %d - base: %d - limite: %d", indice, particion_nueva->base, particion_nueva->limite);
+        return NULL;
+    }
 
     particion_original->base = particion_nueva->limite + 1;
     particion_original->limite = particion_original->limite; //el limite de la particion original queda igual;
@@ -64,7 +77,11 @@ t_particion* crear_particion(uint32_t tamanio) {
     }
 
     particion->base = base;
-    particion->limite = (base + tamanio) - 1;
+    if(tamanio > 0){
+        particion->limite = (particion->base + tamanio) - 1;
+    } else {
+        particion->limite = particion->base;
+    }
     particion->tamanio = tamanio;
 
     particion->pid = UINT32_MAX;
@@ -231,15 +248,6 @@ t_particion* buscar_particion_por_pid(uint32_t pid)
 
     return particion_encontrada;
 }
-
-/**
- * @brief Itera sobre la lista de particiones y retorna el indice de la partición recibida
- * Devuelve -1 si la partición no se encuentra en la lista
- */
-/*int buscar_indice_particion(t_particion* particion)
-{
-
-}*/
 
 /**
  * @brief Libera la memoria de la partición

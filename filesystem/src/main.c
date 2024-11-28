@@ -55,34 +55,48 @@ void atender_memoria(void* socket_cliente) {
 void atender_peticion_filesystem_memoria(int cod_op, int socket)
 {
     switch(cod_op) {
+
         case OPERACION_MENSAJE:
-        recibir_mensaje(socket,logger);
-        break;
+            recibir_mensaje(socket,logger);
+            break;
 
         case OPERACION_DUMP_MEMORY:
-        log_info(logger, "## Memory Dump solicitado ");
-         // Recibir datos del dump usando la deserialización
+            log_info(logger, "## Memory Dump solicitado ");
+
+            t_buffer* buffer;
+            uint32_t length;
+            void* datos;
+
+            buffer = recibir_buffer(&length, socket);
+            datos = (t_datos_dump_memory_fs*)deserializar_datos_dump_memory_fs(buffer);
+
+            t_datos_dump_memory_fs* datos_dump = (t_datos_dump_memory_fs*)datos;
+
+            // Recibir datos del dump usando la deserialización
+            /*
             t_datos_dump_memory_fs* datos_dump = deserializar_datos_dump_memory_fs(
                 buffer_recibir(socket)
             );
+            */
 
             if(datos_dump == NULL) {
                 log_error(logger, "Error al recibir información del dump");
                 enviar_respuesta_operacion(socket, false);
-        // Crear el archivo usando la información recibida
-            bool resultado = crear_archivo_dump(
-                datos_dump->nombre_archivo,
-                datos_dump->contenido, 
-                datos_dump->tamanio
-            );
+            } else {
+            // Crear el archivo usando la información recibida
+                bool resultado = crear_archivo_dump(
+                    datos_dump->nombre_archivo,
+                    datos_dump->contenido, 
+                    datos_dump->tamanio
+                );
             
-            // Enviar resultado a memoria
-            enviar_respuesta_operacion(socket, resultado);
+                // Enviar resultado a memoria
+                enviar_respuesta_operacion(socket, resultado);
             
-            // Liberar recursos
-            destruir_datos_dump_memory_fs(datos_dump);
-            break;
-        }
+                // Liberar recursos
+                destruir_datos_dump_memory_fs(datos_dump);
+            }
+        break;
 
         default:
         log_error(logger, "Memoria envió un código de operación desconocido: %d", cod_op);
@@ -116,6 +130,7 @@ void verifica_existencia_path(char* mount_dir) {
     }
     free(ruta_files);
 }
+
 void inicializar_bloques(char* ruta_files, int block_size, int block_count) {
      char* bloques_path = string_from_format("%s/bloques.dat", ruta_files);
      FILE* bloques_f = fopen(bloques_path, "r");
@@ -208,6 +223,7 @@ void inicializar_filesystem(t_config* config) {
     
     log_debug(logger, "Filesystem inicializado correctamente");
 }
+
 // Funciones de Manejo de Bloques
 int* encontrar_bloques_libres(int cantidad_bloques, int* bloques_encontrados) {
     int block_count = config_get_int_value(config, "BLOCK_COUNT");

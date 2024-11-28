@@ -1,4 +1,5 @@
 #include <utils/comunicacion_memoria_filesystem.h>
+#include <utils/mensajes.h>
 
 
 t_buffer* serializar_datos_dump_memory_fs(t_datos_dump_memory_fs* datos)
@@ -21,8 +22,11 @@ t_datos_dump_memory_fs* deserializar_datos_dump_memory_fs(t_buffer* buffer)
     t_datos_dump_memory_fs* datos = malloc(sizeof(t_datos_dump_memory_fs));
 
     uint32_t length;
+
     datos->nombre_archivo = buffer_read_string(buffer, &length);
     datos->tamanio = buffer_read_uint32(buffer);
+
+    datos->contenido = malloc(datos->tamanio);
     buffer_read(buffer, datos->contenido, datos->tamanio);
 
     return datos;
@@ -30,12 +34,17 @@ t_datos_dump_memory_fs* deserializar_datos_dump_memory_fs(t_buffer* buffer)
 
 void enviar_respuesta_operacion(int socket, bool resultado) {
     uint32_t respuesta = resultado ? 1 : 0;
+    if(respuesta = 0){
+        respuesta = OPERACION_NOTIFICAR_ERROR;
+    } else {
+        respuesta = OPERACION_CONFIRMAR;
+    }
     send(socket, &respuesta, sizeof(uint32_t), 0);
 }
 
 void destruir_datos_dump_memory_fs(t_datos_dump_memory_fs* datos)
 {
     free(datos->nombre_archivo);
-    // free(datos->contenido);
+    free(datos->contenido);
     free(datos);
 }
