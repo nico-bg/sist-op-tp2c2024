@@ -255,7 +255,7 @@ void escribir_bloque(int nro_bloque, void* datos, size_t size) {
     if(archivo == NULL) {
         log_error(logger, "Error al abrir archivo de bloques");
         free(path_bloques);
-        free(mount_dir);
+        //free(mount_dir);
         return;
     }
     
