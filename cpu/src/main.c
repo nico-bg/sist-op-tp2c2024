@@ -253,8 +253,10 @@ void ciclo_de_instruccion()
           incrementar_pc();
 
           enviar_operacion_a_kernel(OPERACION_DUMP_MEMORY);
+          esperar_confirmacion();
 
-          siguiente_ciclo = true;
+          debe_actualizar_contexto = true;
+          omitir_interrupcion = true;
      }
 
      if (strcmp(estructura_instruccion[0], "IO") == 0)

@@ -69,8 +69,6 @@ void atender_peticion_filesystem_memoria(int cod_op, int socket)
             if(datos_dump == NULL) {
                 log_error(logger, "Error al recibir información del dump");
                 enviar_respuesta_operacion(socket, false);
-        break;
-
         // Crear el archivo usando la información recibida
             bool resultado = crear_archivo_dump(
                 datos_dump->nombre_archivo,

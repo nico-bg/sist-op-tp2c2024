@@ -150,16 +150,20 @@ void notificar_error(int socket_cliente){
 
 op_code enviar_dump_memory(int socket_filesystem, t_datos_dump_memory* datos_kernel)
 {
-    char* nombre_archivo;
+    char* nombre_archivo = NULL;
+    char* timestamp = obtener_timestamp();
 
-    string_append_with_format(&nombre_archivo, "%d-%d-%s.dmp", datos_kernel->pid, datos_kernel->tid, obtener_timestamp());
+    int tamanio = snprintf(NULL, 0, "%d-%d-%s.dmp", datos_kernel->pid, datos_kernel->tid, timestamp) + 1;
+    nombre_archivo = malloc(tamanio);
+    snprintf(nombre_archivo, tamanio, "%d-%d-%s.dmp", datos_kernel->pid, datos_kernel->tid, timestamp);
 
     nodo_proceso* nodo = buscar_proceso_por_pid(datos_kernel->pid);
 
     t_datos_dump_memory_fs* datos_a_enviar = malloc(sizeof(t_datos_dump_memory_fs));
     datos_a_enviar->nombre_archivo = nombre_archivo;
     datos_a_enviar->tamanio = nodo->proceso.tamanio;
-    datos_a_enviar->contenido = memoria + nodo->proceso.base;
+    datos_a_enviar->contenido = malloc(datos_a_enviar->tamanio);
+    memcpy(datos_a_enviar->contenido, memoria + nodo->proceso.base, datos_a_enviar->tamanio);
 
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->codigo_operacion = OPERACION_DUMP_MEMORY;
