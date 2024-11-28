@@ -36,6 +36,6 @@ void enviar_respuesta_operacion(int socket, bool resultado) {
 void destruir_datos_dump_memory_fs(t_datos_dump_memory_fs* datos)
 {
     free(datos->nombre_archivo);
-    free(datos->contenido);
+    // free(datos->contenido);
     free(datos);
 }

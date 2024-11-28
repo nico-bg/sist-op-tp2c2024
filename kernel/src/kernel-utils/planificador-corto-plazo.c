@@ -176,6 +176,8 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
         log_info(logger, "## (%d:%d) - Solicitó syscall: DUMP_MEMORY", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
 
         syscall_dump_memory();
+
+        enviar_operacion(OPERACION_CONFIRMAR);
         break;
     case OPERACION_DESALOJAR_HILO:
 
