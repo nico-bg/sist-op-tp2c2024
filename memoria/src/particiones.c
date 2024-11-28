@@ -36,7 +36,7 @@ t_particion* crear_particion_en_indice(uint32_t tamanio, int indice)
     t_particion* particion_original = list_get(particiones, indice);
 
     particion_nueva->base = particion_original->base;
-    particion_nueva->limite = particion_nueva->base + tamanio;
+    particion_nueva->limite = (particion_nueva->base + tamanio) - 1;
     particion_nueva->tamanio = tamanio;
     particion_nueva->esta_libre = true;
     particion_nueva->pid = UINT16_MAX;
@@ -64,7 +64,7 @@ t_particion* crear_particion(uint32_t tamanio) {
     }
 
     particion->base = base;
-    particion->limite = base + tamanio;
+    particion->limite = (base + tamanio) - 1;
     particion->tamanio = tamanio;
 
     particion->pid = UINT32_MAX;
@@ -82,9 +82,17 @@ void asignar_particion(t_particion* particion, uint32_t tamanio_proceso, uint32_
 {
     particion->pid = pid;
     particion->esta_libre = false;
+
     log_debug(logger, "Se asigna particion con tamaño %d a proceso con PID <%d> y tamaño %d", particion->tamanio, pid, tamanio_proceso);
-    //tamanio_proceso no se usa
-    //se puede crear un nuevo parametro para controlar el tamaño del proceso vs tamaño de la partición?
+    int index = 0;
+    t_particion* particion_debug;
+    particion_debug = (t_particion*)list_get(particiones, 0);
+    while(particion_debug->pid != particion->pid){
+        index++;
+        particion_debug = list_get(particiones, index);
+    }
+    log_debug(logger, "particion con indice %d, base %d y limite %d", index, particion->base, particion->limite);
+
 }
 
 /**
@@ -96,6 +104,15 @@ void desasignar_particion(t_particion* particion)
     char* esquema = config_get_string_value(config, "ESQUEMA");
 
     log_debug(logger, "Se desasigna particion con tamaño %d a proceso con PID <%d>", particion->tamanio, particion->pid);
+    int index = 0;
+    t_particion* particion_debug;
+    particion_debug = list_get(particiones, 0);
+    while(particion_debug->pid != particion->pid){
+        index++;
+        particion_debug = list_get(particiones, index);
+    }
+    log_debug(logger, "particion con indice %d, base %d y limite %d", index, particion->base, particion->limite);
+
     particion->esta_libre = true;
     particion->pid = UINT32_MAX; // Simulamos un valor nulo usando el maximo de UINT32
 
