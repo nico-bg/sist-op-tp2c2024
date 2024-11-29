@@ -178,6 +178,7 @@ op_code enviar_dump_memory(int socket_filesystem, t_datos_dump_memory* datos_ker
     destruir_datos_dump_memory_fs(datos_a_enviar);
 
     op_code codigo_operacion = recibir_operacion(socket_filesystem);
+    //close()
 
     return codigo_operacion;
 }

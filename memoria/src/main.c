@@ -7,7 +7,6 @@ t_log* logger;
 t_config* config;
 t_list* particiones;
 void* memoria;
-int socket_filesystem;
 
 int main(int argc, char* argv[]) {
 
@@ -16,21 +15,19 @@ int main(int argc, char* argv[]) {
 
     inicializar_particiones();
 
-    char* ip_filesystem;
-    char* puerto_filesystem;
     char* puerto_escucha;
 
     pthread_t thread_kernel;
 
-    ip_filesystem = config_get_string_value(config, "IP_FILESYSTEM");
-    puerto_filesystem = config_get_string_value(config, "PUERTO_FILESYSTEM");
+    /*ip_filesystem = config_get_string_value(config, "IP_FILESYSTEM");
+    puerto_filesystem = config_get_string_value(config, "PUERTO_FILESYSTEM");*/
     puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
 
 
     /* Conexión con el Filesystem */
-    socket_filesystem = conectar_a_socket(ip_filesystem, puerto_filesystem);
+ /*   socket_filesystem = conectar_a_socket(ip_filesystem, puerto_filesystem);
     log_debug(logger, "Conectado al Filesystem");
-    //enviar_mensaje("Hola, soy la Memoria", socket_filesystem);
+    //enviar_mensaje("Hola, soy la Memoria", socket_filesystem);*/
 
 
     /* Conexión con la CPU */
@@ -50,7 +47,7 @@ int main(int argc, char* argv[]) {
     }
     
     pthread_join(thread_kernel, NULL);
-    terminar_programa(config, socket_filesystem);
+    terminar_programa(config);
 
     return 0;
 }
@@ -60,9 +57,11 @@ void hilo_kernel(void* fd_escucha)
     while(1) {  // Crea un nuevo hilo por cada conexión
         pthread_t kernelThread;
         int *socket_kernel = malloc(sizeof(int));
+        log_debug(logger, "Esperando nueva conexion...");
         *socket_kernel = accept((int)fd_escucha, NULL, NULL);
         log_info(logger, "## Kernel Conectado - FD del socket: %d", *socket_kernel);
         pthread_create(&kernelThread, NULL, (void*) atender_kernel, socket_kernel);
+        log_debug(logger, "Hilo creado para manejar peticion de memoria");
         pthread_detach(kernelThread);
     }
 }
@@ -127,6 +126,7 @@ void atender_peticion_kernel(int cod_op, int socket)
         case OPERACION_DUMP_MEMORY:
             t_datos_dump_memory* datos_mem_dump = (t_datos_dump_memory*)leer_buffer_kernel(cod_op, socket);
             log_info(logger, "## Memory Dump solicitado - (PID:TID) - (%d:%d)", datos_mem_dump->pid, datos_mem_dump->tid);
+            int socket_filesystem = crear_conexion_a_filesystem();
             op_code codigo_operacion = enviar_dump_memory(socket_filesystem, datos_mem_dump);
             if(codigo_operacion == OPERACION_CONFIRMAR){
                 confirmar_operacion(socket);
@@ -135,12 +135,14 @@ void atender_peticion_kernel(int cod_op, int socket)
                 notificar_error(socket);
                 log_debug(logger, "Error en el dump memory");
             }
+            close(socket_filesystem);
             break;
 
         default:
             log_error(logger, "Kernel envió un codigo de operacion desconocido: %d", cod_op);
             break;
     }
+
 }
 
 int atender_cpu(int socket_cliente)
@@ -209,11 +211,10 @@ void atender_peticion_cpu(int cod_op, int socket)
 
 }
 
-void terminar_programa(t_config* config, int conexion)
+void terminar_programa(t_config* config)
 {
     log_destroy(logger);
     config_destroy(config);
-    close(conexion);
 }
 
 uint32_t leer_memoria(t_datos_leer_memoria* datos){
@@ -227,4 +228,13 @@ uint32_t leer_memoria(t_datos_leer_memoria* datos){
 
 void escribir_memoria(t_datos_escribir_memoria* datos){
     memcpy(memoria + datos->dir_fisica, &datos->dato_a_escribir, datos->tamanio);
+}
+
+int crear_conexion_a_filesystem() {
+    
+    char* ip_filesystem = config_get_string_value(config, "IP_FILESYSTEM");
+    char* puerto_filesystem = config_get_string_value(config, "PUERTO_FILESYSTEM");
+    int fd_conexion = conectar_a_socket(ip_filesystem, puerto_filesystem);
+
+    return fd_conexion;   
 }

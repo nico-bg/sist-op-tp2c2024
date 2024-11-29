@@ -61,7 +61,7 @@ typedef struct {
 
 bool hay_espacio_en_memoria(uint32_t tamanio);
 
-void terminar_programa(t_config* config, int conexion);
+void terminar_programa(t_config* config);
 
 void hilo_kernel(void* socket);
 
@@ -115,5 +115,7 @@ estructura_hilo* convertir_struct(t_contexto* contexto);
 uint32_t leer_memoria(t_datos_leer_memoria* datos);
 
 void escribir_memoria(t_datos_escribir_memoria* datos);
+
+int crear_conexion_a_filesystem();
 
 #endif
