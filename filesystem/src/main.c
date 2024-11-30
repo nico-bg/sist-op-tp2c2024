@@ -164,15 +164,30 @@ void inicializar_bitmap(char* ruta_files, int block_count) {
     
     FILE* bitmap_f = fopen(bitmap_path, "r+");
 
-    //Si el archivo no existe, lo crea
-    if (bitmap_f == NULL) {
+        if (bitmap_f != NULL) {
+        // Verificar tamaño actual del archivo
+        fseek(bitmap_f, 0, SEEK_END);
+        int archivo_size = ftell(bitmap_f);
+        rewind(bitmap_f);
+
+        if (archivo_size < bitmap_size) {
+            log_debug(logger, "Tamaño del archivo bitmap no coincide. Será ajustado.");
+            int fd = fileno(bitmap_f);  // Obtener el descriptor del archivo
+            if (ftruncate(fd, bitmap_size) != 0) {
+                log_error(logger, "Error al truncar el archivo bitmap.");
+                fclose(bitmap_f);
+                exit(EXIT_FAILURE);
+            }
+            log_debug(logger, "Archivo bitmap truncado al nuevo tamaño: %d bytes", bitmap_size);
+        }else 
+        //Si el archivo no existe, lo crea 
+        
         log_debug(logger, "Creando archivo bitmap: %s", bitmap_path);
         bitmap_f = fopen(bitmap_path, "w+");
         if (bitmap_f == NULL) {
             log_error(logger, "Error creando archivo bitmap");
             exit(EXIT_FAILURE);
         }
-        
         // Inicializar el archivo con ceros
         char* buffer = calloc(bitmap_size, 1);
         if (fwrite(buffer, bitmap_size, 1, bitmap_f) != 1) {
@@ -321,6 +336,13 @@ bool crear_archivo_dump(const char* nombre_archivo, void* contenido, size_t tama
                 bloques[i], nombre_archivo, contar_bloques_libres());
     }
     
+    char* mount_dir = config_get_string_value(config, "MOUNT_DIR");
+    char bitmap_path[256];
+    snprintf(bitmap_path, sizeof(bitmap_path), "%s/bitmap.dat", mount_dir);
+
+    // Persistir cambios en el archivo bitmap
+   // persistir_bitmap(bitmap_path);
+    
     t_file_metadata metadata = {
         .size = tamanio,
         .index_block = bloque_indice
@@ -355,4 +377,18 @@ void terminar_programa(t_log* logger, t_config* config)
     config_destroy(config);
 }
 
+/*
+void persistir_bitmap(char* bitmap_path) {
+   
+   
+    FILE* bitmap_f = fopen(bitmap_path, "w");
+    if (bitmap_f == NULL) {
+        log_error(logger, "Error al guardar el archivo bitmap: %s", bitmap_path);
+        return;
+    }
 
+    fwrite(bitmap->bitarray, bitarray_get_max_bit(bitmap) / 8, 1, bitmap_f);
+    fclose(bitmap_f);
+    log_debug(logger, "Bitmap guardado correctamente en %s", bitmap_path);
+}
+*/
