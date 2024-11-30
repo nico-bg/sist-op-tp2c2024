@@ -95,4 +95,6 @@ void incrementar_pc();
 
 void esperar_confirmacion();
 
+void segmentation_fault();
+
 #endif

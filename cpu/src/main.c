@@ -10,6 +10,7 @@ int socket_memoria;
 int socket_dispatch;
 int socket_interrupt;
 bool hay_interrupcion;
+bool seg_fault;
 
 pthread_mutex_t mutex_interrupciones;
 pthread_mutex_t mutex_socket_memoria;
@@ -113,6 +114,8 @@ void ciclo_de_instruccion()
      bool siguiente_ciclo = false;
      bool omitir_interrupcion = false;
      bool debe_actualizar_contexto = false;
+
+     seg_fault = false;
 
      t_datos_obtener_instruccion *datos = malloc(sizeof(t_datos_obtener_instruccion));
 
@@ -389,6 +392,10 @@ void ciclo_de_instruccion()
           actualizar_contexto();
      }
 
+     if(seg_fault){
+          return;
+     }
+
      if(es_necesario_interrupir && !omitir_interrupcion) {
         
           log_info(logger, "## Llega interrupción al puerto Interrupt");
@@ -516,7 +523,7 @@ void sub_registro(char *registro1, char *registro2)
 
 void read_mem(char *registro1, char *registro2)
 {
-     //registro 1 es datos, registro2 es direccion
+     //registro1 es datos, registro2 es direccion
 
      // READ_MEM AX OtroRegistro
      uint32_t valor_registro2 = obtener_registro(registro2);
@@ -534,6 +541,7 @@ void read_mem(char *registro1, char *registro2)
      {
 
           log_debug(logger, "Segmentation Fault casero!!!");
+          segmentation_fault();
           //log_info(logger, "#TID: %d  - Actualizo Contexto Ejecución", contexto.tid);
 
           /*
@@ -560,13 +568,16 @@ int mmu(int dir_logica)
 
 void write_mem(char *registro1, char *registro2)
 {
+     //registro1 es direccion, registro2 es datos
+
      uint32_t valor_registro1 = obtener_registro(registro1);
      int dir_fisica;
 
-     if(mmu(valor_registro1 == 1)){
+     if(mmu(valor_registro1) == 1){
           dir_fisica = mmu_dirLog_dirfis(valor_registro1);
      } else {
           log_debug(logger, "Segmentation Fault casero!!!");
+          segmentation_fault();
           //log_info(logger, "#TID: %d  - Actualizo Contexto Ejecución", contexto.tid);
 
           /*
@@ -576,7 +587,7 @@ void write_mem(char *registro1, char *registro2)
           terminar_hilo(socket_kernel, tid);
           */
 
-         //return;
+         return;
      }
 
      t_datos_escribir_memoria* datos = malloc(sizeof(t_datos_escribir_memoria));
@@ -844,4 +855,18 @@ void esperar_confirmacion() {
           log_error(logger, "No se pudo confirmar la operacion. Cod: %d", codigo_operacion);
           abort();
      }
+}
+
+void segmentation_fault(){
+     log_error(logger, "Segmentation Fault: PID: %d, TID: %d", contexto.pid, contexto.tid);
+     seg_fault = true;
+
+     actualizar_contexto();
+
+     //t_buffer* buffer = buffer_create(sizeof(uint32_t));
+     //buffer_add_uint32(buffer, OPERACION_SEGMENTATION_FAULT);
+
+     enviar_operacion_a_kernel(OPERACION_FINALIZAR_PROCESO);
+
+     return;
 }

@@ -81,6 +81,7 @@ uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
         datos_fin_hilo->tid = actual_hilo->hilo.tid;
         finalizar_hilo(datos_fin_hilo);
         actual_hilo = siguiente_hilo;
+        log_debug(logger, "Se eliminó hilo (TID:%d) de proceso (PID:%d)", datos_fin_hilo->tid, datos_fin_hilo->pid);
     }
 
     t_particion* particion = buscar_particion_por_pid(datos->pid);
