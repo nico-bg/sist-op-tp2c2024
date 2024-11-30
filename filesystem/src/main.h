@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <commons/temporal.h>
+#include <errno.h>
 
 void inicializar_filesystem();
 void atender_memoria(void*);
