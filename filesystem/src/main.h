@@ -21,6 +21,6 @@ typedef struct {
     uint32_t index_block;
 } t_file_metadata;
 
-
+void persistir_bitmap(char* bitmap_path);
 
 #endif
