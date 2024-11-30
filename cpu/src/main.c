@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 
      socket_memoria = conectar_a_socket(ip_memoria, puerto_memoria);
 
-     log_info(logger, "Conectado a Memoria");
+     log_debug(logger, "Conectado a Memoria");
 
      int fd_dispatch = iniciar_servidor(puerto_escucha_dispatch);
      int fd_interrupt = iniciar_servidor(puerto_escucha_interrupt);
@@ -67,7 +67,7 @@ void iniciar_semaforos (){
 
 void escuchar_dispatch()
 {
-     log_info(logger, "Hilo escuchar_dispatch esperando pid y tid del kernel");
+     log_debug(logger, "Hilo escuchar_dispatch esperando pid y tid del kernel");
 
      t_buffer *buffer;
      uint32_t size;
@@ -516,6 +516,8 @@ void sub_registro(char *registro1, char *registro2)
 
 void read_mem(char *registro1, char *registro2)
 {
+     //registro 1 es datos, registro2 es direccion
+
      // READ_MEM AX OtroRegistro
      uint32_t valor_registro2 = obtener_registro(registro2);
 
@@ -530,20 +532,15 @@ void read_mem(char *registro1, char *registro2)
      }
      else
      {
-          log_info(logger, "Segmentation Fault casero!!!");
 
-
-          log_info(logger, "#TID: %d  - Actualizo Contexto Ejecución", contexto.tid);
-
+          log_debug(logger, "Segmentation Fault casero!!!");
+          //log_info(logger, "#TID: %d  - Actualizo Contexto Ejecución", contexto.tid);
 
           /*
           devolver el contexto a la memoria
           devolver el tid al kernel con motivo de seg fault
-
           actualizar_contexto(socket_memoria, pid, tid, contexto);
-
           terminar_hilo(socket_kernel, tid);
-
           */
      }
 }
@@ -552,19 +549,35 @@ int mmu(int dir_logica)
 {
      if (((dir_logica + contexto.Base) <= (contexto.Limite)))
      {
-          return 1;
+          return 1; //direccion valida
  
      }
      else
      {
-          return 0;
+          return 0; //direccion invalida
      }
 }
 
 void write_mem(char *registro1, char *registro2)
 {
      uint32_t valor_registro1 = obtener_registro(registro1);
-     int dir_fisica = mmu_dirLog_dirfis(valor_registro1);
+     int dir_fisica;
+
+     if(mmu(valor_registro1 == 1)){
+          dir_fisica = mmu_dirLog_dirfis(valor_registro1);
+     } else {
+          log_debug(logger, "Segmentation Fault casero!!!");
+          //log_info(logger, "#TID: %d  - Actualizo Contexto Ejecución", contexto.tid);
+
+          /*
+          devolver el contexto a la memoria
+          devolver el tid al kernel con motivo de seg fault
+          actualizar_contexto(socket_memoria, pid, tid, contexto);
+          terminar_hilo(socket_kernel, tid);
+          */
+
+         //return;
+     }
 
      t_datos_escribir_memoria* datos = malloc(sizeof(t_datos_escribir_memoria));
      datos->pid = contexto.pid;
@@ -606,6 +619,7 @@ void jnz_pc(char *registro, char *valor)
           incrementar_pc();
      }
 }
+
 uint32_t obtener_registro(char *registro)
 {
      if (strcmp(registro, "PC") == 0)

@@ -23,12 +23,10 @@ int main(int argc, char* argv[]) {
     while(1) {
         pthread_t thread_memoria;
         int *socket_memoria = malloc(sizeof(int));
-        log_debug(logger, "Esperando nueva conexion...");
         *socket_memoria = accept((int)fd_escucha, NULL, NULL);
-        log_debug(logger, "Conexion aceptada en socket: %d", *socket_memoria);
-        log_debug(logger, "Memoria conectada");
-        pthread_create(&thread_memoria, NULL, (void*) atender_memoria, socket_memoria);
-        log_debug(logger, "Hilo creado para manejar peticion de memoria"); 
+        log_debug(logger, "Conexion de memoria aceptada en socket: %d", *socket_memoria);
+        //log_debug(logger, "Memoria conectada");
+        pthread_create(&thread_memoria, NULL, (void*) atender_memoria, socket_memoria); 
         pthread_detach(thread_memoria);
     }
 
@@ -42,7 +40,6 @@ void atender_memoria(void* socket_cliente) {
     int socket = *(int*)socket_cliente;
     free(socket_cliente);
 
-    log_debug(logger, "Esperando operacion en socket: %d", socket);
     int cod_op = recibir_operacion(socket);
 
     switch (cod_op) {
@@ -100,7 +97,6 @@ void atender_peticion_filesystem_memoria(int cod_op, int socket)
         enviar_respuesta_operacion(socket, false);
         break;
     }
-    log_debug(logger, "Operacion concretada, finalizar hilo");
     
 }
 

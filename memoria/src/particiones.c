@@ -42,8 +42,9 @@ t_particion* crear_particion_en_indice(uint32_t tamanio, int indice)
     if(tamanio > 0){
         particion_nueva->limite = (particion_nueva->base + tamanio) - 1;
     } else {
-        particion_nueva->limite = particion_nueva->base;
+        particion_nueva->limite = particion_nueva->base; //Si el proceso tiene tamaño 0, no "ocupará" espacio en memoria
     }
+
     particion_nueva->tamanio = tamanio;
     particion_nueva->esta_libre = true;
     particion_nueva->pid = UINT16_MAX;
@@ -54,7 +55,11 @@ t_particion* crear_particion_en_indice(uint32_t tamanio, int indice)
         return NULL;
     }
 
-    particion_original->base = particion_nueva->limite + 1;
+    if(tamanio == 0){
+        particion_original->base = particion_nueva->limite;
+    } else {
+        particion_original->base = particion_nueva->limite + 1;
+    }
     particion_original->limite = particion_original->limite; //el limite de la particion original queda igual;
     particion_original->tamanio = particion_original->tamanio - particion_nueva->tamanio;
 

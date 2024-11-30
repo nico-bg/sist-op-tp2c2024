@@ -16,26 +16,15 @@ int main(int argc, char* argv[]) {
     inicializar_particiones();
 
     char* puerto_escucha;
-
     pthread_t thread_kernel;
-
-    /*ip_filesystem = config_get_string_value(config, "IP_FILESYSTEM");
-    puerto_filesystem = config_get_string_value(config, "PUERTO_FILESYSTEM");*/
     puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
-
-
-    /* Conexión con el Filesystem */
- /*   socket_filesystem = conectar_a_socket(ip_filesystem, puerto_filesystem);
-    log_debug(logger, "Conectado al Filesystem");
-    //enviar_mensaje("Hola, soy la Memoria", socket_filesystem);*/
-
 
     /* Conexión con la CPU */
     int fd_escucha = iniciar_servidor(puerto_escucha);
     log_debug(logger, "Memoria lista para escuchar al CPU y Kernel");
     
-    int socket_cpu = esperar_cliente(fd_escucha);   //  No se está haciendo un check para asegurar que
-    log_debug(logger, "Se conectó el CPU");          //  es la CPU quien se está conectando - definir
+    int socket_cpu = esperar_cliente(fd_escucha);
+    log_debug(logger, "Se conectó el CPU");
 
     /* Se crea un hilo para escuchar al kernel */
     pthread_create(&thread_kernel, NULL, hilo_kernel, fd_escucha);
@@ -57,11 +46,9 @@ void hilo_kernel(void* fd_escucha)
     while(1) {  // Crea un nuevo hilo por cada conexión
         pthread_t kernelThread;
         int *socket_kernel = malloc(sizeof(int));
-        log_debug(logger, "Esperando nueva conexion...");
         *socket_kernel = accept((int)fd_escucha, NULL, NULL);
         log_info(logger, "## Kernel Conectado - FD del socket: %d", *socket_kernel);
         pthread_create(&kernelThread, NULL, (void*) atender_kernel, socket_kernel);
-        log_debug(logger, "Hilo creado para manejar peticion de memoria");
         pthread_detach(kernelThread);
     }
 }
@@ -151,6 +138,7 @@ int atender_cpu(int socket_cliente)
     switch(codigo_operacion) {
         case -1:
             log_error(logger, "El CPU se desconectó");
+            abort();
             break;
         default:
             atender_peticion_cpu(codigo_operacion, socket_cliente);
@@ -183,9 +171,10 @@ void atender_peticion_cpu(int cod_op, int socket)
 
         case OPERACION_DEVOLVER_INSTRUCCION:
             t_datos_obtener_instruccion* datos_devolver_instruccion = (t_datos_obtener_instruccion*)leer_buffer_cpu(cod_op, socket);
-            char* nombre_archivo = obtener_archivo_pseudocodigo(datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, NOMBRE);
+            char* nombre_archivo = obtener_archivo_pseudocodigo(datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, PATH);
             char* inst = devolver_instruccion(datos_devolver_instruccion);
             log_info(logger, "## Obtener instrucción - (PID:TID) - (%d:%d) - Instrucción: <%s>", datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, inst);
+            log_debug(logger, "Archivo: <%s>", nombre_archivo);
             enviar_buffer(cod_op, socket, inst);
             free(nombre_archivo);
             break;
