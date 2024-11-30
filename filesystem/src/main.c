@@ -254,7 +254,6 @@ if (archivo == NULL) {
     
     fclose(archivo);
     free(path_bloques);
-    free(mount_dir);
     
     usleep(retardo * 1000);
 }
@@ -286,7 +285,6 @@ void crear_archivo_metadata(const char* nombre_archivo, t_file_metadata* metadat
     if(archivo == NULL) {
         log_error(logger, "Error al crear archivo de metadata");
         free(path_metadata);
-        free(mount_dir);
         return;
     }
     
@@ -294,7 +292,6 @@ void crear_archivo_metadata(const char* nombre_archivo, t_file_metadata* metadat
     
     fclose(archivo);
     free(path_metadata);
-    free(mount_dir);
 }
 
 bool crear_archivo_dump(const char* nombre_archivo, void* contenido, size_t tamanio) {
