@@ -154,20 +154,9 @@ void syscall_crear_proceso(char* archivo_pseudocodigo, uint32_t tamanio_proceso,
     crear_proceso(archivo_pseudocodigo, tamanio_proceso, prioridad);
 }
 
-void syscall_finalizar_proceso()
+static void finalizar_proceso_por_pid(uint32_t pid)
 {
-    pthread_mutex_lock(&mutex_estado_exec);
-    bool es_hilo_principal = estado_exec->tid == 0;
-    t_tcb* hilo_principal = estado_exec;
-    pthread_mutex_unlock(&mutex_estado_exec);
-
-    if(!es_hilo_principal) {
-        log_error(logger_debug, "Error al finalizar proceso, el hilo que invocó la syscall no es TID 0");
-    }
-
-    transicion_exec_a_exit();
-
-    t_pcb* proceso = buscar_proceso(hilo_principal->pid_padre);
+    t_pcb* proceso = buscar_proceso(pid);
     op_code respuesta = pedir_finalizacion_proceso_a_memoria(proceso);
 
     if(respuesta != OPERACION_CONFIRMAR) {
@@ -205,6 +194,20 @@ void syscall_finalizar_proceso()
     log_info(logger, "## Finaliza el proceso %d", proceso->pid);
     sem_post(&semaforo_memoria_suficiente);
     destruir_pcb(proceso);
+}
+
+void syscall_finalizar_proceso()
+{
+    pthread_mutex_lock(&mutex_estado_exec);
+    bool es_hilo_principal = estado_exec->tid == 0;
+    t_tcb* hilo_principal = estado_exec;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    if(!es_hilo_principal) {
+        log_error(logger_debug, "Error al finalizar proceso, el hilo que invocó la syscall no es TID 0");
+    }
+
+    finalizar_proceso_por_pid(hilo_principal->pid_padre);
 }
 
 void syscall_crear_mutex(char* recurso)
@@ -516,6 +519,7 @@ static void esperar_respuesta_dump_memory(void* args)
         transicion_blocked_a_ready(datos->hilo);
     } else {
         transicion_blocked_a_exit(datos->hilo);
+        finalizar_proceso_por_pid(datos->hilo->pid_padre);
     }
 
     close(datos->fd_conexion);

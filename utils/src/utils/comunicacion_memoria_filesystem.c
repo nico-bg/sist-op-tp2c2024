@@ -34,7 +34,7 @@ t_datos_dump_memory_fs* deserializar_datos_dump_memory_fs(t_buffer* buffer)
 
 void enviar_respuesta_operacion(int socket, bool resultado) {
     uint32_t respuesta = resultado ? 1 : 0;
-    if(respuesta = 0){
+    if(respuesta == 0){
         respuesta = OPERACION_NOTIFICAR_ERROR;
     } else {
         respuesta = OPERACION_CONFIRMAR;

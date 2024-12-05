@@ -255,10 +255,10 @@ void ciclo_de_instruccion()
 
           incrementar_pc();
 
+          actualizar_contexto();
           enviar_operacion_a_kernel(OPERACION_DUMP_MEMORY);
           esperar_confirmacion();
 
-          debe_actualizar_contexto = true;
           omitir_interrupcion = true;
      }
 
