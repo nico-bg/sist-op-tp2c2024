@@ -39,7 +39,8 @@ void syscall_finalizar_hilo()
 
     // Desvinculo el hilo de la lista de tids del proceso
     tid_auxiliar = hilo->tid;
-    list_remove_by_condition(proceso->tids, existe_tid_en_lista);
+    void* tid_eliminado = list_remove_by_condition(proceso->tids, existe_tid_en_lista);
+    free(tid_eliminado);
 
     // Busco los mutex que tiene asignados el hilo a finalizar
     tid_auxiliar = hilo->tid;
@@ -74,6 +75,8 @@ void syscall_finalizar_hilo()
 
         transicion_blocked_a_ready(hilo_a_desbloquear);
     }
+
+    list_destroy(mutex_asignados);
 
     log_info(logger, "## (%d:%d) Finaliza el hilo", hilo->pid_padre, hilo->tid);
 }

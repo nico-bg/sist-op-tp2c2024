@@ -20,6 +20,10 @@ t_hilo_a_cpu* deserializar_hilo_a_cpu(t_buffer* buffer)
     return hilo_deserializado;
 }
 
+void destruir_hilo_a_cpu(t_hilo_a_cpu* hilo) {
+    free(hilo);
+}
+
 t_buffer* serializar_datos_crear_hilo(t_datos_crear_hilo* datos)
 {
     int archivo_pseudocodigo_length = strlen(datos->archivo_pseudocodigo) + 1;

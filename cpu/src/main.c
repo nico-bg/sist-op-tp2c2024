@@ -92,6 +92,9 @@ void escuchar_dispatch()
 
                log_debug(logger, "Contexto a seteado: %d:%d", contexto.pid, contexto.tid);
 
+               buffer_destroy(contexto_devuelto);
+               destruir_hilo_a_cpu(pcb);
+
                ciclo_de_instruccion();
 
                break;
@@ -125,11 +128,14 @@ void ciclo_de_instruccion()
 
      t_buffer *buffer_pedido_instruccion = serializar_datos_solicitar_instruccion(datos);
 
+     destruir_datos_solicitar_instruccion(datos);
+
      char *instruccion = pedir_proxima_instruccion(socket_memoria, buffer_pedido_instruccion);
 
      // Decode
 
      char **estructura_instruccion = string_split(instruccion, " ");
+     free(instruccion);
 
      if (strcmp(estructura_instruccion[0], "SET") == 0)
      {     
@@ -381,6 +387,8 @@ void ciclo_de_instruccion()
 
           omitir_interrupcion = true;
      }
+
+     string_array_destroy(estructura_instruccion);
 
      // CHECK INTERRUPT
      pthread_mutex_lock(&mutex_interrupciones);
@@ -699,7 +707,13 @@ char *pedir_proxima_instruccion(int servidor_memoria, t_buffer *buffer_pedido_de
 
      t_datos_devolver_instruccion *datos = deserializar_datos_devolver_instruccion(instruccion_paquete_recibido);
 
-     return datos->instruccion;
+     buffer_destroy(instruccion_paquete_recibido);
+
+     char* instruccion = string_duplicate(datos->instruccion);
+
+     destruir_datos_devolver_instruccion(datos);
+
+     return instruccion;
 }
 
 u_int32_t lectura_memoria(u_int32_t dir_fisica)

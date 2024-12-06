@@ -66,6 +66,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
 
         syscall_crear_proceso(datos_crear_proceso->archivo_pseudocodigo, datos_crear_proceso->tamanio_proceso, datos_crear_proceso->prioridad);
         destruir_datos_crear_proceso(datos_crear_proceso);
+        buffer_destroy(buffer);
 
         // Continuamos ejecutando el hilo que solicitó la syscall
         procesar_instrucciones_cpu(hilo_en_ejecucion, false);
@@ -84,6 +85,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
 
         syscall_crear_hilo(datos_crear_hilo->archivo_pseudocodigo, datos_crear_hilo->prioridad);
         destruir_datos_crear_hilo(datos_crear_hilo);
+        buffer_destroy(buffer);
 
         enviar_operacion(OPERACION_CONFIRMAR);
 
@@ -104,6 +106,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
 
         bool hilo_bloqueado = syscall_esperar_hilo(datos_esperar_hilo->tid);
         destruir_datos_operacion_hilo(datos_esperar_hilo);
+        buffer_destroy(buffer);
 
         enviar_operacion(OPERACION_CONFIRMAR);
 
@@ -122,6 +125,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
 
         syscall_crear_mutex(datos_crear_mutex->recurso);
         destruir_datos_operacion_mutex(datos_crear_mutex);
+        buffer_destroy(buffer);
 
         enviar_operacion(OPERACION_CONFIRMAR);
 
@@ -137,6 +141,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
 
         bool mutex_asignado = syscall_bloquear_mutex(datos_bloquear_mutex->recurso);
         destruir_datos_operacion_mutex(datos_bloquear_mutex);
+        buffer_destroy(buffer);
 
         // Continuamos ejecutando el hilo que solicitó la syscall solo si el mutex fue asignado al hilo
         if(mutex_asignado) {
@@ -156,6 +161,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
 
         syscall_desbloquear_mutex(datos_desbloquear_mutex->recurso);
         destruir_datos_operacion_mutex(datos_desbloquear_mutex);
+        buffer_destroy(buffer);
 
         enviar_operacion(OPERACION_CONFIRMAR);
 
@@ -171,6 +177,7 @@ static void procesar_instrucciones_cpu(t_tcb* hilo_en_ejecucion, bool enviar_a_c
 
         syscall_io(datos_io->tiempo);
         destruir_datos_operacion_io(datos_io);
+        buffer_destroy(buffer);
         break;
     case OPERACION_DUMP_MEMORY:
         log_info(logger, "## (%d:%d) - Solicitó syscall: DUMP_MEMORY", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
