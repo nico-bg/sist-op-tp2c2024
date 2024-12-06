@@ -87,6 +87,7 @@ void atender_peticion_kernel(int cod_op, int socket)
                 log_debug(logger, "No hay suficiente espacio para inicializar proceso con PID %d y tamaño %d", datos_crear_proceso->pid, datos_crear_proceso->tamanio);
                 notificar_error(socket);
             }
+            destruir_datos_inicializacion_proceso(datos_crear_proceso);
             break;
 
         case OPERACION_FINALIZAR_PROCESO:
@@ -94,6 +95,7 @@ void atender_peticion_kernel(int cod_op, int socket)
             int tam = finalizar_proceso(datos_finalizar_proceso);
             log_info(logger, "## Proceso Destruido -  PID: %d - Tamaño: %d", datos_finalizar_proceso->pid, tam);
             confirmar_operacion(socket);
+            destruir_datos_finalizacion_proceso(datos_finalizar_proceso);
             break;
 
         case OPERACION_CREAR_HILO:
@@ -101,6 +103,7 @@ void atender_peticion_kernel(int cod_op, int socket)
             iniciar_hilo(datos_crear_hilo);
             log_info(logger, "## Hilo Creado - (PID:TID) - (%d:%d)", datos_crear_hilo->pid, datos_crear_hilo->tid);
             confirmar_operacion(socket);
+            destruir_datos_inicializacion_hilo(datos_crear_hilo);
             break;
 
         case OPERACION_FINALIZAR_HILO:
@@ -108,6 +111,7 @@ void atender_peticion_kernel(int cod_op, int socket)
             finalizar_hilo(datos_finalizar_hilo);
             log_info(logger, "## Hilo Destruido - (PID:TID) - (%d:%d)", datos_finalizar_hilo->pid, datos_finalizar_hilo->tid);
             confirmar_operacion(socket);
+            destruir_datos_finalizacion_hilo(datos_finalizar_hilo);
             break;
 
         case OPERACION_DUMP_MEMORY:
@@ -122,6 +126,7 @@ void atender_peticion_kernel(int cod_op, int socket)
                 notificar_error(socket);
                 log_debug(logger, "Error en el dump memory");
             }
+            destruir_datos_dump_memory(datos_mem_dump);
             close(socket_filesystem);
             break;
 
@@ -167,6 +172,7 @@ void atender_peticion_cpu(int cod_op, int socket)
             actualizar_contexto_ejecucion(datos_actualizar_contexto);
             log_info(logger, "## Contexto Actualizado - (PID:TID) - (%d:%d)", datos_actualizar_contexto->pid, datos_actualizar_contexto->tid);
             confirmar_operacion(socket);
+            destruir_datos_contexto(datos_actualizar_contexto);
             break;
 
         case OPERACION_DEVOLVER_INSTRUCCION:
@@ -177,6 +183,7 @@ void atender_peticion_cpu(int cod_op, int socket)
             log_debug(logger, "Archivo: <%s>", nombre_archivo);
             enviar_buffer(cod_op, socket, inst);
             free(nombre_archivo);
+            destruir_datos_solicitar_instruccion(datos_devolver_instruccion);
             break;
 
         case OPERACION_LEER_MEMORIA:
