@@ -153,6 +153,7 @@ void inicializar_bloques(char* mount_dir, int block_size, int block_count) {
         }
         free(buffer);
     }
+    free(bloques_path);
     fclose(bloques_f);
 }
 

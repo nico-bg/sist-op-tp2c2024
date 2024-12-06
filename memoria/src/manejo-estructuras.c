@@ -288,6 +288,8 @@ t_contexto* devolver_contexto_ejecucion(t_cpu_solicitar_contexto* datos){
     contexto->GX = hilo->hilo.GX;
     contexto->HX = hilo->hilo.HX;
 
+    destruir_datos_solicitar_contexto(datos);
+
     return contexto;
 }
 

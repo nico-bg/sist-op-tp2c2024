@@ -39,6 +39,8 @@ void* leer_buffer_kernel(int cod_op, int socket_cliente){
             break;
     }
 
+    buffer_destroy(buffer);
+
     return datos;
 }
 
@@ -80,6 +82,8 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente){
             break;
     }
 
+    buffer_destroy(buffer);
+
     return datos;
 }
 
@@ -93,8 +97,7 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
 
         case OPERACION_DEVOLVER_CONTEXTO_EJECUCION:
 
-            t_contexto* contexto = malloc(sizeof(t_contexto));
-            contexto = (t_contexto*)datos;
+            t_contexto* contexto = (t_contexto*)datos;
 
             buffer = serializar_datos_contexto(contexto);
 
