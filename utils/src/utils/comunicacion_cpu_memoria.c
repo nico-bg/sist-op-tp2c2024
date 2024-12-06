@@ -144,6 +144,7 @@ t_datos_devolver_instruccion* deserializar_datos_devolver_instruccion(t_buffer* 
 }
 
 void destruir_datos_devolver_instruccion(t_datos_devolver_instruccion* datos){
+    free(datos->instruccion);
     free(datos);
 }
 
