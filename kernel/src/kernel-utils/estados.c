@@ -36,7 +36,7 @@ void inicializar_estados()
     lista_procesos = list_create();
     estado_new = list_create();
     estado_ready = list_create();
-    estado_exec = malloc(sizeof(t_tcb));
+    estado_exec = NULL;
     estado_blocked = list_create();
     estado_exit = list_create();
 
