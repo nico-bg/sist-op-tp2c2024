@@ -2,7 +2,6 @@
 
 // Necesaria para poder filtrar por prioridad en `obtener_lista_mayor_prioridad`
 static int mayor_prioridad_en_ready;
-static int tid_auxiliar;
 
 static void transicion_exec_a_ready(t_tcb* hilo);
 static void transicion_ready_a_exec(t_tcb* hilo);
@@ -18,8 +17,6 @@ static void* temporizador_desalojo_por_quantum(void* arg);
 static t_tcb* obtener_siguiente_a_exec_colas_multinivel();
 static void enviar_hilo_a_cpu(t_tcb* hilo);
 static void procesar_instrucciones_cpu(t_tcb* hilo, bool enviar_a_cpu);
-static bool esta_en_blocked(t_tcb* hilo);
-static bool existe_tcb_en_lista(void* elemento);
 static void enviar_operacion(op_code operacion);
 
 void* planificador_corto_plazo()
@@ -372,23 +369,6 @@ static void enviar_hilo_a_cpu(t_tcb* hilo)
     free(datos_a_enviar);
     buffer_destroy(paquete_serializado);
     eliminar_paquete(paquete);
-}
-
-static bool existe_tcb_en_lista(void* elemento)
-{
-    t_tcb* hilo = (t_tcb*) elemento;
-
-    return hilo->tid == tid_auxiliar;
-}
-
-static bool esta_en_blocked(t_tcb* hilo)
-{
-    tid_auxiliar = hilo->tid;
-    pthread_mutex_lock(&mutex_estado_blocked);
-    bool esta_bloqueado = list_any_satisfy(estado_blocked, existe_tcb_en_lista);
-    pthread_mutex_unlock(&mutex_estado_blocked);
-
-    return esta_bloqueado;
 }
 
 static void enviar_operacion(op_code operacion) {
