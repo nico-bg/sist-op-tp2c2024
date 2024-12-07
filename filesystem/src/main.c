@@ -89,7 +89,7 @@ void atender_peticion_filesystem_memoria(int cod_op, int socket)
             
                 // Liberar recursos
                 destruir_datos_dump_memory_fs(datos_dump);
-                buffer_destroy(buffer);S
+                buffer_destroy(buffer);
             }
         break;
 
