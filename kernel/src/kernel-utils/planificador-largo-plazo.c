@@ -118,6 +118,11 @@ static t_tcb* crear_hilo_principal(t_pcb* proceso_padre)
     hilo_principal->prioridad = proceso_padre->prioridad;
     hilo_principal->hilos_bloqueados = list_create();
 
+    uint32_t* tid_nuevo_hilo = malloc(sizeof(uint32_t)); // Creamos una copia dinámica para poder guardarlo en la lista
+    *tid_nuevo_hilo = hilo_principal->tid;
+
+    list_add(proceso_padre->tids, tid_nuevo_hilo);
+
     return hilo_principal;
 }
 

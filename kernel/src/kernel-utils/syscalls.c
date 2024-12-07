@@ -1,9 +1,7 @@
 #include <kernel-utils/syscalls.h>
 
-static void transicion_exec_a_exit();
 static void transicion_exec_a_blocked();
 static void transicion_blocked_a_ready(t_tcb* hilo);
-static void transicion_blocked_a_exit(t_tcb* hilo);
 static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo);
 static t_pcb* buscar_proceso(uint32_t pid);
 static bool encontrar_proceso_por_pid_auxiliar(void* elemento);
@@ -26,8 +24,6 @@ void syscall_finalizar_hilo()
     pthread_mutex_lock(&mutex_estado_exec);
     t_tcb* hilo = estado_exec;
     pthread_mutex_unlock(&mutex_estado_exec);
-
-    transicion_exec_a_exit();
 
     op_code respuesta = pedir_finalizacion_hilo_a_memoria(hilo);
     t_pcb* proceso = buscar_proceso(hilo->pid_padre);
@@ -77,6 +73,7 @@ void syscall_finalizar_hilo()
     }
 
     list_destroy(mutex_asignados);
+    destruir_tcb(hilo);
 
     log_info(logger, "## (%d:%d) Finaliza el hilo", hilo->pid_padre, hilo->tid);
 }
@@ -180,6 +177,8 @@ static void finalizar_proceso_por_pid(uint32_t pid)
         t_tcb* hilo_a_liberar = buscar_hilo_en_proceso(proceso, *tid_a_liberar);
 
         list_remove_element(proceso->tids, tid_a_liberar);
+
+        free(tid_a_liberar);
 
         // Paso a READY todos los hilos que esperaban a que `hilo_a_liberar` finalice
         while(!list_is_empty(hilo_a_liberar->hilos_bloqueados)) {
@@ -355,22 +354,6 @@ void syscall_dump_memory()
 
 /* UTILIDADES */
 
-static void transicion_exec_a_exit()
-{
-    // Desalojo el hilo del estado EXEC guardándolo en otra variable auxiliar
-    pthread_mutex_lock(&mutex_estado_exec);
-    t_tcb* hilo_a_exit = estado_exec;
-    estado_exec = NULL;
-    pthread_mutex_unlock(&mutex_estado_exec);
-
-    // Agregamos el hilo al estado EXIT
-    pthread_mutex_lock(&mutex_estado_exit);
-    list_add(estado_exit, hilo_a_exit);
-    pthread_mutex_unlock(&mutex_estado_exit);
-
-    sem_post(&semaforo_estado_exit);
-}
-
 static void transicion_exec_a_blocked()
 {
     // Desalojo el hilo del estado EXEC guardándolo en otra variable auxiliar
@@ -398,18 +381,6 @@ static void transicion_blocked_a_ready(t_tcb* hilo)
     pthread_mutex_unlock(&mutex_estado_ready);
 
     sem_post(&semaforo_estado_ready);
-}
-
-static void transicion_blocked_a_exit(t_tcb* hilo)
-{
-    pthread_mutex_lock(&mutex_estado_blocked);
-    list_remove_element(estado_blocked, hilo);
-    pthread_mutex_unlock(&mutex_estado_blocked);
-
-    pthread_mutex_lock(&mutex_estado_exit);
-    list_add(estado_exit, hilo);
-    pthread_mutex_unlock(&mutex_estado_exit);
-    sem_post(&semaforo_estado_exit);
 }
 
 static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo)
@@ -497,6 +468,11 @@ static t_tcb* buscar_hilo_en_proceso(t_pcb* proceso, uint32_t tid)
             pthread_mutex_unlock(&mutex_estado_blocked);
         }
 
+        // Si no se encuentra en los anteriores, tal vez se encuentre en EXEC
+        if(hilo_encontrado == NULL && estado_exec->tid == tid) {
+            hilo_encontrado = estado_exec;
+        }
+
         return hilo_encontrado;
     } else {
         return NULL;
@@ -521,7 +497,6 @@ static void esperar_respuesta_dump_memory(void* args)
     if(respuesta == OPERACION_CONFIRMAR) {
         transicion_blocked_a_ready(datos->hilo);
     } else {
-        transicion_blocked_a_exit(datos->hilo);
         finalizar_proceso_por_pid(datos->hilo->pid_padre);
     }
 
