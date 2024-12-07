@@ -96,6 +96,8 @@ uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
 
     free(actual_proceso);
 
+    destruir_datos_finalizacion_hilo(datos_fin_hilo);
+
     return tamanio;
 }
 
@@ -154,6 +156,8 @@ void finalizar_hilo(t_datos_finalizacion_hilo* datos){
     }
 
     liberar_instrucciones(actual->hilo.instrucciones);
+    free(actual->hilo.archivo_pseudocodigo);
+    
     free(actual);
 
 }

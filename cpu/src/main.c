@@ -621,6 +621,9 @@ void write_mem(char *registro1, char *registro2)
      }
 
      log_info(logger, " ## TID: %d - Accion: ESCRITURA - Dirección Fisica: %d", contexto.tid, dir_fisica);
+     buffer_destroy(paquete_serializado);
+     eliminar_paquete(paquete);
+     destruir_datos_escribir_memoria(datos);
 }
 
 int mmu_dirLog_dirfis(int dir_logica)

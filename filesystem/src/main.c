@@ -89,6 +89,7 @@ void atender_peticion_filesystem_memoria(int cod_op, int socket)
             
                 // Liberar recursos
                 destruir_datos_dump_memory_fs(datos_dump);
+                buffer_destroy(buffer);
             }
         break;
 
@@ -296,8 +297,7 @@ void crear_archivo_metadata(const char* nombre_archivo, t_file_metadata* metadat
 }
 
 bool crear_archivo_dump(const char* nombre_archivo, void* contenido, size_t tamanio) {
-    log_info(logger, "## Archivo Creado: %s - Tamaño: %zu", nombre_archivo, tamanio);
-    
+  
     int bloques_datos = calcular_bloques_necesarios(tamanio);
     int bloques_encontrados;
     
@@ -306,6 +306,8 @@ bool crear_archivo_dump(const char* nombre_archivo, void* contenido, size_t tama
         log_error(logger, "No hay suficientes bloques disponibles");
         return false;
     }
+    
+    log_info(logger, "## Archivo Creado: %s - Tamaño: %zu", nombre_archivo, tamanio);
     
     int bloque_indice = bloques[0];
     for(int i = 0; i < bloques_encontrados; i++) {
