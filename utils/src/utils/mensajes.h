@@ -34,7 +34,8 @@ typedef enum
 	OPERACION_DEVOLVER_INSTRUCCION,
 	OPERACION_ACTUALIZAR_CONTEXTO,
 	OPERACION_LEER_MEMORIA,
-	OPERACION_ESCRIBIR_MEMORIA
+	OPERACION_ESCRIBIR_MEMORIA,
+	OPERACION_SEGMENTATION_FAULT
 } op_code;
 
 typedef struct
@@ -43,6 +44,7 @@ typedef struct
 	t_buffer* buffer;
 } t_paquete;
 
+void confirmar_oper (int socket_cliente);
 t_buffer* serializar_paquete(t_paquete* paquete);
 void eliminar_paquete(t_paquete* paquete);
 void enviar_mensaje(char* mensaje, int socket_cliente);

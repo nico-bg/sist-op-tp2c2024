@@ -1,18 +1,19 @@
 #include <kernel-utils/syscalls.h>
 
-static void transicion_exec_a_exit();
 static void transicion_exec_a_blocked();
 static void transicion_blocked_a_ready(t_tcb* hilo);
-static void transicion_blocked_a_exit(t_tcb* hilo);
-// static op_code solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid);
-// static op_code solicitar_finalizacion_proceso_a_memoria(uint32_t pid);
 static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo);
 static t_pcb* buscar_proceso(uint32_t pid);
 static bool encontrar_proceso_por_pid_auxiliar(void* elemento);
 static bool existe_tid_en_lista(void* elemento);
+static bool existe_tid_y_pid_en_lista(void* elemento);
 static t_tcb* buscar_hilo_en_proceso(t_pcb* proceso, uint32_t tid);
 static bool encontrar_mutex_proceso_en_ejecucion(void* elemento);
 static void esperar_respuesta_dump_memory(void* args);
+static bool esta_mutex_asignado_a_tid(void* elemento);
+static op_code pedir_finalizacion_hilo_a_memoria(t_tcb* hilo);
+static op_code pedir_finalizacion_proceso_a_memoria(t_pcb* proceso);
+static void remover_hilo_de_ready_o_blocked(t_tcb* hilo);
 
 uint32_t pid_auxiliar;
 uint32_t tid_auxiliar;
@@ -20,8 +21,61 @@ char* recurso_buscado;
 
 void syscall_finalizar_hilo()
 {
-    // El planificador de largo plazo se encarga de liberar los procesos
-    transicion_exec_a_exit();
+    pthread_mutex_lock(&mutex_estado_exec);
+    t_tcb* hilo = estado_exec;
+    pthread_mutex_unlock(&mutex_estado_exec);
+
+    op_code respuesta = pedir_finalizacion_hilo_a_memoria(hilo);
+    t_pcb* proceso = buscar_proceso(hilo->pid_padre);
+
+    if(respuesta != OPERACION_CONFIRMAR) {
+        log_debug(logger_debug, "Respuesta desconocida al finalizar hilo. Cod: %d, PID: %d, TID: %d", respuesta, hilo->pid_padre, hilo->tid);
+        abort();
+    }
+
+    // Desvinculo el hilo de la lista de tids del proceso
+    tid_auxiliar = hilo->tid;
+    void* tid_eliminado = list_remove_by_condition(proceso->tids, existe_tid_en_lista);
+    free(tid_eliminado);
+
+    // Busco los mutex que tiene asignados el hilo a finalizar
+    tid_auxiliar = hilo->tid;
+    t_list* mutex_asignados = list_filter(proceso->mutex, esta_mutex_asignado_a_tid);
+
+    // Liberamos todos los mutex/recursos que tiene asignados el hilo a finalizar
+    while(!list_is_empty(mutex_asignados)) {
+        t_mutex* mutex_a_liberar = list_get(mutex_asignados, 0);
+        list_remove_element(mutex_asignados, mutex_a_liberar);
+
+        bool hay_hilos_bloqueados = !queue_is_empty(mutex_a_liberar->hilos_bloqueados);
+
+        if(hay_hilos_bloqueados) {
+            // Asigno el mutex al siguiente hilo bloqueado (FIFO)
+            t_tcb* hilo_a_desbloquear = queue_pop(mutex_a_liberar->hilos_bloqueados);
+            mutex_a_liberar->esta_libre = false;
+            mutex_a_liberar->hilo_asignado = hilo_a_desbloquear;
+
+            // Desbloqueo el hilo pasándolo a READY
+            transicion_blocked_a_ready(hilo_a_desbloquear);
+        } else {
+            // Libero el mutex
+            mutex_a_liberar->esta_libre = true;
+            mutex_a_liberar->hilo_asignado = NULL;
+        }
+    }
+
+    // Liberamos todos los hilos que estaban esperando a que este hilo finalice
+    while(!list_is_empty(hilo->hilos_bloqueados)) {
+        t_tcb* hilo_a_desbloquear = list_get(hilo->hilos_bloqueados, 0);
+        list_remove_element(hilo->hilos_bloqueados, hilo_a_desbloquear);
+
+        transicion_blocked_a_ready(hilo_a_desbloquear);
+    }
+
+    list_destroy(mutex_asignados);
+    destruir_tcb(hilo);
+
+    log_info(logger, "## (%d:%d) Finaliza el hilo", hilo->pid_padre, hilo->tid);
 }
 
 void syscall_crear_hilo(char* archivo_pseudocodigo, uint32_t prioridad)
@@ -50,12 +104,18 @@ void syscall_crear_hilo(char* archivo_pseudocodigo, uint32_t prioridad)
 
     // Actualizamos los datos del proceso asociado
     proceso_invocador->ultimo_tid += 1;
-    list_add(proceso_invocador->tids, &nuevo_hilo->tid);
+
+    uint32_t* tid_nuevo_hilo = malloc(sizeof(uint32_t)); // Creamos una copia dinámica para poder guardarlo en la lista
+    *tid_nuevo_hilo = nuevo_hilo->tid;
+
+    list_add(proceso_invocador->tids, tid_nuevo_hilo);
 
     // Agregamos el nuevo hilo al estado READY para que pueda ser planificado
     pthread_mutex_lock(&mutex_estado_ready);
     list_add(estado_ready, nuevo_hilo);
     pthread_mutex_unlock(&mutex_estado_ready);
+
+    sem_post(&semaforo_estado_ready);
 
     log_info(logger, "## (%d:%d) Se crea el Hilo - Estado: READY", nuevo_hilo->pid_padre, nuevo_hilo->tid);
 
@@ -94,19 +154,62 @@ void syscall_crear_proceso(char* archivo_pseudocodigo, uint32_t tamanio_proceso,
     crear_proceso(archivo_pseudocodigo, tamanio_proceso, prioridad);
 }
 
+static void finalizar_proceso_por_pid(uint32_t pid)
+{
+    t_pcb* proceso = buscar_proceso(pid);
+    op_code respuesta = pedir_finalizacion_proceso_a_memoria(proceso);
+
+    if(respuesta != OPERACION_CONFIRMAR) {
+        log_debug(logger_debug, "Respuesta desconocida al finalizar proceso. Cod: %d, PID: %d", respuesta, proceso->pid);
+        abort();
+    }
+
+    // Saco el proceso de la lista de procesos
+    pthread_mutex_lock(&mutex_lista_procesos);
+    list_remove_element(lista_procesos, proceso);
+    pthread_mutex_unlock(&mutex_lista_procesos);
+
+    // Itero cada TID del proceso para finalizarlos, liberando los hilos bloqueados
+    while(!list_is_empty(proceso->tids)) {
+        int indice_ultimo_tid = list_size(proceso->tids) - 1;
+        uint32_t* tid_a_liberar = (uint32_t*) list_get(proceso->tids, indice_ultimo_tid);
+
+        t_tcb* hilo_a_liberar = buscar_hilo_en_proceso(proceso, *tid_a_liberar);
+
+        list_remove_element(proceso->tids, tid_a_liberar);
+
+        free(tid_a_liberar);
+
+        // Paso a READY todos los hilos que esperaban a que `hilo_a_liberar` finalice
+        while(!list_is_empty(hilo_a_liberar->hilos_bloqueados)) {
+            t_tcb* hilo_a_desbloquear = list_get(hilo_a_liberar->hilos_bloqueados, 0);
+            list_remove_element(hilo_a_liberar->hilos_bloqueados, hilo_a_desbloquear);
+
+            transicion_blocked_a_ready(hilo_a_desbloquear);
+        }
+
+        // Elimino al hilo del estado en que se encuentre y lo  destruyo
+        remover_hilo_de_ready_o_blocked(hilo_a_liberar);
+        destruir_tcb(hilo_a_liberar);
+    }
+
+    log_info(logger, "## Finaliza el proceso %d", proceso->pid);
+    sem_post(&semaforo_memoria_suficiente);
+    destruir_pcb(proceso);
+}
+
 void syscall_finalizar_proceso()
 {
     pthread_mutex_lock(&mutex_estado_exec);
     bool es_hilo_principal = estado_exec->tid == 0;
+    t_tcb* hilo_principal = estado_exec;
     pthread_mutex_unlock(&mutex_estado_exec);
 
     if(!es_hilo_principal) {
         log_error(logger_debug, "Error al finalizar proceso, el hilo que invocó la syscall no es TID 0");
     }
 
-    // Lo mandamos a EXIT para que el planificador de largo plazo se encargue de liberarlo
-    // En caso de ser TID 0, el planificador liberará el hilo y el proceso asociado, caso contrario solo el hilo
-    transicion_exec_a_exit();
+    finalizar_proceso_por_pid(hilo_principal->pid_padre);
 }
 
 void syscall_crear_mutex(char* recurso)
@@ -150,7 +253,7 @@ bool syscall_bloquear_mutex(char* recurso)
         return true;
     } else {
         transicion_exec_a_blocked();
-        queue_push(mutex->hilos_bloqueados, estado_exec);
+        queue_push(mutex->hilos_bloqueados, hilo_en_ejecucion);
 
         log_info(logger, "## (%d:%d) - Bloqueado por: MUTEX", hilo_en_ejecucion->pid_padre, hilo_en_ejecucion->tid);
 
@@ -174,8 +277,6 @@ void syscall_desbloquear_mutex(char* recurso)
     bool hay_mas_hilos_bloqueados = !queue_is_empty(mutex->hilos_bloqueados);
 
     if(correctamente_asignado && hay_mas_hilos_bloqueados) {
-        // TODO: Evaluar si es necesario bloquear con mutex
-        // ...porque se puede producir una RC con la liberación de hilos en EXIT
         t_tcb* hilo_a_desbloquear = queue_pop(mutex->hilos_bloqueados);
 
         mutex->hilo_asignado = hilo_a_desbloquear;
@@ -253,22 +354,6 @@ void syscall_dump_memory()
 
 /* UTILIDADES */
 
-static void transicion_exec_a_exit()
-{
-    // Desalojo el hilo del estado EXEC guardándolo en otra variable auxiliar
-    pthread_mutex_lock(&mutex_estado_exec);
-    t_tcb* hilo_a_exit = estado_exec;
-    estado_exec = NULL;
-    pthread_mutex_unlock(&mutex_estado_exec);
-
-    // Agregamos el hilo al estado EXIT
-    pthread_mutex_lock(&mutex_estado_exit);
-    list_add(estado_exit, hilo_a_exit);
-    pthread_mutex_unlock(&mutex_estado_exit);
-
-    sem_post(&semaforo_estado_exit);
-}
-
 static void transicion_exec_a_blocked()
 {
     // Desalojo el hilo del estado EXEC guardándolo en otra variable auxiliar
@@ -298,65 +383,6 @@ static void transicion_blocked_a_ready(t_tcb* hilo)
     sem_post(&semaforo_estado_ready);
 }
 
-static void transicion_blocked_a_exit(t_tcb* hilo)
-{
-    pthread_mutex_lock(&mutex_estado_blocked);
-    list_remove_element(estado_blocked, hilo);
-    pthread_mutex_unlock(&mutex_estado_blocked);
-
-    pthread_mutex_lock(&mutex_estado_exit);
-    list_add(estado_exit, hilo);
-    pthread_mutex_unlock(&mutex_estado_exit);
-    sem_post(&semaforo_estado_exit);
-}
-
-
-// static op_code solicitar_finalizacion_proceso_a_memoria(uint32_t pid)
-// {
-//     int socket_memoria = crear_conexion_a_memoria();
-
-//     t_datos_finalizacion_proceso* datos = malloc(sizeof(t_datos_finalizacion_proceso));
-//     datos->pid = pid;
-
-//     t_paquete* paquete = malloc(sizeof(t_paquete));
-//     paquete->codigo_operacion = OPERACION_FINALIZAR_PROCESO;
-//     paquete->buffer = serializar_datos_finalizacion_proceso(datos);
-//     t_buffer* paquete_serializado = serializar_paquete(paquete);
-
-//     send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
-
-//     buffer_destroy(paquete_serializado);
-//     eliminar_paquete(paquete);
-//     destruir_datos_finalizacion_proceso(datos);
-
-//     op_code respuesta = recibir_operacion(socket_memoria);
-
-//     close(socket_memoria);
-
-//     return respuesta;
-// }
-
-// static op_code solicitar_finalizacion_hilo_a_memoria(uint32_t pid, uint32_t tid)
-// {
-//     int fd_conexion = crear_conexion_a_memoria();
-
-//     t_datos_finalizacion_hilo* datos_a_enviar = malloc(sizeof(t_datos_finalizacion_hilo));
-//     datos_a_enviar->pid = pid;
-//     datos_a_enviar->tid = tid;
-
-//     t_paquete* paquete = malloc(sizeof(t_paquete));
-//     paquete->codigo_operacion = OPERACION_FINALIZAR_HILO;
-//     paquete->buffer = serializar_datos_finalizacion_hilo(datos_a_enviar);
-
-//     t_buffer* paquete_serializado = serializar_paquete(paquete);
-
-//     send(fd_conexion, paquete_serializado->stream, paquete_serializado->size, 0);
-
-//     buffer_destroy(paquete_serializado);
-//     eliminar_paquete(paquete);
-//     close(fd_conexion);
-// }
-
 static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo)
 {
     // Nos conectamos a la Memoria
@@ -366,7 +392,7 @@ static void solicitar_inicializacion_hilo_a_memoria(t_tcb* hilo)
     t_datos_inicializacion_hilo* datos_a_enviar = malloc(sizeof(t_datos_inicializacion_hilo));
     datos_a_enviar->pid = hilo->pid_padre;
     datos_a_enviar->tid = hilo->tid;
-    datos_a_enviar->archivo_pseudocodigo = hilo->nombre_archivo;
+    datos_a_enviar->archivo_pseudocodigo = string_duplicate(hilo->nombre_archivo);
 
     // Empaquetamos y serializamos los datos junto con el código de operación
     t_paquete* paquete = malloc(sizeof(t_paquete));
@@ -394,6 +420,7 @@ static bool encontrar_proceso_por_pid_auxiliar(void* elemento)
  */
 static t_pcb* buscar_proceso(uint32_t pid)
 {
+    pid_auxiliar = pid;
     pthread_mutex_lock(&mutex_lista_procesos);
     t_pcb* proceso_encontrado = list_find(lista_procesos, encontrar_proceso_por_pid_auxiliar);
     pthread_mutex_unlock(&mutex_lista_procesos);
@@ -413,9 +440,17 @@ static bool existe_tid_en_lista(void* elemento)
     return *tid == tid_auxiliar;
 }
 
+static bool existe_tid_y_pid_en_lista(void* elemento)
+{
+    t_tcb* hilo = (t_tcb*) elemento;
+
+    return hilo->tid == tid_auxiliar && hilo->pid_padre == pid_auxiliar;
+}
+
 static t_tcb* buscar_hilo_en_proceso(t_pcb* proceso, uint32_t tid)
 {
     tid_auxiliar = tid;
+    pid_auxiliar = proceso->pid;
     bool tid_existente = list_any_satisfy(proceso->tids, existe_tid_en_lista);
 
     if(tid_existente) {
@@ -423,14 +458,19 @@ static t_tcb* buscar_hilo_en_proceso(t_pcb* proceso, uint32_t tid)
 
         // Buscamos el TID en la lista de estado READY
         pthread_mutex_lock(&mutex_estado_ready);
-        hilo_encontrado = list_find(estado_ready, existe_tid_en_lista);
+        hilo_encontrado = list_find(estado_ready, existe_tid_y_pid_en_lista);
         pthread_mutex_unlock(&mutex_estado_ready);
 
         // Si no se encuentra el hilo en READY, lo buscamos en BLOCKED
         if(hilo_encontrado == NULL) {
             pthread_mutex_lock(&mutex_estado_blocked);
-            hilo_encontrado = list_find(estado_blocked, existe_tid_en_lista);
+            hilo_encontrado = list_find(estado_blocked, existe_tid_y_pid_en_lista);
             pthread_mutex_unlock(&mutex_estado_blocked);
+        }
+
+        // Si no se encuentra en los anteriores, tal vez se encuentre en EXEC
+        if(hilo_encontrado == NULL && estado_exec->tid == tid) {
+            hilo_encontrado = estado_exec;
         }
 
         return hilo_encontrado;
@@ -457,9 +497,86 @@ static void esperar_respuesta_dump_memory(void* args)
     if(respuesta == OPERACION_CONFIRMAR) {
         transicion_blocked_a_ready(datos->hilo);
     } else {
-        transicion_blocked_a_exit(datos->hilo);
+        finalizar_proceso_por_pid(datos->hilo->pid_padre);
     }
 
     close(datos->fd_conexion);
     free(args);
+}
+
+static bool esta_mutex_asignado_a_tid(void* elemento)
+{
+    t_mutex* mutex = (t_mutex*) elemento;
+
+    return mutex->hilo_asignado != NULL && mutex->hilo_asignado->tid == tid_auxiliar;
+}
+
+static op_code pedir_finalizacion_hilo_a_memoria(t_tcb* hilo)
+{
+    int socket_memoria = crear_conexion_a_memoria();
+
+    t_datos_finalizacion_hilo* datos = malloc(sizeof(t_datos_finalizacion_hilo));
+    datos->pid = hilo->pid_padre;
+    datos->tid = hilo->tid;
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = OPERACION_FINALIZAR_HILO;
+    paquete->buffer = serializar_datos_finalizacion_hilo(datos);
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+    send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
+    destruir_datos_finalizacion_hilo(datos);
+
+    op_code respuesta = recibir_operacion(socket_memoria);
+
+    close(socket_memoria);
+
+    return respuesta;
+}
+
+static op_code pedir_finalizacion_proceso_a_memoria(t_pcb* proceso)
+{
+    int socket_memoria = crear_conexion_a_memoria();
+
+    t_datos_finalizacion_proceso* datos = malloc(sizeof(t_datos_finalizacion_proceso));
+    datos->pid = proceso->pid;
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = OPERACION_FINALIZAR_PROCESO;
+    paquete->buffer = serializar_datos_finalizacion_proceso(datos);
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+    send(socket_memoria, paquete_serializado->stream, paquete_serializado->size, 0);
+
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
+    destruir_datos_finalizacion_proceso(datos);
+
+    op_code respuesta = recibir_operacion(socket_memoria);
+
+    close(socket_memoria);
+
+    return respuesta;
+}
+
+static void remover_hilo_de_ready_o_blocked(t_tcb* hilo)
+{
+    // TODO: REVISAR SI ES NECESARIO BUSCAR EN ESTADO EXEC
+    // Remuevo el hilo de READY si es que se encuentra en este estado
+    pthread_mutex_lock(&mutex_estado_ready);
+    bool estaba_en_ready = list_remove_element(estado_ready, hilo);
+    pthread_mutex_unlock(&mutex_estado_ready);
+
+    // Si estaba en READY, reduzco el contador porque eliminamos un elemento
+    if(estaba_en_ready) {
+        sem_wait(&semaforo_estado_ready);
+    }
+
+    // Remuevo el hilo de BLOCKED si es que se encuentra en este estado
+    pthread_mutex_lock(&mutex_estado_blocked);
+    list_remove_element(estado_blocked, hilo);
+    pthread_mutex_unlock(&mutex_estado_blocked);
 }

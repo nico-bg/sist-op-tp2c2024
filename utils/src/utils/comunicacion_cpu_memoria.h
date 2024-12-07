@@ -41,6 +41,7 @@ typedef struct {
     uint32_t dir_fisica;
     uint32_t tamanio;
 } t_datos_leer_memoria;
+
 typedef struct {
     uint32_t pid;
     uint32_t tid;

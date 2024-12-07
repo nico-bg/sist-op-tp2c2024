@@ -39,6 +39,8 @@ void* leer_buffer_kernel(int cod_op, int socket_cliente){
             break;
     }
 
+    buffer_destroy(buffer);
+
     return datos;
 }
 
@@ -76,9 +78,11 @@ void* leer_buffer_cpu(int cod_op, int socket_cliente){
             break;
 
         default:
-            //log_error(logger, "CPU envió un código de operacion desconocido - %d", cod_op);
+            log_error(logger, "CPU envió un código de operacion desconocido - %d", cod_op);
             break;
     }
+
+    buffer_destroy(buffer);
 
     return datos;
 }
@@ -93,8 +97,7 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
 
         case OPERACION_DEVOLVER_CONTEXTO_EJECUCION:
 
-            t_contexto* contexto = malloc(sizeof(t_contexto));
-            contexto = (t_contexto*)datos;
+            t_contexto* contexto = (t_contexto*)datos;
 
             buffer = serializar_datos_contexto(contexto);
 
@@ -128,15 +131,8 @@ void enviar_buffer(int cod_op, int socket_cliente, void* datos){
             eliminar_paquete(paquete);
             destruir_datos_devolver_instruccion(instruccion);
             break;
-        case OPERACION_LEER_MEMORIA:
-            buffer = buffer_create(sizeof(uint32_t));
-            buffer_add_uint32(buffer, (uint32_t) datos);
-            send(socket_cliente, buffer->stream, buffer->size, 0);
-            buffer_destroy(buffer);
-            break;
-
         default:
-            //codigo
+            log_error(logger, "Codigo de operacion desconocido");
             break;
     }
 }
@@ -153,4 +149,41 @@ void notificar_error(int socket_cliente){
     uint32_t op = OPERACION_NOTIFICAR_ERROR;
 
     send(socket_cliente, &op, sizeof(uint32_t), 0);
+}
+
+op_code enviar_dump_memory(int socket_filesystem, t_datos_dump_memory* datos_kernel)
+{
+    char* nombre_archivo = NULL;
+    char* timestamp = obtener_timestamp();
+
+    int tamanio = snprintf(NULL, 0, "%d-%d-%s.dmp", datos_kernel->pid, datos_kernel->tid, timestamp) + 1;
+    nombre_archivo = malloc(tamanio);
+    snprintf(nombre_archivo, tamanio, "%d-%d-%s.dmp", datos_kernel->pid, datos_kernel->tid, timestamp);
+
+    free(timestamp);
+
+    nodo_proceso* nodo = buscar_proceso_por_pid(datos_kernel->pid);
+
+    t_datos_dump_memory_fs* datos_a_enviar = malloc(sizeof(t_datos_dump_memory_fs));
+    datos_a_enviar->nombre_archivo = nombre_archivo;
+    datos_a_enviar->tamanio = nodo->proceso.tamanio;
+    datos_a_enviar->contenido = malloc(datos_a_enviar->tamanio);
+    memcpy(datos_a_enviar->contenido, memoria + nodo->proceso.base, datos_a_enviar->tamanio);
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = OPERACION_DUMP_MEMORY;
+    paquete->buffer = serializar_datos_dump_memory_fs(datos_a_enviar);
+
+    t_buffer* paquete_serializado = serializar_paquete(paquete);
+
+    send(socket_filesystem, paquete_serializado->stream, paquete_serializado->size, 0);
+
+    buffer_destroy(paquete_serializado);
+    eliminar_paquete(paquete);
+    destruir_datos_dump_memory_fs(datos_a_enviar);
+
+    op_code codigo_operacion = recibir_operacion(socket_filesystem);
+    //close()
+
+    return codigo_operacion;
 }

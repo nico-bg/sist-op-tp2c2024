@@ -50,8 +50,6 @@ t_hilo_a_cpu* pcb;
 
 t_contexto contexto;
 
-//sem_t sem_ciclo_de_instruccion;
-
 u_int32_t lectura_memoria(u_int32_t dir_fisica);
 
 void escuchar_dispatch();
@@ -92,5 +90,11 @@ void ejecutar_instruccion_mutex(op_code operacion, char* recurso);
 void enviar_operacion_a_kernel(op_code operacion);
 
 void ejecutar_instruccion_hilo(op_code operacion, uint32_t tid);
+
+void incrementar_pc();
+
+void esperar_confirmacion();
+
+void segmentation_fault();
 
 #endif

@@ -13,13 +13,15 @@ void crear_proceso(char* nombre_archivo, uint32_t tamanio_proceso, uint32_t prio
 {
     // Inicializamos el nuevo proceso con PID incremental
     t_pcb* nuevo_proceso = malloc(sizeof(t_pcb));
-    nuevo_proceso->pid = ULTIMO_PID == 0 ? ULTIMO_PID : ULTIMO_PID + 1;
+    nuevo_proceso->pid = ULTIMO_PID + 1;
     nuevo_proceso->tids = list_create();
     nuevo_proceso->mutex = list_create();
     nuevo_proceso->tamanio = tamanio_proceso;
     nuevo_proceso->ultimo_tid = 0;
     nuevo_proceso->prioridad = prioridad;
-    nuevo_proceso->nombre_archivo = nombre_archivo;
+    nuevo_proceso->nombre_archivo = string_duplicate(nombre_archivo);
+
+    ULTIMO_PID = nuevo_proceso->pid;
 
     // Agregamos el proceso a nuestra `lista_procesos`
     pthread_mutex_lock(&mutex_lista_procesos);

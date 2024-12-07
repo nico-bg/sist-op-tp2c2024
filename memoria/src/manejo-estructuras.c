@@ -1,4 +1,5 @@
 #include "main.h"
+#include "globales.h"
 
 static nodo_proceso* nodo_primer_proceso = NULL;
 
@@ -8,6 +9,10 @@ nodo_proceso* buscar_proceso_por_pid(uint32_t pid){
 
     while(actual != NULL && actual->proceso.pid != pid){
         actual = actual->siguiente_nodo_proceso;
+    }
+
+    if(actual == NULL){
+        log_error(logger, "No se encontró el proceso");
     }
 
     return actual;
@@ -22,18 +27,22 @@ nodo_hilo* buscar_hilo_por_tid(uint32_t pid, uint32_t tid){
         actual = actual->siguiente_nodo_hilo;
     }
 
+    if(actual == NULL){
+        log_error(logger, "No se encontró el hilo");
+    }
+
     return actual;
 }
 
 
-void iniciar_proceso(t_datos_inicializacion_proceso* datos){
+void iniciar_proceso(t_datos_inicializacion_proceso* datos, t_particion* particion){
     
     nodo_proceso* nuevo_nodo_proceso = (nodo_proceso*)malloc(sizeof(nodo_proceso));
 
     nuevo_nodo_proceso->proceso.pid = datos->pid;
     nuevo_nodo_proceso->proceso.tamanio = datos->tamanio;
-    nuevo_nodo_proceso->proceso.base = 0;
-    nuevo_nodo_proceso->proceso.limite = nuevo_nodo_proceso->proceso.base + datos->tamanio;
+    nuevo_nodo_proceso->proceso.base = particion->base;
+    nuevo_nodo_proceso->proceso.limite = nuevo_nodo_proceso->proceso.base + particion->tamanio;
     nuevo_nodo_proceso->proceso.lista_hilos = NULL; //No inicializamos ningún hilo todavía
 
     nuevo_nodo_proceso->siguiente_nodo_proceso = NULL; //Inicializamos el puntero al siguiente elemento de la lista (vacío)
@@ -45,25 +54,49 @@ void iniciar_proceso(t_datos_inicializacion_proceso* datos){
          proceso->siguiente_nodo_proceso = nuevo_nodo_proceso;
     }
 
+    asignar_particion(particion, datos->tamanio, datos->pid);
+
     return;
 }
 
 uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
 
-    nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);
+    nodo_proceso* actual_proceso = nodo_primer_proceso;
+    nodo_proceso* previo_proceso = NULL;
 
-    int tamanio = proceso->proceso.tamanio;
-
-    nodo_hilo* actual = proceso->proceso.lista_hilos;
-    nodo_hilo* siguiente;
-
-    while(actual != NULL){ //Eliminamos todos los hilos del programa
-        siguiente = actual->siguiente_nodo_hilo;
-        free(actual);
-        actual = siguiente;
+    while(actual_proceso != NULL && actual_proceso->proceso.pid != datos->pid){
+        previo_proceso = actual_proceso;
+        actual_proceso = actual_proceso->siguiente_nodo_proceso;
     }
 
-    free(proceso);
+    int tamanio = actual_proceso->proceso.tamanio;
+
+    nodo_hilo* actual_hilo = actual_proceso->proceso.lista_hilos;
+    nodo_hilo* siguiente_hilo;
+    t_datos_finalizacion_hilo* datos_fin_hilo = malloc(sizeof(t_datos_finalizacion_hilo));
+    datos_fin_hilo->pid = datos->pid;
+
+    while(actual_hilo != NULL){ //Eliminamos todos los hilos del programa
+        siguiente_hilo = actual_hilo->siguiente_nodo_hilo;
+        datos_fin_hilo->tid = actual_hilo->hilo.tid;
+        finalizar_hilo(datos_fin_hilo);
+        actual_hilo = siguiente_hilo;
+        log_debug(logger, "Se eliminó hilo (TID:%d) de proceso (PID:%d)", datos_fin_hilo->tid, datos_fin_hilo->pid);
+    }
+
+    t_particion* particion = buscar_particion_por_pid(datos->pid);
+
+    desasignar_particion(particion);
+
+    if(previo_proceso == NULL){
+        nodo_primer_proceso = actual_proceso->siguiente_nodo_proceso;
+    } else {
+        previo_proceso->siguiente_nodo_proceso = actual_proceso->siguiente_nodo_proceso;
+    }
+
+    free(actual_proceso);
+
+    destruir_datos_finalizacion_hilo(datos_fin_hilo);
 
     return tamanio;
 }
@@ -71,6 +104,7 @@ uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
 void iniciar_hilo(t_datos_inicializacion_hilo* datos){
 
     nodo_proceso* nodo_proceso = buscar_proceso_por_pid(datos->pid);
+
     nodo_hilo* nuevo_nodo_hilo = (nodo_hilo*)malloc(sizeof(nodo_hilo));
 
     nuevo_nodo_hilo->hilo.tid = datos->tid;
@@ -84,7 +118,7 @@ void iniciar_hilo(t_datos_inicializacion_hilo* datos){
     nuevo_nodo_hilo->hilo.GX = 0;
     nuevo_nodo_hilo->hilo.HX = 0;
     
-    nuevo_nodo_hilo->hilo.archivo_pseudocodigo = datos->archivo_pseudocodigo;
+    nuevo_nodo_hilo->hilo.archivo_pseudocodigo = string_duplicate(datos->archivo_pseudocodigo);
     nuevo_nodo_hilo->hilo.instrucciones = leer_archivo_pseudocodigo(datos->archivo_pseudocodigo);
 
     nuevo_nodo_hilo->siguiente_nodo_hilo = NULL;
@@ -92,7 +126,7 @@ void iniciar_hilo(t_datos_inicializacion_hilo* datos){
     if(nodo_proceso->proceso.lista_hilos == NULL){   // Aun no se inicializó ningún hilo en el proceso
         nodo_proceso->proceso.lista_hilos = nuevo_nodo_hilo;
     } else {                                // El proceso ya tenía al menos un hilo
-        nodo_hilo* ultimo_hilo = buscar_ultimo_hilo(nodo_proceso->proceso.lista_hilos->hilo.tid);
+        nodo_hilo* ultimo_hilo = buscar_ultimo_hilo(nodo_proceso->proceso.pid);
         ultimo_hilo->siguiente_nodo_hilo = nuevo_nodo_hilo;
     }
 
@@ -101,9 +135,29 @@ void iniciar_hilo(t_datos_inicializacion_hilo* datos){
 
 void finalizar_hilo(t_datos_finalizacion_hilo* datos){
 
-    nodo_hilo* actual = buscar_hilo_por_tid(datos->pid, datos->tid);
+    nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);
+
+    nodo_hilo* actual = proceso->proceso.lista_hilos;
+    nodo_hilo* previo = NULL;
+
+    while(actual != NULL && actual->hilo.tid != datos->tid){
+        previo = actual;
+        actual = actual->siguiente_nodo_hilo;
+    }
+
+    if(actual == NULL){
+        log_error(logger, "ERROR AL ELIMINAR HILO: HILO NO ENCONTRADO");
+    }
+
+    if(previo == NULL){
+        proceso->proceso.lista_hilos = actual->siguiente_nodo_hilo;
+    } else {
+        previo->siguiente_nodo_hilo = actual->siguiente_nodo_hilo;
+    }
 
     liberar_instrucciones(actual->hilo.instrucciones);
+    free(actual->hilo.archivo_pseudocodigo);
+    
     free(actual);
 
 }
@@ -133,6 +187,7 @@ char** leer_archivo_pseudocodigo(const char* nombre_archivo_codigo){
     instrucciones[cont] = NULL; //La ultima linea del array será NULL, indica que terminan las instrucciones
 
     fclose(archivo);
+    free(path_archivo);
     return instrucciones;
 
 }
@@ -161,17 +216,13 @@ int contar_lineas(const char* path_archivo){
     return cont;
 }
 
-char* obtener_path_completo(char* nombre_archivo){
+char* obtener_path_completo(const char* nombre_archivo){
 
     t_config* config = iniciar_config("memoria.config");
     
     char* path_config = config_get_string_value(config, "PATH_INSTRUCCIONES");
 
     char* path_completo = malloc(strlen(path_config) + strlen(nombre_archivo) + 2); // +1 para '/' y +1 para '\0'
-
-    // string_append(&path_completo, path_config);
-    // string_append(&path_completo, "/");
-    // string_append(&path_completo, nombre_archivo);
 
     strcpy(path_completo, path_config);
     strcat(path_completo, "/");
@@ -191,6 +242,7 @@ char* obtener_archivo_pseudocodigo(u_int32_t pid, uint32_t tid, int code){
     } else if (code == PATH) {
         return obtener_path_completo(nodo_hilo->hilo.archivo_pseudocodigo);
     }
+    
 }
 
 nodo_proceso* buscar_ultimo_proceso(void){
@@ -209,6 +261,7 @@ nodo_proceso* buscar_ultimo_proceso(void){
 nodo_hilo* buscar_ultimo_hilo(uint32_t pid){
 
     nodo_proceso* nodo_proceso = buscar_proceso_por_pid(pid);
+
     nodo_hilo* actual = nodo_proceso->proceso.lista_hilos;
 
     while(actual->siguiente_nodo_hilo != NULL){
@@ -220,7 +273,6 @@ nodo_hilo* buscar_ultimo_hilo(uint32_t pid){
 
 
 t_contexto* devolver_contexto_ejecucion(t_cpu_solicitar_contexto* datos){
-
     nodo_proceso* proceso = buscar_proceso_por_pid(datos->pid);
     nodo_hilo* hilo = buscar_hilo_por_tid(datos->pid, datos->tid);
 
@@ -239,6 +291,8 @@ t_contexto* devolver_contexto_ejecucion(t_cpu_solicitar_contexto* datos){
     contexto->FX = hilo->hilo.FX;
     contexto->GX = hilo->hilo.GX;
     contexto->HX = hilo->hilo.HX;
+
+    destruir_datos_solicitar_contexto(datos);
 
     return contexto;
 }

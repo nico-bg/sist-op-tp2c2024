@@ -1,6 +1,9 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include <globales.h>
+#include <particiones.h>
+
 #include <utils/configuracion.h>
 #include <utils/conexiones.h>
 #include <utils/mensajes.h>
@@ -58,7 +61,7 @@ typedef struct {
 
 bool hay_espacio_en_memoria(uint32_t tamanio);
 
-void terminar_programa(t_config* config, int conexion);
+void terminar_programa(t_config* config);
 
 void hilo_kernel(void* socket);
 
@@ -76,7 +79,7 @@ nodo_proceso* buscar_proceso_por_pid(uint32_t pid);
 
 nodo_hilo* buscar_hilo_por_tid(uint32_t pid, uint32_t tid);
 
-void iniciar_proceso(t_datos_inicializacion_proceso* datos);
+void iniciar_proceso(t_datos_inicializacion_proceso* datos, t_particion* particion);
 
 uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos);
 
@@ -91,7 +94,7 @@ void liberar_instrucciones(char** instrucciones);
 
 int contar_lineas(const char* nombre_archivo);
 
-char* obtener_path_completo(char* nombre_archivo);
+char* obtener_path_completo(const char* nombre_archivo);
 
 char* obtener_archivo_pseudocodigo(u_int32_t pid, uint32_t tid, int code);
 
@@ -107,5 +110,12 @@ void actualizar_contexto_ejecucion(t_contexto* datos);
 char* devolver_instruccion(t_datos_obtener_instruccion* datos);
 
 estructura_hilo* convertir_struct(t_contexto* contexto);
+
+
+uint32_t leer_memoria(t_datos_leer_memoria* datos);
+
+void escribir_memoria(t_datos_escribir_memoria* datos);
+
+int crear_conexion_a_filesystem();
 
 #endif
