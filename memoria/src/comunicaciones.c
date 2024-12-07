@@ -160,6 +160,8 @@ op_code enviar_dump_memory(int socket_filesystem, t_datos_dump_memory* datos_ker
     nombre_archivo = malloc(tamanio);
     snprintf(nombre_archivo, tamanio, "%d-%d-%s.dmp", datos_kernel->pid, datos_kernel->tid, timestamp);
 
+    free(timestamp);
+
     nodo_proceso* nodo = buscar_proceso_por_pid(datos_kernel->pid);
 
     t_datos_dump_memory_fs* datos_a_enviar = malloc(sizeof(t_datos_dump_memory_fs));
