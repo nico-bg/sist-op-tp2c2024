@@ -181,7 +181,7 @@ void atender_peticion_cpu(int cod_op, int socket)
             char* inst = devolver_instruccion(datos_devolver_instruccion);
             log_info(logger, "## Obtener instrucción - (PID:TID) - (%d:%d) - Instrucción: <%s>", datos_devolver_instruccion->pid, datos_devolver_instruccion->tid, inst);
             log_debug(logger, "Archivo: <%s>", nombre_archivo);
-            enviar_buffer(cod_op, socket, inst);
+            enviar_buffer(cod_op, socket, string_duplicate(inst));
             free(nombre_archivo);
             destruir_datos_solicitar_instruccion(datos_devolver_instruccion);
             break;

@@ -73,7 +73,7 @@ uint32_t finalizar_proceso(t_datos_finalizacion_proceso* datos){
 
     nodo_hilo* actual_hilo = actual_proceso->proceso.lista_hilos;
     nodo_hilo* siguiente_hilo;
-    t_datos_finalizacion_hilo* datos_fin_hilo;
+    t_datos_finalizacion_hilo* datos_fin_hilo = malloc(sizeof(t_datos_finalizacion_hilo));
     datos_fin_hilo->pid = datos->pid;
 
     while(actual_hilo != NULL){ //Eliminamos todos los hilos del programa
@@ -116,7 +116,7 @@ void iniciar_hilo(t_datos_inicializacion_hilo* datos){
     nuevo_nodo_hilo->hilo.GX = 0;
     nuevo_nodo_hilo->hilo.HX = 0;
     
-    nuevo_nodo_hilo->hilo.archivo_pseudocodigo = datos->archivo_pseudocodigo;
+    nuevo_nodo_hilo->hilo.archivo_pseudocodigo = string_duplicate(datos->archivo_pseudocodigo);
     nuevo_nodo_hilo->hilo.instrucciones = leer_archivo_pseudocodigo(datos->archivo_pseudocodigo);
 
     nuevo_nodo_hilo->siguiente_nodo_hilo = NULL;
