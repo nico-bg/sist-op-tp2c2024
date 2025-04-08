@@ -1,10 +1,9 @@
-![image](https://github.com/user-attachments/assets/e6084b66-6618-42b7-83d7-c7841b9c80a8)
-
-
 # tp-scaffold
 
 Esta es una plantilla de proyecto diseñada para generar un TP de Sistemas
 Operativos de la UTN FRBA.
+
+Enunciado C 2c2024: https://docs.google.com/document/d/1KloOXfXQb_c1S3PKDEEywnArX9YB3aApqGVmpNgv9_Q/edit?usp=sharing
 
 ## Dependencias
 
